@@ -127,6 +127,10 @@ namespace DeluxeJournal.Menus
             }
         }
 
+        public override void gameWindowSizeChanged(Rectangle oldBounds, Rectangle newBounds)
+        {
+        }
+
         public void AddTabsToClickableComponents(IPage page)
         {
             page.AllClickableComponents.AddRange(_tabs);
