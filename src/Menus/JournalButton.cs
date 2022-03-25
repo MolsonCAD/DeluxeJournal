@@ -46,11 +46,13 @@ namespace DeluxeJournal.Menus
 
         public override void performHoverAction(int x, int y)
         {
-            UpdatePosition();
-
             if (Game1.player.visibleQuestCount == 0 && taskButton.containsPoint(x, y))
             {
                 _hoverText = _translation.Get("ui.taskbutton.hover").Tokens(new { key = Game1.options.journalButton[0].ToString() });
+            }
+            else
+            {
+                _hoverText = "";
             }
         }
 
@@ -58,26 +60,29 @@ namespace DeluxeJournal.Menus
         {
             if (Game1.player.visibleQuestCount == 0)
             {
+                UpdatePosition();
                 taskButton.draw(b);
-            }
 
-            if (_hoverText.Length > 0 && isWithinBounds(Game1.getOldMouseX(), Game1.getOldMouseY()))
-            {
-                drawHoverText(b, _hoverText, Game1.dialogueFont);
+                if (_hoverText.Length > 0 && isWithinBounds(Game1.getOldMouseX(), Game1.getOldMouseY()))
+                {
+                    drawHoverText(b, _hoverText, Game1.dialogueFont);
+                }
             }
         }
 
         private void UpdatePosition()
         {
-            xPositionOnScreen = Game1.uiViewport.Width - 88;
+            Vector2 position = new Vector2(Game1.uiViewport.Width - 300, 248);
 
             if (Game1.isOutdoorMapSmallerThanViewport())
             {
-                int mapWidth = Game1.currentLocation.map.Layers[0].LayerWidth;
-                xPositionOnScreen = Math.Min(xPositionOnScreen, mapWidth * 64 - Game1.uiViewport.X - 88);
+                position.X = Math.Min(position.X, Game1.currentLocation.map.Layers[0].LayerWidth * 64 - Game1.uiViewport.X - 300);
             }
 
-            taskButton.bounds = new Rectangle(xPositionOnScreen, yPositionOnScreen, width, height);
+            Utility.makeSafe(ref position, 300, 284);
+            xPositionOnScreen = (int)position.X;
+            yPositionOnScreen = (int)position.Y;
+            taskButton.bounds = new Rectangle(xPositionOnScreen + 212, yPositionOnScreen, width, height);
         }
     }
 }
