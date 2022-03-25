@@ -71,11 +71,21 @@ namespace DeluxeJournal.Framework.Tasks
         public override void EventSubscribe(ITaskEvents events)
         {
             events.ModEvents.Display.MenuChanged += OnMenuChanged;
+            events.ModEvents.GameLoop.DayEnding += OnDayEnding;
         }
 
         public override void EventUnsubscribe(ITaskEvents events)
         {
             events.ModEvents.Display.MenuChanged -= OnMenuChanged;
+            events.ModEvents.GameLoop.DayEnding -= OnDayEnding;
+        }
+
+        private void OnDayEnding(object? sender, DayEndingEventArgs e)
+        {
+            foreach (Item item in Game1.getFarm().getShippingBin(Game1.player))
+            {
+                OnSell(item);
+            }
         }
 
         private void OnMenuChanged(object? sender, MenuChangedEventArgs e)
