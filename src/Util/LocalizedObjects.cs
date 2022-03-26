@@ -80,15 +80,15 @@ namespace DeluxeJournal.Util
             IDictionary<int, string> hatsData = Game1.content.Load<Dictionary<int, string>>("Data\\hats");
             IDictionary<string, string> map = new Dictionary<string, string>();
             string text;
+            string[] values;
 
             foreach (int key in Game1.objectInformation.Keys)
             {
                 if ((text = Game1.objectInformation[key]) != null)
                 {
-                    string[] values = text.Split('/');
-                    string name = values[0];
+                    values = text.Split('/');
 
-                    if (name != "Weeds" && (name != "Stone" || key == SObject.stone))
+                    if (values[0] != "Weeds" && (values[0] != "Stone" || key == SObject.stone))
                     {
                         map[values[4].ToLowerInvariant()] = (values[3] == "Ring" ? "R " : "O ") + key + " 1";
                     }
@@ -99,7 +99,8 @@ namespace DeluxeJournal.Util
             {
                 if ((text = Game1.bigCraftablesInformation[key]) != null)
                 {
-                    map[text.Split('/')[isLocaleEnglish ? 0 : 9].ToLowerInvariant()] = "BO " + key + " 1";
+                    values = text.Split('/');
+                    map[values[isLocaleEnglish ? 0 : values.Length - 1].ToLowerInvariant()] = "BO " + key + " 1";
                 }
             }
 
@@ -115,7 +116,8 @@ namespace DeluxeJournal.Util
             {
                 if ((text = furnitureData[key]) != null)
                 {
-                    map[text.Split('/')[isLocaleEnglish ? 0 : 6].ToLowerInvariant()] = "F " + key + " 1";
+                    values = text.Split('/');
+                    map[values[isLocaleEnglish ? 0 : values.Length - 1].ToLowerInvariant()] = "F " + key + " 1";
                 }
             }
 
@@ -123,7 +125,8 @@ namespace DeluxeJournal.Util
             {
                 if ((text = weaponData[key]) != null)
                 {
-                    map[text.Split('/')[isLocaleEnglish ? 0 : 14].ToLowerInvariant()] = "W " + key + " 1";
+                    values = text.Split('/');
+                    map[values[isLocaleEnglish ? 0 : values.Length - 1].ToLowerInvariant()] = "W " + key + " 1";
                 }
             }
 
@@ -131,7 +134,8 @@ namespace DeluxeJournal.Util
             {
                 if ((text = bootsData[key]) != null)
                 {
-                    map[text.Split('/')[isLocaleEnglish ? 1 : 6].ToLowerInvariant()] = "B " + key + " 1";
+                    values = text.Split('/');
+                    map[values[isLocaleEnglish ? 0 : values.Length - 1].ToLowerInvariant()] = "B " + key + " 1";
                 }
             }
 
@@ -139,7 +143,8 @@ namespace DeluxeJournal.Util
             {
                 if ((text = hatsData[key]) != null)
                 {
-                    map[text.Split('/')[isLocaleEnglish ? 0 : 4].ToLowerInvariant()] = "H " + key + " 1";
+                    values = text.Split('/');
+                    map[values[isLocaleEnglish ? 0 : values.Length - 1].ToLowerInvariant()] = "H " + key + " 1";
                 }
             }
 
