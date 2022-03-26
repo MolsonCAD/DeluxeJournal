@@ -4,8 +4,8 @@ keeping track of the day-to-day. Create a to-do list of tasks with a variety of 
 auto-completion conditions, or just jot down what you need on the notes page.
 
 ## Install
-- Install [the lastest version of SMAPI](https://smapi.io)
-- Install this mod from Nexus mods
+- Install [the latest version of SMAPI](https://smapi.io)
+- Install [this mod from Nexus mods](https://www.nexusmods.com/stardewvalley/mods/11436)
 - Unzip into the `StardewValley/Mods` folder
 - Run the game using SMAPI
 
@@ -43,3 +43,6 @@ Fill it with anything you want!
 ## Mod Integration
 There is some rudimentary support for adding custom pages and there's groundwork done for custom tasks.
 If there's interest, I can add some more information on this and implement support for it.
+
+## See Also
+- [Source code](https://github.com/MolsonCAD/DeluxeJournal)

@@ -6,5 +6,7 @@
 	"UniqueID": "MolsonCAD.DeluxeJournal",
 	"EntryDll": "DeluxeJournal.dll",
 	"MinimumApiVersion": "3.9.0",
-	"UpdateKeys": []
+	"UpdateKeys": [
+		"Nexus:11436"
+	]
 }
