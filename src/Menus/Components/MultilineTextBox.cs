@@ -338,7 +338,7 @@ namespace DeluxeJournal.Menus.Components
             if (caretVisible && Selected)
             {
                 MoveCaretToIndex();
-                b.Draw(Game1.staminaRect, new Rectangle(_bounds.X + _caretPosition.X, _bounds.Y + _caretPosition.Y + 8, 4, 32), _textColor);
+                b.Draw(Game1.staminaRect, new Rectangle(_bounds.X + _caretPosition.X, _bounds.Y + _caretPosition.Y, 4, _font.LineSpacing), _textColor);
             }
 
             scrollComponent.EndScissorTest(b);

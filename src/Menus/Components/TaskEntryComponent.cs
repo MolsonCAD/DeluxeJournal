@@ -17,6 +17,7 @@ namespace DeluxeJournal.Menus.Components
         private readonly ITranslationHelper _translation;
         private readonly SpriteFont _font;
         private readonly Dictionary<char, SpriteFont.Glyph> _glyphs;
+        private readonly int _halfLineSpacing;
         private readonly int _ellipsisWidth;
         private readonly int _centerY;
 
@@ -35,6 +36,7 @@ namespace DeluxeJournal.Menus.Components
             _translation = translation;
             _font = Game1.dialogueFont;
             _glyphs = _font.GetGlyphs();
+            _halfLineSpacing = (_font.LineSpacing / 2) - (_font.LineSpacing / 2 % 4);
             _ellipsisWidth = (int)_font.MeasureString("...").X;
             _centerY = bounds.Y + (bounds.Height / 2);
             _hoverStartTime = 0;
@@ -65,7 +67,7 @@ namespace DeluxeJournal.Menus.Components
                 barRightSourceRect = new Rectangle(42, 64, 5, 14),
                 notchSourceRect = new Rectangle(47, 64, 1, 14),
                 AlignText = ProgressBar.TextAlignment.Center,
-                TextMargin = new Vector2(80, 8)
+                TextMargin = new Vector2(80, 28 - _halfLineSpacing)
             };
         }
 
@@ -175,14 +177,14 @@ namespace DeluxeJournal.Menus.Components
                 Utility.drawTextWithShadow(b,
                     _translation.Get(daysRemainingKey, new { count = daysRemaining }),
                     _font,
-                    new Vector2(progressBar.bounds.X + 48, _centerY - 26),
+                    new Vector2(progressBar.bounds.X + 48, _centerY - _halfLineSpacing - 6),
                     Color.DarkBlue);
             }
 
             Utility.drawTextWithShadow(b,
                 TruncateString(name, nameWidth),
                 _font,
-                new Vector2(bounds.X + 68, _centerY - 26),
+                new Vector2(bounds.X + 68, _centerY - _halfLineSpacing - 6),
                 textColor);
 
             if (_hovering && (!Game1.options.SnappyMenus || popOut))
