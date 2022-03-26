@@ -360,8 +360,11 @@ namespace DeluxeJournal.Menus
 
             if (closeTipButton.visible = DeluxeJournalMod.Instance?.Config?.ShowSmartAddTip ?? true)
             {
-                DrawInfoBox(b, new Rectangle(_textBox.X - 32, _textBox.Y + 34, 544, 140), 396);
-                iconY += 80;
+                string text = Game1.parseText(_translation.Get("ui.tasks.new.smarttip"), Game1.smallFont, 396);
+                int extraLineSpacing = Math.Max(0, text.Count(c => c == '\n') - 1) * Game1.smallFont.LineSpacing;
+
+                DrawInfoBox(b, text, new Rectangle(_textBox.X - 32, _textBox.Y + 34, 544, 140 + extraLineSpacing));
+                iconY += 80 + extraLineSpacing;
 
                 if (new Rectangle(_textBox.X, _textBox.Y + 72, 480, 76).Contains(Game1.getOldMouseX(), Game1.getOldMouseY()))
                 {
@@ -418,7 +421,7 @@ namespace DeluxeJournal.Menus
             }
         }
 
-        private void DrawInfoBox(SpriteBatch b, Rectangle bounds, int textWidth)
+        private void DrawInfoBox(SpriteBatch b, string text, Rectangle bounds)
         {
             Texture2D texture = Game1.menuTexture;
 
@@ -447,11 +450,7 @@ namespace DeluxeJournal.Menus
                 horizontalShadowOffset: -2,
                 verticalShadowOffset: 2);
 
-            Utility.drawTextWithShadow(b,
-                Game1.parseText(_translation.Get("ui.tasks.new.smarttip"), Game1.smallFont, textWidth),
-                Game1.smallFont,
-                new Vector2(_textBox.X + 38, _textBox.Y + 80),
-                Color.Maroon);
+            Utility.drawTextWithShadow(b, text, Game1.smallFont, new Vector2(_textBox.X + 38, _textBox.Y + 80), Color.Maroon);
         }
 
         private void AddTaskAndExit(bool smart = true)

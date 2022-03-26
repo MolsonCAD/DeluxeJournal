@@ -25,7 +25,7 @@ namespace DeluxeJournal.Util
         /// <param name="fuzzy">Perform a fuzzy search if true, otherwise only return an Item with the exact name.</param>
         public Item? GetItem(string localizedName, bool fuzzy = false)
         {
-            localizedName = localizedName.ToLowerInvariant();
+            localizedName = localizedName.Trim().ToLowerInvariant();
 
             if (_tools.ContainsKey(localizedName))
             {
@@ -62,7 +62,8 @@ namespace DeluxeJournal.Util
 
         private static T? GetValue<T>(IDictionary<string, T> map, string key, bool fuzzy) where T : class
         {
-            key = fuzzy ? Utility.fuzzySearch(key.ToLowerInvariant(), map.Keys.ToList()) : key.ToLowerInvariant();
+            key = key.Trim().ToLowerInvariant();
+            key = fuzzy ? Utility.fuzzySearch(key, map.Keys.ToList()) : key;
 
             if (key != null && map.ContainsKey(key))
             {
@@ -100,7 +101,11 @@ namespace DeluxeJournal.Util
                 if ((text = Game1.bigCraftablesInformation[key]) != null)
                 {
                     values = text.Split('/');
-                    map[values[isLocaleEnglish ? 0 : values.Length - 1].ToLowerInvariant()] = "BO " + key + " 1";
+
+                    if (CraftingRecipe.craftingRecipes.ContainsKey(values[0]))
+                    {
+                        map[values[isLocaleEnglish ? 0 : values.Length - 1].Trim().ToLowerInvariant()] = "BO " + key + " 1";
+                    }
                 }
             }
 
@@ -117,7 +122,7 @@ namespace DeluxeJournal.Util
                 if ((text = furnitureData[key]) != null)
                 {
                     values = text.Split('/');
-                    map[values[isLocaleEnglish ? 0 : values.Length - 1].ToLowerInvariant()] = "F " + key + " 1";
+                    map[values[isLocaleEnglish ? 0 : values.Length - 1].Trim().ToLowerInvariant()] = "F " + key + " 1";
                 }
             }
 
@@ -126,7 +131,7 @@ namespace DeluxeJournal.Util
                 if ((text = weaponData[key]) != null)
                 {
                     values = text.Split('/');
-                    map[values[isLocaleEnglish ? 0 : values.Length - 1].ToLowerInvariant()] = "W " + key + " 1";
+                    map[values[isLocaleEnglish ? 0 : values.Length - 1].Trim().ToLowerInvariant()] = "W " + key + " 1";
                 }
             }
 
@@ -135,7 +140,7 @@ namespace DeluxeJournal.Util
                 if ((text = bootsData[key]) != null)
                 {
                     values = text.Split('/');
-                    map[values[isLocaleEnglish ? 0 : values.Length - 1].ToLowerInvariant()] = "B " + key + " 1";
+                    map[values[isLocaleEnglish ? 0 : values.Length - 1].Trim().ToLowerInvariant()] = "B " + key + " 1";
                 }
             }
 
@@ -144,7 +149,7 @@ namespace DeluxeJournal.Util
                 if ((text = hatsData[key]) != null)
                 {
                     values = text.Split('/');
-                    map[values[isLocaleEnglish ? 0 : values.Length - 1].ToLowerInvariant()] = "H " + key + " 1";
+                    map[values[isLocaleEnglish ? 0 : values.Length - 1].Trim().ToLowerInvariant()] = "H " + key + " 1";
                 }
             }
 
