@@ -323,6 +323,8 @@ namespace DeluxeJournal.Menus.Components
             string text = _text.ToString();
             Vector2 textPosition = new Vector2(_bounds.X, _bounds.Y - scrollComponent.ScrollAmount);
             bool caretVisible = _arrowKey != Keys.None || !(Game1.currentGameTime.TotalGameTime.TotalMilliseconds % 1000.0 < 500.0);
+            int caretY = _caretPosition.Y + (int)(_font.LineSpacing * 0.05f);
+            int caretHeight = (int)(_font.LineSpacing * 0.9f);
 
             scrollComponent.BeginScissorTest(b);
 
@@ -338,7 +340,7 @@ namespace DeluxeJournal.Menus.Components
             if (caretVisible && Selected)
             {
                 MoveCaretToIndex();
-                b.Draw(Game1.staminaRect, new Rectangle(_bounds.X + _caretPosition.X, _bounds.Y + _caretPosition.Y, 4, _font.LineSpacing), _textColor);
+                b.Draw(Game1.staminaRect, new Rectangle(_bounds.X + _caretPosition.X, _bounds.Y + caretY, 4, caretHeight), _textColor);
             }
 
             scrollComponent.EndScissorTest(b);

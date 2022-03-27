@@ -9,4 +9,5 @@ _releases/
 .vs/
 
 # other
+todo.txt
 run-smapi.ps1
