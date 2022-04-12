@@ -33,6 +33,10 @@ namespace DeluxeJournal.Tasks
         /// <remarks>Note: Tasks marked as completed are removed at the end of the day if the period is "Never".</remarks>
         bool Complete { get; set; }
 
+        /// <summary>UMID of the player that owns this task.</summary>
+        [JsonIgnore]
+        long OwnerUMID { get; set; }
+
         /// <summary>Renew period. Tasks will be renewed at the end of the period.</summary>
         /// /// <remarks>Note: Tasks marked as completed are removed at the end of the day if the period is "Never".</remarks>
         [JsonConverter(typeof(StringEnumConverter))]
@@ -83,6 +87,12 @@ namespace DeluxeJournal.Tasks
 
         /// <summary>Show a progress bar on the task entry if true. Progress is defined as Count divided by MaxCount.</summary>
         bool ShouldShowProgress();
+
+        /// <summary>Does this player own this task?</summary>
+        bool IsTaskOwner(Farmer player);
+
+        /// <summary>Does the player with this UMID own this task?</summary>
+        bool IsTaskOwner(long umid);
 
         /// <summary>Subscribe hook.</summary>
         void EventSubscribe(ITaskEvents events);

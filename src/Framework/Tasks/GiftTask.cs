@@ -61,7 +61,7 @@ namespace DeluxeJournal.Framework.Tasks
 
         private void OnItemGifted(object? sender, GiftEventArgs e)
         {
-            if (CanUpdate() && TargetName == e.NPC.Name && (TargetIndex == -1 || TargetIndex == e.Item.ParentSheetIndex))
+            if (CanUpdate() && IsTaskOwner(e.Player) && TargetName == e.NPC.Name && (TargetIndex == -1 || TargetIndex == e.Item.ParentSheetIndex))
             {
                 MarkAsCompleted();
             }

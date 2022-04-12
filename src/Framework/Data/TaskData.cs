@@ -7,6 +7,6 @@ namespace DeluxeJournal.Framework.Data
     [JsonConverter(typeof(TaskDataConverter))]
     internal class TaskData
     {
-        public IDictionary<string, List<ITask>> Tasks { get; set; } = new Dictionary<string, List<ITask>>();
+        public IDictionary<string, IDictionary<long, IList<ITask>>> Tasks { get; set; } = new Dictionary<string, IDictionary<long, IList<ITask>>>();
     }
 }

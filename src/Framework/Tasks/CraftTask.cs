@@ -75,7 +75,7 @@ namespace DeluxeJournal.Framework.Tasks
 
         private void OnItemCrafted(object? sender, ItemReceivedEventArgs e)
         {
-            if (CanUpdate() && IsBigCraftable() == e.Item.bigCraftable.Value && TargetIndex == e.Item.ParentSheetIndex)
+            if (CanUpdate() && IsTaskOwner(e.Player) && IsBigCraftable() == e.Item.bigCraftable.Value && TargetIndex == e.Item.ParentSheetIndex)
             {
                 IncrementCount(e.Count);
             }

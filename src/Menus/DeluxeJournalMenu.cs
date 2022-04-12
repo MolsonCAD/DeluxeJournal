@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.BellsAndWhistles;
 using StardewValley.Menus;
@@ -16,7 +17,20 @@ namespace DeluxeJournal.Menus
     {
         private const int ActiveTabOffset = 8;
 
-        public static int ActiveTab { get; private set; }
+        private static readonly PerScreen<int> ActiveTabPerScreen = new PerScreen<int>();
+
+        public static int ActiveTab
+        {
+            get
+            {
+                return ActiveTabPerScreen.Value;
+            }
+
+            set
+            {
+                ActiveTabPerScreen.Value = value;
+            }
+        }
 
         private readonly List<ClickableTextureComponent> _tabs;
         private readonly List<IPage> _pages;

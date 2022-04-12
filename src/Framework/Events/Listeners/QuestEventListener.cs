@@ -4,6 +4,7 @@ using StardewValley.Quests;
 namespace DeluxeJournal.Framework.Listeners
 {
     /// <summary>Quest event listener base class.</summary>
+    [Obsolete]
     internal abstract class QuestEventListener : Quest
     {
         public QuestEventListener(int questType)

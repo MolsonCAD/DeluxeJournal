@@ -1,4 +1,5 @@
-﻿using StardewModdingAPI;
+﻿using StardewValley;
+using StardewModdingAPI;
 using DeluxeJournal.Events;
 using DeluxeJournal.Framework.Data;
 using DeluxeJournal.Tasks;
@@ -10,58 +11,37 @@ namespace DeluxeJournal.Framework.Tasks
         private readonly ITaskEvents _events;
         private readonly IDataHelper _dataHelper;
         private readonly TaskData _data;
-        private readonly List<ITask> _tasks;
+        private readonly IDictionary<long, TaskList> _tasks;
 
-        public TaskData Data => _data;
+        public IList<ITask> Tasks
+        {
+            get
+            {
+                if (!_tasks.ContainsKey(Game1.player.UniqueMultiplayerID))
+                {
+                    _tasks[Game1.player.UniqueMultiplayerID] = new TaskList(_events);
+                }
 
-        public IReadOnlyList<ITask> Tasks => _tasks;
+                return _tasks[Game1.player.UniqueMultiplayerID];
+            }
+        }
 
         public TaskManager(ITaskEvents events, IDataHelper dataHelper)
         {
             _events = events;
             _dataHelper = dataHelper;
             _data = _dataHelper.ReadGlobalData<TaskData>(DeluxeJournalMod.TASKS_DATA_KEY) ?? new TaskData();
-            _tasks = new List<ITask>();
-        }
-
-        public void AddTask(ITask task)
-        {
-            InsertTask(0, task);
-        }
-
-        public void InsertTask(int index, ITask task)
-        {
-            task.EventSubscribe(_events);
-            _tasks.Insert(index, task);
-        }
-
-        public void RemoveTask(ITask task)
-        {
-            task.EventUnsubscribe(_events);
-            _tasks.Remove(task);
-        }
-
-        public void RemoveTaskAt(int index)
-        {
-            _tasks[index].EventUnsubscribe(_events);
-            _tasks.RemoveAt(index);
-        }
-
-        public void ReplaceTask(ITask oldTask, ITask newTask)
-        {
-            int index = _tasks.IndexOf(oldTask);
-
-            oldTask.EventUnsubscribe(_events);
-            newTask.EventSubscribe(_events);
-
-            _tasks.RemoveAt(index);
-            _tasks.Insert(index, newTask);
+            _tasks = new Dictionary<long, TaskList>();
         }
 
         public void OnDayEnding()
         {
-            _tasks.RemoveAll(delegate(ITask task)
+            ITask task;
+
+            for (int i = Tasks.Count - 1; i >= 0; i--)
             {
+                task = Tasks[i];
+
                 if (task.RenewPeriod != ITask.Period.Never)
                 {
                     if (task.Complete)
@@ -75,46 +55,62 @@ namespace DeluxeJournal.Framework.Tasks
                     }
                 }
 
-                return task.Complete;
-            });
+                if (task.Complete)
+                {
+                    Tasks.RemoveAt(i);
+                }
+            }
         }
 
+        /// <summary>Sort local player tasks.</summary>
         public void SortTasks()
         {
-            // Preserve ordering among tasks in the same state
-            for (int i = 0; i < _tasks.Count; i++)
-            {
-                _tasks[i].SetSortingIndex(i);
-            }
-
-            _tasks.Sort();
+            ((TaskList)Tasks).Sort();
         }
 
         public void Load()
         {
-            for (int i = _tasks.Count - 1; i >= 0; i--)
+            string saveFolderName = Constants.SaveFolderName;
+            long umid;
+
+            // Each TaskList must be cleared in order to unsubscribe from task events
+            foreach (TaskList tasks in _tasks.Values)
             {
-                RemoveTaskAt(i);
+                tasks.Clear();
             }
 
-            if (_data.Tasks.ContainsKey(Constants.SaveFolderName))
-            {
-                foreach (ITask task in _data.Tasks[Constants.SaveFolderName])
-                {
-                    InsertTask(_tasks.Count, task);
-                }
+            _tasks.Clear();
 
-                SortTasks();
+            if (_data.Tasks.ContainsKey(saveFolderName))
+            {
+                foreach (long key in _data.Tasks[saveFolderName].Keys)
+                {
+                    // UMID is set to 0 when data is converted from legacy versions (<= 1.0.3)
+                    umid = (key == 0) ? Game1.player.UniqueMultiplayerID : key;
+
+                    if (!_tasks.ContainsKey(umid))
+                    {
+                        _tasks[umid] = new TaskList(_events);
+                    }
+
+                    foreach (ITask task in _data.Tasks[saveFolderName][key])
+                    {
+                        task.OwnerUMID = umid;
+                        _tasks[umid].Add(task);
+                    }
+
+                    _tasks[umid].Sort();
+                }
             }
         }
 
         public void Save()
         {
-            if (_data != null)
-            {
-                _data.Tasks[Constants.SaveFolderName] = _tasks;
-                _dataHelper.WriteGlobalData(DeluxeJournalMod.TASKS_DATA_KEY, _data);
-            }
+            _data.Tasks[Constants.SaveFolderName] = _tasks
+                .Where(entry => entry.Value.Count > 0)
+                .ToDictionary(entry => entry.Key, entry => (IList<ITask>)entry.Value.ToList());
+
+            _dataHelper.WriteGlobalData(DeluxeJournalMod.TASKS_DATA_KEY, _data);
         }
     }
 }

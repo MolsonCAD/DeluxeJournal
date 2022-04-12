@@ -1,7 +1,5 @@
 ﻿using StardewModdingAPI;
-using StardewModdingAPI.Events;
 using StardewValley;
-using StardewValley.Menus;
 using DeluxeJournal.Events;
 using DeluxeJournal.Tasks;
 using DeluxeJournal.Util;
@@ -62,30 +60,20 @@ namespace DeluxeJournal.Framework.Tasks
 
         public override void EventSubscribe(ITaskEvents events)
         {
-            events.ModEvents.Display.MenuChanged += OnMenuChanged;
+            events.SalablePurchased += OnSalablePurchased;
         }
 
         public override void EventUnsubscribe(ITaskEvents events)
         {
-            events.ModEvents.Display.MenuChanged -= OnMenuChanged;
+            events.SalablePurchased -= OnSalablePurchased;
         }
 
-        private void OnMenuChanged(object? sender, MenuChangedEventArgs e)
+        private void OnSalablePurchased(object? sender, SalablePurchasedEventArgs e)
         {
-            if (CanUpdate() && e.NewMenu is ShopMenu shopMenu)
+            if (CanUpdate() && IsTaskOwner(e.Player) && e.Salable is Item item && TargetIndex == item.ParentSheetIndex)
             {
-                ShopHelper.AttachPurchaseCallback(shopMenu, OnPurchase);
+                IncrementCount(e.Amount);
             }
-        }
-
-        private bool OnPurchase(ISalable salable, Farmer player, int amount)
-        {
-            if (player.IsLocalPlayer && salable is Item item && TargetIndex == item.ParentSheetIndex)
-            {
-                IncrementCount(amount);
-            }
-
-            return false;
         }
     }
 }

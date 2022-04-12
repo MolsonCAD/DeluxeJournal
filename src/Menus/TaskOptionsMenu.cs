@@ -262,6 +262,9 @@ namespace DeluxeJournal.Menus
             {
                 if (DeluxeJournalMod.Instance?.TaskManager is TaskManager taskManager)
                 {
+                    IList<ITask> tasks = taskManager.Tasks;
+                    int index = tasks.IndexOf(_task);
+
                     task.Active = _task.Active;
                     task.Complete = _task.Complete;
                     task.Count = _task.Count;
@@ -273,7 +276,8 @@ namespace DeluxeJournal.Menus
                         task.Complete = true;
                     }
 
-                    taskManager.ReplaceTask(_task, task);
+                    tasks.RemoveAt(index);
+                    tasks.Insert(index, task);
                 }
             }
             else if (GetParentMenu() is TasksPage tasksPage)

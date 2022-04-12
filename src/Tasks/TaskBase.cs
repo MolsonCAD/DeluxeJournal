@@ -20,6 +20,9 @@ namespace DeluxeJournal.Tasks
 
         public string Name { get; set; }
 
+        [JsonIgnore]
+        public long OwnerUMID { get; set; }
+
         public Period RenewPeriod { get; set; }
 
         public WorldDate RenewDate { get; set; }
@@ -74,6 +77,7 @@ namespace DeluxeJournal.Tasks
 
             Name = name;
             Active = true;
+            OwnerUMID = Game1.player?.UniqueMultiplayerID ?? 0;
             RenewPeriod = Period.Never;
             RenewDate = new WorldDate(1, "spring", 1);
             TargetDisplayName = string.Empty;
@@ -168,6 +172,16 @@ namespace DeluxeJournal.Tasks
         public virtual bool ShouldShowProgress()
         {
             return false;
+        }
+
+        public bool IsTaskOwner(Farmer farmer)
+        {
+            return OwnerUMID == farmer.UniqueMultiplayerID;
+        }
+
+        public bool IsTaskOwner(long umid)
+        {
+            return OwnerUMID == umid;
         }
 
         public virtual void EventSubscribe(ITaskEvents events)

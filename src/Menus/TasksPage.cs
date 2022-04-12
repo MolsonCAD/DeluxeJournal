@@ -143,21 +143,21 @@ namespace DeluxeJournal.Menus
 
         public void AddTask(ITask task)
         {
-            _taskManager.AddTask(task);
+            _taskManager.Tasks.Insert(0, task);
             scrollComponent.ContentHeight += scrollComponent.ScrollDistance;
             scrollComponent.Refresh();
         }
 
         public void RemoveTask(ITask task)
         {
-            _taskManager.RemoveTask(task);
+            _taskManager.Tasks.Remove(task);
             scrollComponent.ContentHeight -= scrollComponent.ScrollDistance;
             scrollComponent.ScrollAmount -= scrollComponent.ScrollDistance;
         }
 
         private void RemoveTaskAt(int i)
         {
-            _taskManager.RemoveTaskAt(i);
+            _taskManager.Tasks.RemoveAt(i);
             scrollComponent.ContentHeight -= scrollComponent.ScrollDistance;
             scrollComponent.ScrollAmount -= scrollComponent.ScrollDistance;
         }
@@ -305,7 +305,7 @@ namespace DeluxeJournal.Menus
             }
             else
             {
-                IReadOnlyList<ITask> tasks = _taskManager.Tasks;
+                IList<ITask> tasks = _taskManager.Tasks;
                 int scrollOffset = scrollComponent.ScrollAmount / scrollComponent.ScrollDistance;
 
                 for (int i = 0; i < taskEntries.Count && i + scrollOffset < tasks.Count; i++)
@@ -388,8 +388,8 @@ namespace DeluxeJournal.Menus
                     {
                         if (_selectedTaskIndex > scrollOffset)
                         {
-                            _taskManager.RemoveTaskAt(_selectedTaskIndex);
-                            _taskManager.InsertTask(--_selectedTaskIndex, task);
+                            _taskManager.Tasks.RemoveAt(_selectedTaskIndex);
+                            _taskManager.Tasks.Insert(--_selectedTaskIndex, task);
 
                             if (_dragging)
                             {
@@ -403,8 +403,8 @@ namespace DeluxeJournal.Menus
                     {
                         if (_selectedTaskIndex < Math.Min(_taskManager.Tasks.Count - 1, scrollOffset + taskEntries.Count - 1))
                         {
-                            _taskManager.RemoveTaskAt(_selectedTaskIndex);
-                            _taskManager.InsertTask(++_selectedTaskIndex, task);
+                            _taskManager.Tasks.RemoveAt(_selectedTaskIndex);
+                            _taskManager.Tasks.Insert(++_selectedTaskIndex, task);
 
                             if (_dragging)
                             {
@@ -501,7 +501,7 @@ namespace DeluxeJournal.Menus
                 HoverText = Translation.Get("ui.tasks.addbutton.hover");
             }
 
-            IReadOnlyList<ITask> tasks = _taskManager.Tasks;
+            IList<ITask> tasks = _taskManager.Tasks;
             int scrollOffset = scrollComponent.ScrollAmount / scrollComponent.ScrollDistance;
 
             for (int i = 0; i < taskEntries.Count; i++)
@@ -549,7 +549,7 @@ namespace DeluxeJournal.Menus
 
         public override void draw(SpriteBatch b)
         {
-            IReadOnlyList<ITask> tasks = _taskManager.Tasks;
+            IList<ITask> tasks = _taskManager.Tasks;
             Vector2 moneyBoxPosition = new Vector2(moneyBox.bounds.X - 36, moneyBox.bounds.Y);
 
             scrollComponent.BeginScissorTest(b);

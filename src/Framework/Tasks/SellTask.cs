@@ -1,7 +1,5 @@
 ﻿using StardewModdingAPI;
-using StardewModdingAPI.Events;
 using StardewValley;
-using StardewValley.Menus;
 using DeluxeJournal.Events;
 using DeluxeJournal.Tasks;
 using DeluxeJournal.Util;
@@ -70,40 +68,20 @@ namespace DeluxeJournal.Framework.Tasks
 
         public override void EventSubscribe(ITaskEvents events)
         {
-            events.ModEvents.Display.MenuChanged += OnMenuChanged;
-            events.ModEvents.GameLoop.DayEnding += OnDayEnding;
+            events.SalableSold += OnSalableSold;
         }
 
         public override void EventUnsubscribe(ITaskEvents events)
         {
-            events.ModEvents.Display.MenuChanged -= OnMenuChanged;
-            events.ModEvents.GameLoop.DayEnding -= OnDayEnding;
+            events.SalableSold -= OnSalableSold;
         }
 
-        private void OnDayEnding(object? sender, DayEndingEventArgs e)
+        private void OnSalableSold(object? sender, SalableSoldEventArgs e)
         {
-            foreach (Item item in Game1.getFarm().getShippingBin(Game1.player))
-            {
-                OnSell(item);
-            }
-        }
-
-        private void OnMenuChanged(object? sender, MenuChangedEventArgs e)
-        {
-            if (CanUpdate() && e.NewMenu is ShopMenu shop)
-            {
-                ShopHelper.AttachQuietSellCallback(shop, OnSell);
-            }
-        }
-
-        private bool OnSell(ISalable salable)
-        {
-            if (salable is Item item && TargetIndex == item.ParentSheetIndex)
+            if (CanUpdate() && IsTaskOwner(e.Player) && e.Salable is Item item && TargetIndex == item.ParentSheetIndex)
             {
                 IncrementCount(item.Stack);
             }
-
-            return false;
         }
     }
 }

@@ -83,7 +83,7 @@ namespace DeluxeJournal.Framework.Tasks
 
         private void OnItemCollected(object? sender, ItemReceivedEventArgs e)
         {
-            if (CanUpdate() && TargetIndex != -1 && TargetIndex == e.Item.ParentSheetIndex)
+            if (CanUpdate() && IsTaskOwner(e.Player) && TargetIndex != -1 && TargetIndex == e.Item.ParentSheetIndex)
             {
                 IncrementCount(e.Count);
             }

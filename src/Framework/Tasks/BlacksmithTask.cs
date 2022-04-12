@@ -129,7 +129,7 @@ namespace DeluxeJournal.Framework.Tasks
 
         private void OnInventoryChanged(object? sender, InventoryChangedEventArgs e)
         {
-            if (CanUpdate() && e.IsLocalPlayer)
+            if (CanUpdate() && IsTaskOwner(e.Player))
             {
                 UpdateStage(e.Player, e.Added);
             }
