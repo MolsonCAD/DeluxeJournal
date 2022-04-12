@@ -276,6 +276,7 @@ namespace DeluxeJournal.Menus
                         task.Complete = true;
                     }
 
+                    task.Validate();
                     tasks.RemoveAt(index);
                     tasks.Insert(index, task);
                 }

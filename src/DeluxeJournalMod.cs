@@ -64,7 +64,6 @@ namespace DeluxeJournal
             PageManager.RegisterPage("quests", (bounds) => new QuestsPage(bounds, UiTexture, helper.Translation), 102);
 
             helper.Events.Display.RenderingActiveMenu += OnRenderingActiveMenu;
-            helper.Events.GameLoop.DayEnding += OnDayEnding;
             helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
             helper.Events.GameLoop.Saving += OnSaving;
 
@@ -106,11 +105,6 @@ namespace DeluxeJournal
             {
                 Game1.activeClickableMenu = new DeluxeJournalMenu(PageManager);
             }
-        }
-
-        private void OnDayEnding(object? sender, DayEndingEventArgs e)
-        {
-            TaskManager?.OnDayEnding();
         }
 
         private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)

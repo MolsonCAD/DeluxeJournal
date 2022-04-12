@@ -94,6 +94,13 @@ namespace DeluxeJournal.Tasks
             return date.SeasonIndex * 28 + date.DayOfMonth;
         }
 
+        public virtual ITask Copy()
+        {
+            ITask copy = (ITask)MemberwiseClone();
+            copy.RenewDate = new WorldDate(copy.RenewDate);
+            return copy;
+        }
+
         /// <summary>Is this task ready to receive update events?</summary>
         public bool CanUpdate()
         {
@@ -174,6 +181,16 @@ namespace DeluxeJournal.Tasks
             return false;
         }
 
+        public virtual bool ShouldShowCustomStatus()
+        {
+            return false;
+        }
+
+        public virtual string GetCustomStatusKey()
+        {
+            return string.Empty;
+        }
+
         public bool IsTaskOwner(Farmer farmer)
         {
             return OwnerUMID == farmer.UniqueMultiplayerID;
@@ -189,6 +206,10 @@ namespace DeluxeJournal.Tasks
         }
 
         public virtual void EventUnsubscribe(ITaskEvents events)
+        {
+        }
+
+        public virtual void Validate()
         {
         }
 

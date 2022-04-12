@@ -32,6 +32,9 @@
 	"ui.tasks.renewbutton.hover": "刷新任务",
 	"ui.tasks.renew.day": "{{count}} 天",
 	"ui.tasks.renew.days": "{{count}} 天",
+	"ui.tasks.status.deliver": "[152] Deliver", // TODO
+	"ui.tasks.status.upgrading": "[42] Upgrading", // TODO
+	"ui.tasks.status.ready": "[151] Ready", // TODO
 	"ui.tasks.moneybox.hover0": "净收入/支出或利润",
 	"ui.tasks.moneybox.hover1": "目前资金",
 	"ui.tasks.moneybutton.hover": "切换金额",

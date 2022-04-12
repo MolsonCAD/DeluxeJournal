@@ -13,7 +13,6 @@ namespace DeluxeJournal.Framework.Tasks
         public class Factory : DeluxeJournal.Tasks.TaskFactory
         {
             private Item? _item = null;
-            private int _stages = 2;
 
             [TaskParameter("tool")]
             public Item? Item
@@ -25,26 +24,15 @@ namespace DeluxeJournal.Framework.Tasks
 
                 set
                 {
-                    _item = null;
-                    _stages = 2;
-
                     if (value is Tool tool && (tool is Axe || tool is Hoe || tool is WateringCan || tool is Pickaxe))
                     {
-                        int localUpgradeLevel = ToolHelper.GetLocalToolUpgradeLevel(tool.GetType());
-
-                        if (tool.UpgradeLevel == 0)
-                        {
-                            if (localUpgradeLevel < Tool.iridium)
-                            {
-                                tool.UpgradeLevel = localUpgradeLevel + 1;
-                                _item = tool;
-                            }
-                        }
-                        else
-                        {
-                            _stages = Math.Max(0, tool.UpgradeLevel - localUpgradeLevel) + 1;
-                            _item = tool;
-                        }
+                        int localUpgradeLevel = ToolHelper.GetToolUpgradeLevelForPlayer(tool.BaseName, Game1.player);
+                        tool.UpgradeLevel = (localUpgradeLevel < Tool.iridium) ? localUpgradeLevel + 1 : 0;
+                        _item = tool;
+                    }
+                    else
+                    {
+                        _item = null;
                     }
                 }
             }
@@ -63,7 +51,7 @@ namespace DeluxeJournal.Framework.Tasks
             {
                 if (Item is Tool tool)
                 {
-                    return new BlacksmithTask(name, tool, _stages);
+                    return new BlacksmithTask(name, tool);
                 }
 
                 return null;
@@ -75,19 +63,44 @@ namespace DeluxeJournal.Framework.Tasks
         {
         }
 
-        public BlacksmithTask(string name, Tool tool, int stages = 2) : base(TaskTypes.Blacksmith, name)
+        public BlacksmithTask(string name, Tool tool) : base(TaskTypes.Blacksmith, name)
         {
             TargetDisplayName = tool.DisplayName;
             TargetName = tool.BaseName;
             Variant = tool.UpgradeLevel;
-            MaxCount = stages;
+            MaxCount = 2;
 
-            UpdateStage(Game1.player, Enumerable.Empty<Item>());
+            Validate();
         }
 
-        public override bool ShouldShowProgress()
+        public override void Validate()
         {
-            return true;
+            if (CanUpdate())
+            {
+                Tool upgraded = Game1.player.toolBeingUpgraded.Value;
+                Count = (upgraded != null && upgraded.BaseName == TargetName) ? 1 : 0;
+            }
+        }
+
+        public override bool ShouldShowCustomStatus()
+        {
+            return !Complete;
+        }
+
+        public override string GetCustomStatusKey()
+        {
+            if (Count == 0)
+            {
+                return "ui.tasks.status.deliver";
+            }
+            else if (Game1.player.daysLeftForToolUpgrade.Value > 0)
+            {
+                return "ui.tasks.status.upgrading";
+            }
+            else
+            {
+                return "ui.tasks.status.ready";
+            }
         }
 
         public override int GetPrice()
@@ -97,25 +110,32 @@ namespace DeluxeJournal.Framework.Tasks
 
         public override void EventSubscribe(ITaskEvents events)
         {
+            events.SalablePurchased += OnSalablePurchased;
             events.ModEvents.Player.InventoryChanged += OnInventoryChanged;
         }
 
         public override void EventUnsubscribe(ITaskEvents events)
         {
+            events.SalablePurchased -= OnSalablePurchased;
             events.ModEvents.Player.InventoryChanged -= OnInventoryChanged;
         }
 
-        private void UpdateStage(Farmer player, IEnumerable<Item> added)
+        private void OnSalablePurchased(object? sender, SalablePurchasedEventArgs e)
         {
-            Tool? upgraded = player.toolBeingUpgraded.Value;
-
-            if (Count < MaxCount - 1 && upgraded != null && upgraded.BaseName == TargetName)
+            if (CanUpdate() && IsTaskOwner(e.Player) && Count == 0)
             {
-                Count = MaxCount - (Variant - upgraded.UpgradeLevel) - 1;
+                if (e.Salable is Tool tool && tool.BaseName == TargetName)
+                {
+                    Count = 1;
+                }
             }
-            else if (Count == MaxCount - 1)
+        }
+
+        private void OnInventoryChanged(object? sender, InventoryChangedEventArgs e)
+        {
+            if (CanUpdate() && IsTaskOwner(e.Player) && e.Player.toolBeingUpgraded.Value == null && Count == 1)
             {
-                foreach (Item item in added)
+                foreach (Item item in e.Added)
                 {
                     if (item is Tool tool && tool.BaseName == TargetName)
                     {
@@ -124,14 +144,6 @@ namespace DeluxeJournal.Framework.Tasks
                         break;
                     }
                 }
-            }
-        }
-
-        private void OnInventoryChanged(object? sender, InventoryChangedEventArgs e)
-        {
-            if (CanUpdate() && IsTaskOwner(e.Player))
-            {
-                UpdateStage(e.Player, e.Added);
             }
         }
     }

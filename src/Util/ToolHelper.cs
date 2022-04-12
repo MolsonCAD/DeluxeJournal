@@ -3,7 +3,7 @@ using StardewValley.Tools;
 
 namespace DeluxeJournal.Util
 {
-    public class ToolHelper
+    public static class ToolHelper
     {
         /// <summary>Extract a ToolDescription from a Tool.</summary>
         public static ToolDescription GetToolDescription(Tool tool)
@@ -41,17 +41,29 @@ namespace DeluxeJournal.Util
             };
         }
 
-        /// <summary>Get the upgrade level for a Tool owned by the local player.</summary>
-        /// <param name="toolType">The type value of the Tool.</param>
-        /// <returns>The upgrade level for the Tool, or the base level if not found.</returns>
-        public static int GetLocalToolUpgradeLevel(Type toolType)
+        /// <summary>Get the upgrade level for a tool owned by a given player.</summary>
+        /// <remarks>
+        /// "Ownership" here is defined as the last player to use a tool or  the tool in a
+        /// player's inventory. Enabling the guess flag prioritizes unused tools to fallback on
+        /// and always grabs the tool of the lowest level when breaking ties.
+        /// </remarks>
+        /// <param name="name">The base name of the tool.</param>
+        /// <param name="player">The player that owns the tool.</param>
+        /// <param name="guess">Make a guess if a definitive owner could not be found.</param>
+        /// <returns>The upgrade level for the tool, or the base level if not found.</returns>
+        public static int GetToolUpgradeLevelForPlayer(string name, Farmer player, bool guess = true)
         {
             int level = -1;
             int fallback = 0;
+            bool foundUnownedFallback = false;
 
-            if (Game1.player.toolBeingUpgraded.Value is Tool tool && tool.GetType() == toolType)
+            if (player.toolBeingUpgraded.Value is Tool upgraded && upgraded.BaseName == name)
             {
-                return tool.UpgradeLevel;
+                return upgraded.UpgradeLevel;
+            }
+            else if (player.getToolFromName(name) is Tool held)
+            {
+                return held.UpgradeLevel;
             }
 
             Utility.iterateAllItems(searchForTool);
@@ -66,15 +78,26 @@ namespace DeluxeJournal.Util
 
             void searchForTool(Item item)
             {
-                if (level == -1 && item is Tool tool && tool.GetType() == toolType)
+                if (level == -1 && item is Tool tool && tool.BaseName == name)
                 {
-                    if (tool.getLastFarmerToUse() == null)
-                    {
-                        fallback = tool.UpgradeLevel;
-                    }
-                    else if (tool.getLastFarmerToUse().IsLocalPlayer)
+                    Farmer lastPlayer = tool.getLastFarmerToUse();
+
+                    if (lastPlayer != null && lastPlayer.UniqueMultiplayerID == player.UniqueMultiplayerID)
                     {
                         level = tool.UpgradeLevel;
+                    }
+                    else if (!guess)
+                    {
+                        return;
+                    }
+                    else if (lastPlayer == null && (!foundUnownedFallback || tool.UpgradeLevel < fallback))
+                    {
+                        fallback = tool.UpgradeLevel;
+                        foundUnownedFallback = true;
+                    }
+                    else if (!foundUnownedFallback && tool.UpgradeLevel < fallback)
+                    {
+                        fallback = tool.UpgradeLevel;
                     }
                 }
             }

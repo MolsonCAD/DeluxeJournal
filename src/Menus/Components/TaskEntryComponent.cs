@@ -154,6 +154,40 @@ namespace DeluxeJournal.Menus.Components
                         progressBar.Draw(b, _font, Color.DarkBlue, count, maxCount);
                     }
                 }
+                else if (task.ShouldShowCustomStatus())
+                {
+                    Translation status = _translation.Get(task.GetCustomStatusKey()).UsePlaceholder(false);
+
+                    if (status.HasValue())
+                    {
+                        string text = status.ToString();
+                        int emojiEnd = text.StartsWith('[') ? text.IndexOf(']') : -1;
+                        int textOffset = 0;
+
+                        nameWidth -= 260;
+
+                        if (emojiEnd > 0 && int.TryParse(text[1..emojiEnd], out int emojiIndex))
+                        {
+                            text = text[(emojiEnd + 1)..].TrimStart();
+                            textOffset = 48;
+
+                            Utility.drawWithShadow(b,
+                                ChatBox.emojiTexture,
+                                new Vector2(progressBar.bounds.X, _centerY - 22),
+                                new Rectangle(emojiIndex * 9 % ChatBox.emojiTexture.Width, emojiIndex * 9 / ChatBox.emojiTexture.Width * 9, 9, 9),
+                                Color.White,
+                                0f,
+                                Vector2.Zero,
+                                4f);
+                        }
+
+                        Utility.drawTextWithShadow(b,
+                            text,
+                            _font,
+                            new Vector2(progressBar.bounds.X + textOffset, _centerY - _halfLineSpacing - 6),
+                            Color.DarkBlue);
+                    }
+                }
             }
             else
             {

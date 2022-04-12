@@ -1,5 +1,6 @@
 ﻿using StardewValley;
 using StardewModdingAPI;
+using StardewModdingAPI.Events;
 using DeluxeJournal.Events;
 using DeluxeJournal.Framework.Data;
 using DeluxeJournal.Tasks;
@@ -32,34 +33,9 @@ namespace DeluxeJournal.Framework.Tasks
             _dataHelper = dataHelper;
             _data = _dataHelper.ReadGlobalData<TaskData>(DeluxeJournalMod.TASKS_DATA_KEY) ?? new TaskData();
             _tasks = new Dictionary<long, TaskList>();
-        }
 
-        public void OnDayEnding()
-        {
-            ITask task;
-
-            for (int i = Tasks.Count - 1; i >= 0; i--)
-            {
-                task = Tasks[i];
-
-                if (task.RenewPeriod != ITask.Period.Never)
-                {
-                    if (task.Complete)
-                    {
-                        task.Complete = task.Active = false;
-                    }
-
-                    if (!task.Active && task.DaysRemaining() <= 1)
-                    {
-                        task.Active = true;
-                    }
-                }
-
-                if (task.Complete)
-                {
-                    Tasks.RemoveAt(i);
-                }
-            }
+            _events.ModEvents.GameLoop.DayStarted += OnDayStarted;
+            _events.ModEvents.GameLoop.DayEnding += OnDayEnding;
         }
 
         /// <summary>Sort local player tasks.</summary>
@@ -96,7 +72,7 @@ namespace DeluxeJournal.Framework.Tasks
                     foreach (ITask task in _data.Tasks[saveFolderName][key])
                     {
                         task.OwnerUMID = umid;
-                        _tasks[umid].Add(task);
+                        _tasks[umid].Add(task.Copy());
                     }
 
                     _tasks[umid].Sort();
@@ -111,6 +87,42 @@ namespace DeluxeJournal.Framework.Tasks
                 .ToDictionary(entry => entry.Key, entry => (IList<ITask>)entry.Value.ToList());
 
             _dataHelper.WriteGlobalData(DeluxeJournalMod.TASKS_DATA_KEY, _data);
+        }
+
+        private void OnDayStarted(object? sender, DayStartedEventArgs e)
+        {
+            foreach (ITask task in Tasks)
+            {
+                task.Validate();
+            }
+        }
+
+        private void OnDayEnding(object? sender, DayEndingEventArgs e)
+        {
+            ITask task;
+
+            for (int i = Tasks.Count - 1; i >= 0; i--)
+            {
+                task = Tasks[i];
+
+                if (task.RenewPeriod != ITask.Period.Never)
+                {
+                    if (task.Complete)
+                    {
+                        task.Complete = task.Active = false;
+                    }
+
+                    if (!task.Active && task.DaysRemaining() <= 1)
+                    {
+                        task.Active = true;
+                    }
+                }
+
+                if (task.Complete)
+                {
+                    Tasks.RemoveAt(i);
+                }
+            }
         }
     }
 }

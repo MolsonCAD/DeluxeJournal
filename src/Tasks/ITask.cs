@@ -67,6 +67,9 @@ namespace DeluxeJournal.Tasks
         /// <summary>Starting price value.</summary>
         int BasePrice { get; set; }
 
+        /// <summary>Create a copy of this task.</summary>
+        ITask Copy();
+
         /// <summary>Days remaining until renew.</summary>
         int DaysRemaining();
 
@@ -88,6 +91,12 @@ namespace DeluxeJournal.Tasks
         /// <summary>Show a progress bar on the task entry if true. Progress is defined as Count divided by MaxCount.</summary>
         bool ShouldShowProgress();
 
+        /// <summary>Show a custom status on the task entry if true. Status is obtained via GetCustomStatusKey().</summary>
+        bool ShouldShowCustomStatus();
+
+        /// <summary>Get the translation key for current status of the task.</summary>
+        string GetCustomStatusKey();
+
         /// <summary>Does this player own this task?</summary>
         bool IsTaskOwner(Farmer player);
 
@@ -99,5 +108,12 @@ namespace DeluxeJournal.Tasks
 
         /// <summary>Unsubscribe hook.</summary>
         void EventUnsubscribe(ITaskEvents events);
+
+        /// <summary>Validate the state of this task.</summary>
+        /// <remarks>
+        /// Called when the state of a task may be invalidated, such as after making changes via the
+        /// options menu or after the start of a new day.
+        /// </remarks>
+        void Validate();
     }
 }
