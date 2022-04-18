@@ -72,17 +72,17 @@ namespace DeluxeJournal.Menus
 
         private void UpdatePosition()
         {
-            Vector2 position = new Vector2(Game1.uiViewport.Width - 300, 248);
+            Vector2 position = new Vector2(Game1.uiViewport.Width - 88, 248);
 
             if (Game1.isOutdoorMapSmallerThanViewport())
             {
-                position.X = Math.Min(position.X, Game1.currentLocation.map.Layers[0].LayerWidth * 64 - Game1.uiViewport.X - 300);
+                position.X = Math.Min(position.X, Game1.currentLocation.map.Layers[0].LayerWidth * 64 - Game1.uiViewport.X - 88);
             }
 
-            Utility.makeSafe(ref position, 300, 284);
+            Utility.makeSafe(ref position, width, height);
             xPositionOnScreen = (int)position.X;
             yPositionOnScreen = (int)position.Y;
-            taskButton.bounds = new Rectangle(xPositionOnScreen + 212, yPositionOnScreen, width, height);
+            taskButton.bounds = new Rectangle(xPositionOnScreen, yPositionOnScreen, width, height);
         }
     }
 }
