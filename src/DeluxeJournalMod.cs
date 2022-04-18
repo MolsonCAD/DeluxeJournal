@@ -29,6 +29,8 @@ namespace DeluxeJournal
 
         public static Texture2D? CharacterIconsTexture { get; private set; }
 
+        public static bool IsMainScreen => !Context.IsSplitScreen || Context.ScreenId == 0;
+
         private NotesData? _notesData;
 
         public Config? Config { get; private set; }
@@ -38,11 +40,6 @@ namespace DeluxeJournal
         public TaskManager? TaskManager { get; private set; }
 
         public PageManager? PageManager { get; private set; }
-
-        private static bool IsMainScreen()
-        {
-            return !Context.IsSplitScreen || Context.ScreenId == 0;
-        }
 
         public override void Entry(IModHelper helper)
         {
@@ -55,7 +52,7 @@ namespace DeluxeJournal
             Config = helper.ReadConfig<Config>();
             _notesData = helper.Data.ReadGlobalData<NotesData>(NOTES_DATA_KEY) ?? new NotesData();
 
-            EventManager = new EventManager(helper.Events);
+            EventManager = new EventManager(helper.Events, helper.Multiplayer, Monitor);
             TaskManager = new TaskManager(new TaskEvents(EventManager), helper.Data);
             PageManager = new PageManager();
 
@@ -69,7 +66,8 @@ namespace DeluxeJournal
 
             Patcher.Apply(new Harmony(ModManifest.UniqueID), Monitor,
                 new FarmerPatch(EventManager, Monitor),
-                new UtilityPatch(EventManager, Monitor)
+                new UtilityPatch(EventManager, Monitor),
+                new CarpenterMenuPatch(EventManager, Monitor)
             );
         }
 
@@ -109,7 +107,7 @@ namespace DeluxeJournal
 
         private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
         {
-            if (IsMainScreen())
+            if (IsMainScreen)
             {
                 TaskManager?.Load();
             }
@@ -127,7 +125,7 @@ namespace DeluxeJournal
                 Helper.WriteConfig(Config);
             }
 
-            if (IsMainScreen())
+            if (IsMainScreen)
             {
                 TaskManager?.Save();
             }

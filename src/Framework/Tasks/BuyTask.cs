@@ -53,11 +53,6 @@ namespace DeluxeJournal.Framework.Tasks
             return true;
         }
 
-        public override int GetPrice()
-        {
-            return base.GetPrice() * (MaxCount - Count);
-        }
-
         public override void EventSubscribe(ITaskEvents events)
         {
             events.SalablePurchased += OnSalablePurchased;

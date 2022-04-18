@@ -1,5 +1,6 @@
 ﻿using StardewModdingAPI.Events;
 using StardewValley;
+using StardewValley.Buildings;
 using StardewValley.Menus;
 using DeluxeJournal.Events;
 using DeluxeJournal.Util;
@@ -38,6 +39,12 @@ namespace DeluxeJournal.Framework.Events
             remove => EventManager.SalableSold.Remove(value);
         }
 
+        public event EventHandler<BuildingConstructedEventArgs> BuildingConstructed
+        {
+            add => EventManager.BuildingConstructed.Add(value);
+            remove => EventManager.BuildingConstructed.Remove(value);
+        }
+
         public IModEvents ModEvents => EventManager.ModEvents;
 
         private EventManager EventManager { get; }
@@ -48,6 +55,7 @@ namespace DeluxeJournal.Framework.Events
 
             ModEvents.Display.MenuChanged += OnMenuChanged;
             ModEvents.GameLoop.DayEnding += OnDayEnding;
+            ModEvents.World.BuildingListChanged += OnBuildingListChanged;
         }
 
         // Run with low priority to ensure completed sell tasks remain for the next day
@@ -81,6 +89,17 @@ namespace DeluxeJournal.Framework.Events
             Farmer player = Game1.player;
             EventManager.SalableSold.Raise(player, new SalableSoldEventArgs(player, salable, salable.Stack));
             return false;
+        }
+
+        private void OnBuildingListChanged(object? sender, BuildingListChangedEventArgs e)
+        {
+            if (DeluxeJournalMod.IsMainScreen)
+            {
+                foreach (Building building in e.Added)
+                {
+                    EventManager.BuildingConstructed.Raise(sender, new BuildingConstructedEventArgs(e.Location, building, false));
+                }
+            }
         }
     }
 }

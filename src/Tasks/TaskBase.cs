@@ -153,7 +153,7 @@ namespace DeluxeJournal.Tasks
 
         public virtual int GetPrice()
         {
-            return BasePrice;
+            return BasePrice * (MaxCount - Count);
         }
 
         public int GetSortingIndex()

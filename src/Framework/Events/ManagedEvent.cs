@@ -1,8 +1,15 @@
 ﻿namespace DeluxeJournal.Framework.Events
 {
-    internal class ManagedEvent<TEventArgs> where TEventArgs : EventArgs
+    internal class ManagedEvent<TEventArgs> : IManagedEvent where TEventArgs : EventArgs
     {
         private event EventHandler<TEventArgs>? Event;
+
+        public string EventName { get; }
+
+        public ManagedEvent(string name)
+        {
+            EventName = name;
+        }
 
         /// <summary>Add an event handler.</summary>
         public void Add(EventHandler<TEventArgs> handler)

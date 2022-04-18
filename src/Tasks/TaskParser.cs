@@ -120,7 +120,7 @@ namespace DeluxeJournal.Tasks
                     {
                         ids.UnionWith(_keywords[word]);
                     }
-                    else if (int.TryParse(word, out int count) && count > 0)
+                    else if (int.TryParse(word.TrimStart('x'), out int count) && count > 0)
                     {
                         _count = count;
                     }

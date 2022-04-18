@@ -308,7 +308,7 @@ namespace DeluxeJournal.Menus
                 TaskParameter parameter;
                 Rectangle iconBounds;
                 object? value;
-                string name;
+                string text;
 
                 for (int i = 0; i < parameters.Count; i++)
                 {
@@ -323,7 +323,7 @@ namespace DeluxeJournal.Menus
 
                     if (parameter.Type == typeof(Item))
                     {
-                        name = value != null ? ((Item)value).DisplayName : string.Empty;
+                        text = value != null ? ((Item)value).DisplayName : string.Empty;
 
                         _parameterIcons.Add(_parameterTextBoxes.Count, new ClickableTextureComponent(
                             iconBounds,
@@ -334,7 +334,7 @@ namespace DeluxeJournal.Menus
                     }
                     else if (parameter.Type == typeof(NPC))
                     {
-                        name = value != null ? ((NPC)value).displayName : string.Empty;
+                        text = value != null ? ((NPC)value).displayName : string.Empty;
 
                         _parameterIcons.Add(_parameterTextBoxes.Count, new ClickableTextureComponent(
                             iconBounds,
@@ -345,16 +345,7 @@ namespace DeluxeJournal.Menus
                     }
                     else
                     {
-                        name = value?.ToString() ?? string.Empty;
-
-                        if (parameter.Attribute.Tag == "building")
-                        {
-                            name = Game1.content.Load<Dictionary<string, string?>>("Data\\Blueprints").GetValueOrDefault(name, null)?.Split('/')[8] ?? string.Empty;
-                        }
-                        else if (parameter.Attribute.Tag == "monster")
-                        {
-                            name = Game1.content.Load<Dictionary<string, string?>>("Data\\Monsters").GetValueOrDefault(name, null)?.Split('/')[14] ?? string.Empty;
-                        }
+                        text = value?.ToString() ?? string.Empty;
                     }
 
                     textBox = new TaskParameterTextBox(parameter, _textBoxTexture, null, Game1.smallFont, Game1.textColor, _translation)
@@ -363,7 +354,7 @@ namespace DeluxeJournal.Menus
                         Y = _fixedContentBounds.Bottom + VerticalSpacing * i,
                         Width = _fixedContentBounds.Width - LabelWidth,
                         Label = _translation.Get("ui.tasks.parameter." + parameter.Attribute.Name).Default(parameter.Attribute.Name),
-                        TextWithParse = name,
+                        TextWithParse = text,
                         numbersOnly = parameter.Type == typeof(int)
                     };
 

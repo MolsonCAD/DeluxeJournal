@@ -63,7 +63,7 @@ namespace DeluxeJournal.Framework.Tasks
 
         public override int GetPrice()
         {
-            return -base.GetPrice() * (MaxCount - Count);
+            return -base.GetPrice();
         }
 
         public override void EventSubscribe(ITaskEvents events)
