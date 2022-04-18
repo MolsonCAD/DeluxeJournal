@@ -40,8 +40,6 @@ namespace DeluxeJournal.Framework.Events
         {
             if (e.FromModID == DeluxeJournalMod.Instance?.ModManifest.UniqueID)
             {
-                DeluxeJournalMod.Instance?.Monitor.Log(string.Format("MessageReceived: {0}, {1}", StardewValley.Game1.player.Name, e.Type), LogLevel.Debug);
-
                 if (GetType().GetProperty(e.Type, BindingFlags.Public | BindingFlags.Instance)?.GetValue(this) is IManagedNetEvent managed)
                 {
                     try
