@@ -64,7 +64,7 @@ namespace DeluxeJournal.Menus
         }
 
         /// <summary>Snap to the tab ClickableComponent of the active page.</summary>
-        public void SnapToActiveTabComponent()
+        public virtual void SnapToActiveTabComponent()
         {
             currentlySnappedComponent = getComponentWithID(TabRegion + DeluxeJournalMenu.ActiveTab);
             snapCursorToCurrentSnappedComponent();
@@ -72,7 +72,7 @@ namespace DeluxeJournal.Menus
 
         /// <summary>Set the child menu and snap to the default ClickableComponent.</summary>
         /// <param name="menu">IClickableMenu to be set as the child of this page.</param>
-        protected void SetSnappyChildMenu(IClickableMenu menu)
+        protected void SetSnappyChildMenu(IClickableMenu? menu)
         {
             SetChildMenu(menu);
 

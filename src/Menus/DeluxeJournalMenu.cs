@@ -11,9 +11,9 @@ using static StardewValley.Menus.ClickableComponent;
 
 namespace DeluxeJournal.Menus
 {
-    /// <summary>The active menu the replaces the vanilla QuestLog. Displays journal pages and tabs.</summary>
-    /// <remarks>Custom pages should be registered using the API.</remarks>
-    public class DeluxeJournalMenu : IClickableMenu
+    /// <summary>Replacement QuestLog that displays journal pages and tabs.</summary>
+    /// <remarks>Custom pages should be registered using the DeluxeJournal API.</remarks>
+    public class DeluxeJournalMenu : QuestLog
     {
         private const int ActiveTabOffset = 8;
 
@@ -56,25 +56,21 @@ namespace DeluxeJournal.Menus
             }
         }
 
-        internal DeluxeJournalMenu(PageManager pageManager) : base(0, 0, 832, 576, showUpperRightCloseButton: true)
+        internal DeluxeJournalMenu(QuestLog questLog, PageManager pageManager) : base()
         {
-            if (LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.ko ||
-                LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.fr)
-            {
-                height += 64;
-            }
-
-            Vector2 topLeft = Utility.getTopLeftPositionForCenteringOnScreen(width, height, 0, 32);
-            xPositionOnScreen = (int)topLeft.X;
-            yPositionOnScreen = (int)topLeft.Y;
-            upperRightCloseButton.bounds = new Rectangle(xPositionOnScreen + width - 20, yPositionOnScreen - 8, 48, 48);
-
             _pages = pageManager.GetPages(new Rectangle(xPositionOnScreen, yPositionOnScreen, width, height));
             _tabs = new List<ClickableTextureComponent>();
             _hoverText = "";
 
+            upperRightCloseButton.bounds = new Rectangle(xPositionOnScreen + width - 20, yPositionOnScreen - 8, 48, 48);
+
             foreach (IPage page in _pages)
             {
+                if (page is QuestLogPage questLogPage)
+                {
+                    questLogPage.QuestLog = questLog;
+                }
+
                 _tabs.Add(page.GetTabComponent());
             }
 
@@ -91,8 +87,8 @@ namespace DeluxeJournal.Menus
             
             _tabs[ActiveTab].bounds.X += ActiveTabOffset;
             ActivePage.populateClickableComponentList();
-            ActivePage.OnVisible();
             AddTabsToClickableComponents(ActivePage);
+            ActivePage.OnVisible();
 
             if (Game1.options.SnappyMenus)
             {
@@ -122,8 +118,8 @@ namespace DeluxeJournal.Menus
 
             _tabs[ActiveTab].bounds.X += ActiveTabOffset;
             ActivePage.populateClickableComponentList();
-            ActivePage.OnVisible();
             AddTabsToClickableComponents(ActivePage);
+            ActivePage.OnVisible();
 
             if (Game1.options.SnappyMenus)
             {
@@ -138,13 +134,17 @@ namespace DeluxeJournal.Menus
             }
         }
 
+        public void AddTabsToClickableComponents(IPage page)
+        {
+            page.allClickableComponents.AddRange(_tabs);
+        }
+
         public override void gameWindowSizeChanged(Rectangle oldBounds, Rectangle newBounds)
         {
         }
 
-        public void AddTabsToClickableComponents(IPage page)
+        protected override void customSnapBehavior(int direction, int oldRegion, int oldID)
         {
-            page.allClickableComponents.AddRange(_tabs);
         }
 
         public override ClickableComponent getCurrentlySnappedComponent()
@@ -164,7 +164,11 @@ namespace DeluxeJournal.Menus
 
         public override void snapToDefaultClickableComponent()
         {
-            GetActiveMenu().snapToDefaultClickableComponent();
+            // Protected against the base QuestLog constructor calling before the pages are created
+            if (_pages != null)
+            {
+                GetActiveMenu().snapToDefaultClickableComponent();
+            }
         }
 
         public override void snapCursorToCurrentSnappedComponent()
@@ -186,7 +190,10 @@ namespace DeluxeJournal.Menus
         {
             if (ActivePage.GetChildMenu() == null)
             {
-                base.receiveLeftClick(x, y, playSound);
+                if (upperRightCloseButton != null && upperRightCloseButton.containsPoint(x, y) && readyToClose())
+                {
+                    exitThisMenu(playSound);
+                }
 
                 for (int i = 0; i < _tabs.Count; ++i)
                 {
@@ -271,21 +278,34 @@ namespace DeluxeJournal.Menus
 
         public override void draw(SpriteBatch b)
         {
-            b.Draw(Game1.fadeToBlackRect, Game1.graphics.GraphicsDevice.Viewport.Bounds, Color.Black * 0.75f);
-            SpriteText.drawStringWithScrollCenteredAt(b, _tabs[ActiveTab].hoverText, xPositionOnScreen + width / 2, yPositionOnScreen - 64);
-            drawTextureBox(b, Game1.mouseCursors, new Rectangle(384, 373, 18, 18), xPositionOnScreen, yPositionOnScreen, width, height, Color.White, 4f);
+            if (ActivePage is QuestLogPage questLogPage && questLogPage.QuestLog != null)
+            {
+                questLogPage.draw(b);
+            }
+            else
+            {
+                b.Draw(Game1.fadeToBlackRect, Game1.graphics.GraphicsDevice.Viewport.Bounds, Color.Black * 0.75f);
+                drawTextureBox(b, Game1.mouseCursors, new Rectangle(384, 373, 18, 18), xPositionOnScreen, yPositionOnScreen, width, height, Color.White, 4f);
+                SpriteText.drawStringWithScrollCenteredAt(b, _tabs[ActiveTab].hoverText, xPositionOnScreen + width / 2, yPositionOnScreen - 64);
+            }
 
             foreach (ClickableTextureComponent tab in _tabs)
             {
                 tab.draw(b);
             }
 
-            for (IClickableMenu menu = ActivePage; menu != null; menu = menu.GetChildMenu())
+            if (ActivePage is not QuestLogPage)
             {
-                menu.draw(b);
+                for (IClickableMenu menu = ActivePage; menu != null; menu = menu.GetChildMenu())
+                {
+                    menu.draw(b);
+                }
             }
 
-            base.draw(b);
+            if (upperRightCloseButton != null && shouldDrawCloseButton())
+            {
+                upperRightCloseButton.draw(b);
+            }
 
             Game1.mouseCursorTransparency = 1f;
             drawMouse(b);

@@ -56,10 +56,11 @@ namespace DeluxeJournal
             TaskManager = new TaskManager(new TaskEvents(EventManager), helper.Data);
             PageManager = new PageManager();
 
-            PageManager.RegisterPage("notes", (bounds) => new NotesPage(bounds, UiTexture, helper.Translation), 100);
+            PageManager.RegisterPage("quests", (bounds) => new QuestLogPage(bounds, UiTexture, helper.Translation), 102);
             PageManager.RegisterPage("tasks", (bounds) => new TasksPage(bounds, UiTexture, helper.Translation), 101);
-            PageManager.RegisterPage("quests", (bounds) => new QuestsPage(bounds, UiTexture, helper.Translation), 102);
+            PageManager.RegisterPage("notes", (bounds) => new NotesPage(bounds, UiTexture, helper.Translation), 100);
 
+            helper.Events.Display.MenuChanged += OnMenuChanged;
             helper.Events.Display.RenderingActiveMenu += OnRenderingActiveMenu;
             helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
             helper.Events.GameLoop.Saving += OnSaving;
@@ -95,14 +96,26 @@ namespace DeluxeJournal
             }
         }
 
+        private void ReplaceQuestLog()
+        {
+            if (PageManager != null && Game1.activeClickableMenu is QuestLog questLog && questLog is not DeluxeJournalMenu)
+            {
+                Game1.activeClickableMenu = new DeluxeJournalMenu(questLog, PageManager);
+            }
+        }
+
+        [EventPriority(EventPriority.Low)]
+        private void OnMenuChanged(object? sender, MenuChangedEventArgs e)
+        {
+            // Hijack modded QuestLog and replace it with DeluxeJournalMenu
+            ReplaceQuestLog();
+        }
+
         [EventPriority(EventPriority.High)]
         private void OnRenderingActiveMenu(object? sender, RenderingActiveMenuEventArgs e)
         {
-            // Hijack vanilla QuestLog and replace it with DeluxeJournalMenu before rendering
-            if (Game1.activeClickableMenu is QuestLog && PageManager != null)
-            {
-                Game1.activeClickableMenu = new DeluxeJournalMenu(PageManager);
-            }
+            // Hijack vanilla QuestLog before rendering and replace it with DeluxeJournalMenu
+            ReplaceQuestLog();
         }
 
         private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
@@ -114,7 +127,7 @@ namespace DeluxeJournal
 
             if (PageManager != null && !Game1.onScreenMenus.OfType<JournalButton>().Any())
             {
-                Game1.onScreenMenus.Add(new JournalButton(PageManager, Helper.Translation));
+                Game1.onScreenMenus.Add(new JournalButton(Helper.Translation));
             }
         }
 

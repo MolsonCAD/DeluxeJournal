@@ -4,7 +4,11 @@ namespace DeluxeJournal.Menus
 {
     public abstract class IPage : IClickableMenu
     {
+        /// <summary>Reserved starting <see cref="ClickableComponent.myID"/> region for tabs.</summary>
         public const int TabRegion = 9500;
+
+        /// <summary>End of reserved <see cref="ClickableComponent.myID"/> region for tabs.</summary>
+        public const int TabRegionEnd = 9599;
 
         /// <summary>The page name.</summary>
         public string Name { get; }

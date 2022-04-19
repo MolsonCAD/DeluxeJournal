@@ -13,14 +13,12 @@ namespace DeluxeJournal.Menus
         public readonly ClickableTextureComponent taskButton;
 
         private readonly ITranslationHelper _translation;
-        private readonly PageManager _pageManager;
         private string _hoverText;
 
-        internal JournalButton(PageManager pageManager, ITranslationHelper translation) :
+        internal JournalButton(ITranslationHelper translation) :
             base(Game1.uiViewport.Width - 88, 248, 44, 46)
         {
             _translation = translation;
-            _pageManager = pageManager;
             _hoverText = "";
 
             taskButton = new ClickableTextureComponent(
@@ -35,7 +33,7 @@ namespace DeluxeJournal.Menus
             if (Game1.player.visibleQuestCount == 0 && taskButton.containsPoint(x, y) &&
                 Game1.player.CanMove && !Game1.dialogueUp && !Game1.eventUp && Game1.farmEvent == null)
             {
-                Game1.activeClickableMenu = new DeluxeJournalMenu(_pageManager);
+                Game1.activeClickableMenu = new QuestLog();
             }
         }
 
