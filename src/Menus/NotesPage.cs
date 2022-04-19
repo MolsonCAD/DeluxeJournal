@@ -49,6 +49,12 @@ namespace DeluxeJournal.Menus
 
         public override void OnHidden()
         {
+            if (_dirty)
+            {
+                _dirty = false;
+                Save();
+            }
+
             _textBox.Selected = false;
         }
 
