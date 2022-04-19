@@ -48,7 +48,6 @@ namespace DeluxeJournal.Menus
         private Tasks.TaskFactory? _taskFactory;
         private OptionsElement? _optionHeld;
         private string _selectedTaskID;
-        private bool _restoreChildMenu;
         private string _hoverText;
 
         public TaskOptionsMenu(ITask task, ITranslationHelper translation) : this(translation)
@@ -95,7 +94,6 @@ namespace DeluxeJournal.Menus
             _taskFactory = null;
             _task = null;
             _selectedTaskID = TaskTypes.Basic;
-            _restoreChildMenu = false;
             _hoverText = "";
 
             _fixedContentBounds = default;
@@ -281,9 +279,16 @@ namespace DeluxeJournal.Menus
                     tasks.Insert(index, task);
                 }
             }
-            else if (GetParentMenu() is TasksPage tasksPage)
+            else
             {
-                tasksPage.AddTask(task);
+                for (IClickableMenu parent = GetParentMenu(); parent != null; parent = parent.GetParentMenu())
+                {
+                    if (parent is TasksPage tasksPage)
+                    {
+                        tasksPage.AddTask(task);
+                        break;
+                    }
+                }
             }
         }
 
@@ -406,15 +411,6 @@ namespace DeluxeJournal.Menus
             }
         }
 
-        protected override void cleanupBeforeExit()
-        {
-            if (_restoreChildMenu)
-            {
-                _parentMenu?.SetChildMenu(_childMenu);
-                _parentMenu = null;
-            }
-        }
-
         protected override void customSnapBehavior(int direction, int oldRegion, int oldID)
         {
             switch (direction)
@@ -473,19 +469,18 @@ namespace DeluxeJournal.Menus
 
             if (backButton.containsPoint(x, y))
             {
-                _restoreChildMenu = true;
                 exitThisMenu(playSound);
             }
             else if (cancelButton.containsPoint(x, y))
             {
-                exitThisMenu(playSound);
+                ExitAllChildMenus(playSound);
             }
             else if (okButton.containsPoint(x, y) && CanApplyChanges())
             {
                 ApplyChanges();
 
                 Game1.playSound("bigSelect");
-                exitThisMenuNoSound();
+                ExitAllChildMenus(playSound);
             }
             else if (nameTextBoxCC.containsPoint(x, y))
             {
@@ -714,6 +709,19 @@ namespace DeluxeJournal.Menus
         private void DrawLabel(SpriteBatch b, string name, int yPos, Color color)
         {
             Utility.drawTextWithShadow(b, name, Game1.dialogueFont, new Vector2(_fixedContentBounds.X, yPos), color);
+        }
+
+        private void ExitAllChildMenus(bool playSound = true)
+        {
+            if (playSound)
+            {
+                Game1.playSound("bigDeSelect");
+            }
+
+            for (IClickableMenu parent = GetParentMenu(); parent != null; parent = parent.GetParentMenu())
+            {
+                parent.GetChildMenu().exitThisMenuNoSound();
+            }
         }
     }
 }

@@ -26,7 +26,7 @@ namespace DeluxeJournal.Menus
                 return ActiveTabPerScreen.Value;
             }
 
-            set
+            private set
             {
                 ActiveTabPerScreen.Value = value;
             }
@@ -40,11 +40,13 @@ namespace DeluxeJournal.Menus
 
         public IReadOnlyList<IPage> Pages => _pages;
 
+        public IPage ActivePage => _pages[ActiveTab];
+
         private string HoverText
         {
             get
             {
-                string pageHoverText = _pages[ActiveTab].HoverText;
+                string pageHoverText = ActivePage.HoverText;
                 return pageHoverText.Length > 0 ? pageHoverText : _hoverText;
             }
 
@@ -88,9 +90,9 @@ namespace DeluxeJournal.Menus
             }
             
             _tabs[ActiveTab].bounds.X += ActiveTabOffset;
-            _pages[ActiveTab].populateClickableComponentList();
-            _pages[ActiveTab].OnVisible();
-            AddTabsToClickableComponents(_pages[ActiveTab]);
+            ActivePage.populateClickableComponentList();
+            ActivePage.OnVisible();
+            AddTabsToClickableComponents(ActivePage);
 
             if (Game1.options.SnappyMenus)
             {
@@ -99,17 +101,12 @@ namespace DeluxeJournal.Menus
 
             Game1.playSound("bigSelect");
 
-            exitFunction = () => _pages[ActiveTab].OnHidden();
-        }
-
-        public IPage GetActivePage()
-        {
-            return _pages[ActiveTab];
+            exitFunction = () => ActivePage.OnHidden();
         }
 
         public void ChangeTab(int tab, bool playSound = true)
         {
-            if (tab == ActiveTab || tab < 0 || tab >= _tabs.Count)
+            if (!readyToClose() || tab == ActiveTab || tab < 0 || tab >= _tabs.Count)
             {
                 return;
             }
@@ -119,24 +116,24 @@ namespace DeluxeJournal.Menus
                 Game1.playSound("smallSelect");
             }
 
+            ActivePage.OnHidden();
             _tabs[ActiveTab].bounds.X -= ActiveTabOffset;
-            _pages[ActiveTab].OnHidden();
             ActiveTab = tab;
 
             _tabs[ActiveTab].bounds.X += ActiveTabOffset;
-            _pages[ActiveTab].populateClickableComponentList();
-            _pages[ActiveTab].OnVisible();
-            AddTabsToClickableComponents(_pages[ActiveTab]);
+            ActivePage.populateClickableComponentList();
+            ActivePage.OnVisible();
+            AddTabsToClickableComponents(ActivePage);
 
             if (Game1.options.SnappyMenus)
             {
-                if (_pages[ActiveTab] is PageBase page)
+                if (ActivePage is PageBase page)
                 {
                     page.SnapToActiveTabComponent();
                 }
                 else
                 {
-                    _pages[ActiveTab].snapToDefaultClickableComponent();
+                    ActivePage.snapToDefaultClickableComponent();
                 }
             }
         }
@@ -147,47 +144,47 @@ namespace DeluxeJournal.Menus
 
         public void AddTabsToClickableComponents(IPage page)
         {
-            page.AllClickableComponents.AddRange(_tabs);
+            page.allClickableComponents.AddRange(_tabs);
         }
 
         public override ClickableComponent getCurrentlySnappedComponent()
         {
-            return _pages[ActiveTab].getCurrentlySnappedComponent();
+            return GetActiveMenu().getCurrentlySnappedComponent();
         }
 
         public override void setCurrentlySnappedComponentTo(int id)
         {
-            _pages[ActiveTab].setCurrentlySnappedComponentTo(id);
+            GetActiveMenu().setCurrentlySnappedComponentTo(id);
         }
 
         public override void automaticSnapBehavior(int direction, int oldRegion, int oldID)
         {
-            _pages[ActiveTab].automaticSnapBehavior(direction, oldRegion, oldID);
+            GetActiveMenu().automaticSnapBehavior(direction, oldRegion, oldID);
         }
 
         public override void snapToDefaultClickableComponent()
         {
-            _pages[ActiveTab].snapToDefaultClickableComponent();
+            GetActiveMenu().snapToDefaultClickableComponent();
         }
 
         public override void snapCursorToCurrentSnappedComponent()
         {
-            _pages[ActiveTab].snapCursorToCurrentSnappedComponent();
+            GetActiveMenu().snapCursorToCurrentSnappedComponent();
         }
 
         public override void receiveGamePadButton(Buttons b)
         {
-            _pages[ActiveTab].receiveGamePadButton(b);
+            GetActiveMenu().receiveGamePadButton(b);
         }
 
         public override void setUpForGamePadMode()
         {
-            _pages[ActiveTab].setUpForGamePadMode();
+            GetActiveMenu().setUpForGamePadMode();
         }
 
         public override void receiveLeftClick(int x, int y, bool playSound = true)
         {
-            if (!_pages[ActiveTab].ChildHasFocus())
+            if (ActivePage.GetChildMenu() == null)
             {
                 base.receiveLeftClick(x, y, playSound);
 
@@ -201,42 +198,40 @@ namespace DeluxeJournal.Menus
                 }
             }
 
-            _pages[ActiveTab].receiveLeftClick(x, y, playSound);
+            GetActiveMenu().receiveLeftClick(x, y, playSound);
         }
 
         public override void leftClickHeld(int x, int y)
         {
-            _pages[ActiveTab].leftClickHeld(x, y);
+            GetActiveMenu().leftClickHeld(x, y);
         }
 
         public override void releaseLeftClick(int x, int y)
         {
-            _pages[ActiveTab].releaseLeftClick(x, y);
+            GetActiveMenu().releaseLeftClick(x, y);
         }
 
         public override void receiveRightClick(int x, int y, bool playSound = true)
         {
-            _pages[ActiveTab].receiveRightClick(x, y, playSound);
+            GetActiveMenu().receiveRightClick(x, y, playSound);
         }
 
         public override void receiveScrollWheelAction(int direction)
         {
-            _pages[ActiveTab].receiveScrollWheelAction(direction);
+            GetActiveMenu().receiveScrollWheelAction(direction);
         }
 
         public override void receiveKeyPress(Keys key)
         {
-            if (!_pages[ActiveTab].ChildHasFocus() && !_pages[ActiveTab].KeyboardHasFocus())
+            GetActiveMenu().receiveKeyPress(key);
+
+            if (ActivePage.GetChildMenu() == null && !ActivePage.KeyboardHasFocus())
             {
-                if ((Game1.options.doesInputListContain(Game1.options.menuButton, key) ||
-                    Game1.options.doesInputListContain(Game1.options.journalButton, key)) &&
-                    readyToClose())
+                if (Game1.options.doesInputListContain(Game1.options.journalButton, key) && readyToClose())
                 {
                     exitThisMenu();
                 }
             }
-
-            _pages[ActiveTab].receiveKeyPress(key);
         }
 
         public override void performHoverAction(int x, int y)
@@ -244,9 +239,9 @@ namespace DeluxeJournal.Menus
             base.performHoverAction(x, y);
             _hoverText = "";
 
-            _pages[ActiveTab].performHoverAction(x, y);
+            GetActiveMenu().performHoverAction(x, y);
 
-            if (!_pages[ActiveTab].ChildHasFocus())
+            if (ActivePage.GetChildMenu() == null)
             {
                 foreach (ClickableTextureComponent tab in _tabs)
                 {
@@ -261,17 +256,17 @@ namespace DeluxeJournal.Menus
 
         public override bool readyToClose()
         {
-            return _pages[ActiveTab].readyToClose();
+            return GetActiveMenu().readyToClose();
         }
 
         public override bool shouldDrawCloseButton()
         {
-            return _pages[ActiveTab].shouldDrawCloseButton();
+            return ActivePage.GetChildMenu() == null;
         }
 
         public override void update(GameTime time)
         {
-            _pages[ActiveTab].update(time);
+            GetActiveMenu().update(time);
         }
 
         public override void draw(SpriteBatch b)
@@ -284,17 +279,33 @@ namespace DeluxeJournal.Menus
             {
                 tab.draw(b);
             }
-            
-            Game1.mouseCursorTransparency = 1f;
 
-            _pages[ActiveTab].draw(b);
+            for (IClickableMenu menu = ActivePage; menu != null; menu = menu.GetChildMenu())
+            {
+                menu.draw(b);
+            }
+
             base.draw(b);
+
+            Game1.mouseCursorTransparency = 1f;
             drawMouse(b);
 
-            if (HoverText.Length > 0)
+            if (HoverText.Length > 0 && ActivePage.GetChildMenu() == null)
             {
                 drawHoverText(b, HoverText, Game1.dialogueFont);
             }
+        }
+
+        private IClickableMenu GetActiveMenu()
+        {
+            IClickableMenu menu = ActivePage;
+
+            while (menu.GetChildMenu() != null)
+            {
+                menu = menu.GetChildMenu();
+            }
+
+            return menu;
         }
     }
 }

@@ -226,11 +226,7 @@ namespace DeluxeJournal.Menus
             }
             else if (optionsButton.containsPoint(x, y))
             {
-                IClickableMenu optionsMenu = new TaskOptionsMenu(_previousText, _taskParser, _translation);
-
-                _parentMenu.SetChildMenu(optionsMenu);
-                optionsMenu.SetChildMenu(this);
-                OnExit();
+                SetChildMenu(new TaskOptionsMenu(_previousText, _taskParser, _translation));
             }
             else if (closeTipButton.containsPoint(x, y) && DeluxeJournalMod.Instance?.Config is Config config)
             {
@@ -350,6 +346,11 @@ namespace DeluxeJournal.Menus
 
         public override void draw(SpriteBatch b)
         {
+            if (GetChildMenu() != null)
+            {
+                return;
+            }
+
             string title = _translation.Get("ui.tasks.new");
             int iconY = okButton.bounds.Y;
 

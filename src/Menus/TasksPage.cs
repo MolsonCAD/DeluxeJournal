@@ -28,6 +28,7 @@ namespace DeluxeJournal.Menus
         public readonly MoneyDial moneyDial;
         public readonly ScrollComponent scrollComponent;
 
+        private readonly ITranslationHelper _translation;
         private readonly Config _config;
         private readonly TaskManager _taskManager;
         private readonly Rectangle _boundsWithScrollBar;
@@ -44,7 +45,7 @@ namespace DeluxeJournal.Menus
         }
 
         public TasksPage(string name, string title, int x, int y, int width, int height, Texture2D tabTexture, Rectangle tabSourceRect, ITranslationHelper translation) :
-            base(name, title, x, y, width, height, tabTexture, tabSourceRect, translation)
+            base(name, title, x, y, width, height, tabTexture, tabSourceRect)
         {
             if (DeluxeJournalMod.Instance?.Config is not Config config)
             {
@@ -56,6 +57,7 @@ namespace DeluxeJournal.Menus
                 throw new InvalidOperationException("TasksPage created before instantiation of TaskManager");
             }
 
+            _translation = translation;
             _config = config;
             _taskManager = taskManager;
             _dragScrollInterval = 0.16;
@@ -71,7 +73,7 @@ namespace DeluxeJournal.Menus
             for (int i = 0; i < maxEntries; i++)
             {
                 bounds.Y = y + 20 + i * bounds.Height;
-                taskEntries.Add(new TaskEntryComponent(bounds, i.ToString(), Translation)
+                taskEntries.Add(new TaskEntryComponent(bounds, i.ToString(), _translation)
                 {
                     myID = i,
                     upNeighborID = CUSTOM_SNAP_BEHAVIOR,
@@ -128,17 +130,17 @@ namespace DeluxeJournal.Menus
 
         public void OpenAddTaskMenu()
         {
-            SetSnappyChildMenu(new AddTaskMenu(Translation));
+            SetSnappyChildMenu(new AddTaskMenu(_translation));
         }
 
         public void OpenTaskOptionsMenu(ITask task)
         {
-            SetSnappyChildMenu(new TaskOptionsMenu(task, Translation));
+            SetSnappyChildMenu(new TaskOptionsMenu(task, _translation));
         }
 
         private void OpenTaskEntryMenu(TaskEntryComponent entry, ITask task)
         {
-            SetSnappyChildMenu(new TaskEntryMenu(entry, task, Translation));
+            SetSnappyChildMenu(new TaskEntryMenu(entry, task, _translation));
         }
 
         public void AddTask(ITask task)
@@ -250,45 +252,12 @@ namespace DeluxeJournal.Menus
 
         public override void snapToDefaultClickableComponent()
         {
-            if (ChildHasFocus())
-            {
-                _childMenu.snapToDefaultClickableComponent();
-            }
-            else
-            {
-                currentlySnappedComponent = (_taskManager.Tasks.Count > 0) ? getComponentWithID(_currentlySnappedEntry) : addTaskButton;
-                snapCursorToCurrentSnappedComponent();
-            }
-        }
-
-        public override void snapCursorToCurrentSnappedComponent()
-        {
-            if (ChildHasFocus())
-            {
-                _childMenu.snapCursorToCurrentSnappedComponent();
-            }
-            else
-            {
-                base.snapCursorToCurrentSnappedComponent();
-            }
-        }
-
-        public override void receiveGamePadButton(Buttons b)
-        {
-            if (ChildHasFocus())
-            {
-                _childMenu.receiveGamePadButton(b);
-            }
+            currentlySnappedComponent = (_taskManager.Tasks.Count > 0) ? getComponentWithID(_currentlySnappedEntry) : addTaskButton;
+            snapCursorToCurrentSnappedComponent();
         }
 
         public override void receiveLeftClick(int x, int y, bool playSound = true)
         {
-            if (ChildHasFocus())
-            {
-                _childMenu.receiveLeftClick(x, y, playSound);
-                return;
-            }
-
             if (_dragging)
             {
                 return;
@@ -356,12 +325,6 @@ namespace DeluxeJournal.Menus
         {
             if (!GameMenu.forcePreventClose)
             {
-                if (ChildHasFocus())
-                {
-                    _childMenu.leftClickHeld(x, y);
-                    return;
-                }
-
                 if (_selectedTaskIndex != -1)
                 {
                     double currentTime = Game1.currentGameTime.TotalGameTime.TotalSeconds;
@@ -424,12 +387,6 @@ namespace DeluxeJournal.Menus
         {
             if (!GameMenu.forcePreventClose)
             {
-                if (ChildHasFocus())
-                {
-                    _childMenu.releaseLeftClick(x, y);
-                    return;
-                }
-
                 if (_selectedTaskIndex != -1 && !_dragging)
                 {
                     ITask task = _taskManager.Tasks[_selectedTaskIndex];
@@ -457,48 +414,23 @@ namespace DeluxeJournal.Menus
             scrollComponent.Scroll(direction);
         }
 
-        public override void receiveKeyPress(Keys key)
-        {
-            if (ChildHasFocus())
-            {
-                _childMenu.receiveKeyPress(key);
-                return;
-            }
-
-            base.receiveKeyPress(key);
-        }
-
-        public override void applyMovementKey(int direction)
-        {
-            if (!ChildHasFocus())
-            {
-                base.applyMovementKey(direction);
-            }
-        }
-
         public override void performHoverAction(int x, int y)
         {
             base.performHoverAction(x, y);
-
-            if (ChildHasFocus())
-            {
-                _childMenu.performHoverAction(x, y);
-                return;
-            }
 
             _moneyButtonVisible = moneyButton.containsPoint(x, y);
 
             if (_moneyButtonVisible)
             {
-                HoverText = Translation.Get("ui.tasks.moneybutton.hover");
+                HoverText = _translation.Get("ui.tasks.moneybutton.hover");
             }
             else if (moneyBox.containsPoint(x, y))
             {
-                HoverText = Translation.Get("ui.tasks.moneybox." + (_config.MoneyViewNetWealth ? "hover1" : "hover0"));
+                HoverText = _translation.Get("ui.tasks.moneybox." + (_config.MoneyViewNetWealth ? "hover1" : "hover0"));
             }
             else if (addTaskButton.containsPoint(x, y))
             {
-                HoverText = Translation.Get("ui.tasks.addbutton.hover");
+                HoverText = _translation.Get("ui.tasks.addbutton.hover");
             }
 
             IList<ITask> tasks = _taskManager.Tasks;
@@ -521,11 +453,11 @@ namespace DeluxeJournal.Menus
                     {
                         if (entry.checkbox.containsPoint(x, y) && !tasks[i + scrollOffset].Active)
                         {
-                            HoverText = Translation.Get("ui.tasks.renewbutton.hover");
+                            HoverText = _translation.Get("ui.tasks.renewbutton.hover");
                         }
                         else if (entry.removeButton.containsPoint(x, y))
                         {
-                            HoverText = Translation.Get("ui.tasks.removebutton.hover");
+                            HoverText = _translation.Get("ui.tasks.removebutton.hover");
                         }
                         else if (entry.IsNameTruncated() && entry.TimeHovering() > 1.0)
                         {
@@ -537,14 +469,6 @@ namespace DeluxeJournal.Menus
 
             moneyButton.tryHover(x, y);
             addTaskButton.tryHover(x, y);
-        }
-
-        public override void update(GameTime time)
-        {
-            if (ChildHasFocus())
-            {
-                _childMenu.update(time);
-            }
         }
 
         public override void draw(SpriteBatch b)
@@ -565,7 +489,7 @@ namespace DeluxeJournal.Menus
             }
             else
             {
-                string helpText = Translation.Get("ui.tasks.help");
+                string helpText = _translation.Get("ui.tasks.help");
                 Vector2 helpTextSize = Game1.dialogueFont.MeasureString(helpText);
                 Vector2 textPosition = new Vector2(xPositionOnScreen + (width / 2) - (helpTextSize.X / 2), yPositionOnScreen + (height / 2) - helpTextSize.Y);
                 textPosition = new Vector2(textPosition.X - (textPosition.X % 4), textPosition.Y - (textPosition.Y % 4));
@@ -614,11 +538,6 @@ namespace DeluxeJournal.Menus
             else
             {
                 moneyDial.draw(b, moneyBoxPosition + new Vector2(68, 24), money);
-            }
-
-            if (ChildHasFocus())
-            {
-                _childMenu.draw(b);
             }
         }
 

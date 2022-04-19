@@ -30,12 +30,12 @@ namespace DeluxeJournal.Menus
         private List<string> _objectiveText;
 
         public QuestsPage(Rectangle bounds, Texture2D tabTexture, ITranslationHelper translation) :
-            this("quests", translation.Get("ui.tab.quests"), bounds.X, bounds.Y, bounds.Width, bounds.Height, tabTexture, new Rectangle(0, 0, 16, 16), translation)
+            this("quests", translation.Get("ui.tab.quests"), bounds.X, bounds.Y, bounds.Width, bounds.Height, tabTexture, new Rectangle(0, 0, 16, 16))
         {
         }
 
-        public QuestsPage(string name, string title, int x, int y, int width, int height, Texture2D tabTexture, Rectangle tabSourceRect, ITranslationHelper translation) :
-            base(name, title, x, y, width, height, tabTexture, tabSourceRect, translation)
+        public QuestsPage(string name, string title, int x, int y, int width, int height, Texture2D tabTexture, Rectangle tabSourceRect) :
+            base(name, title, x, y, width, height, tabTexture, tabSourceRect)
         {
             questButtons = new List<ClickableComponent>();
             _pages = new List<List<IQuest>>();
@@ -220,11 +220,6 @@ namespace DeluxeJournal.Menus
             {
                 ExitQuestPage(false);
             }
-        }
-
-        public override bool ChildHasFocus()
-        {
-            return _questOnPage != -1;
         }
 
         protected override void customSnapBehavior(int direction, int oldRegion, int oldID)
