@@ -13,7 +13,7 @@ namespace DeluxeJournal.Menus
 {
     /// <summary>Replacement QuestLog that displays journal pages and tabs.</summary>
     /// <remarks>Custom pages should be registered using the DeluxeJournal API.</remarks>
-    public class DeluxeJournalMenu : QuestLog
+    public class DeluxeJournalMenu : IClickableMenu
     {
         private const int ActiveTabOffset = 8;
 
@@ -56,8 +56,19 @@ namespace DeluxeJournal.Menus
             }
         }
 
-        internal DeluxeJournalMenu(QuestLog questLog, PageManager pageManager) : base()
+        internal DeluxeJournalMenu(PageManager pageManager) :
+            base(0, 0, 832, 576, showUpperRightCloseButton: true)
         {
+            if (LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.ko ||
+                LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.fr)
+            {
+                height += 64;
+            }
+
+            Vector2 topLeft = Utility.getTopLeftPositionForCenteringOnScreen(width, height, 0, 32);
+            xPositionOnScreen = (int)topLeft.X;
+            yPositionOnScreen = (int)topLeft.Y;
+
             _pages = pageManager.GetPages(new Rectangle(xPositionOnScreen, yPositionOnScreen, width, height));
             _tabs = new List<ClickableTextureComponent>();
             _hoverText = "";
@@ -66,11 +77,6 @@ namespace DeluxeJournal.Menus
 
             foreach (IPage page in _pages)
             {
-                if (page is QuestLogPage questLogPage)
-                {
-                    questLogPage.QuestLog = questLog;
-                }
-
                 _tabs.Add(page.GetTabComponent());
             }
 
@@ -86,8 +92,7 @@ namespace DeluxeJournal.Menus
             }
             
             _tabs[ActiveTab].bounds.X += ActiveTabOffset;
-            ActivePage.populateClickableComponentList();
-            AddTabsToClickableComponents(ActivePage);
+            PopulatePageClickableComponents(ActivePage);
             ActivePage.OnVisible();
 
             if (Game1.options.SnappyMenus)
@@ -117,8 +122,7 @@ namespace DeluxeJournal.Menus
             ActiveTab = tab;
 
             _tabs[ActiveTab].bounds.X += ActiveTabOffset;
-            ActivePage.populateClickableComponentList();
-            AddTabsToClickableComponents(ActivePage);
+            PopulatePageClickableComponents(ActivePage);
             ActivePage.OnVisible();
 
             if (Game1.options.SnappyMenus)
@@ -134,16 +138,31 @@ namespace DeluxeJournal.Menus
             }
         }
 
-        public void AddTabsToClickableComponents(IPage page)
+        public void PopulatePageClickableComponents(IPage page)
         {
+            page.populateClickableComponentList();
             page.allClickableComponents.AddRange(_tabs);
         }
 
-        public override void gameWindowSizeChanged(Rectangle oldBounds, Rectangle newBounds)
+        public void SetQuestLog(QuestLog questLog)
         {
+            for (int i = 0; i < _pages.Count; i++)
+            {
+                if (_pages[i] is QuestLogPage questLogPage)
+                {
+                    questLogPage.QuestLog = questLog;
+
+                    if (ActiveTab == i)
+                    {
+                        questLogPage.PopulateQuestLogClickableComponentsList();
+                    }
+
+                    return;
+                }
+            }
         }
 
-        protected override void customSnapBehavior(int direction, int oldRegion, int oldID)
+        public override void gameWindowSizeChanged(Rectangle oldBounds, Rectangle newBounds)
         {
         }
 

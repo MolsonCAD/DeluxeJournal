@@ -61,14 +61,14 @@ namespace DeluxeJournal
             PageManager.RegisterPage("notes", (bounds) => new NotesPage(bounds, UiTexture, helper.Translation), 100);
 
             helper.Events.Display.MenuChanged += OnMenuChanged;
-            helper.Events.Display.RenderingActiveMenu += OnRenderingActiveMenu;
             helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
             helper.Events.GameLoop.Saving += OnSaving;
 
             Patcher.Apply(new Harmony(ModManifest.UniqueID), Monitor,
                 new FarmerPatch(EventManager, Monitor),
                 new UtilityPatch(EventManager, Monitor),
-                new CarpenterMenuPatch(EventManager, Monitor)
+                new CarpenterMenuPatch(EventManager, Monitor),
+                new QuestLogPatch(Monitor)
             );
         }
 
@@ -96,26 +96,16 @@ namespace DeluxeJournal
             }
         }
 
-        private void ReplaceQuestLog()
-        {
-            if (PageManager != null && Game1.activeClickableMenu is QuestLog questLog && questLog is not DeluxeJournalMenu)
-            {
-                Game1.activeClickableMenu = new DeluxeJournalMenu(questLog, PageManager);
-            }
-        }
-
         [EventPriority(EventPriority.Low)]
         private void OnMenuChanged(object? sender, MenuChangedEventArgs e)
         {
-            // Hijack modded QuestLog and replace it with DeluxeJournalMenu
-            ReplaceQuestLog();
-        }
-
-        [EventPriority(EventPriority.High)]
-        private void OnRenderingActiveMenu(object? sender, RenderingActiveMenuEventArgs e)
-        {
-            // Hijack vanilla QuestLog before rendering and replace it with DeluxeJournalMenu
-            ReplaceQuestLog();
+            // Hijack QuestLog and replace it with DeluxeJournalMenu
+            if (PageManager != null && Game1.activeClickableMenu is QuestLog questLog)
+            {
+                DeluxeJournalMenu deluxeJournalMenu = new DeluxeJournalMenu(PageManager);
+                deluxeJournalMenu.SetQuestLog(questLog);
+                Game1.activeClickableMenu = deluxeJournalMenu;
+            }
         }
 
         private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)

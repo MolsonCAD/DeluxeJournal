@@ -83,13 +83,18 @@ namespace DeluxeJournal.Menus
             };
         }
 
-        public override void OnVisible()
+        public void PopulateQuestLogClickableComponentsList()
         {
             if (QuestLog != null)
             {
                 QuestLog.populateClickableComponentList();
                 QuestLog.allClickableComponents.AddRange(allClickableComponents);
             }
+        }
+
+        public override void OnVisible()
+        {
+            PopulateQuestLogClickableComponentsList();
         }
 
         public override void SnapToActiveTabComponent()
