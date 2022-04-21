@@ -32,9 +32,9 @@
 	"ui.tasks.renewbutton.hover": "Renovar Tarefa",
 	"ui.tasks.renew.day": "{{count}} Dia",
 	"ui.tasks.renew.days": "{{count}} Dias",
-	"ui.tasks.status.deliver": "[152] Deliver", // TODO
-	"ui.tasks.status.upgrading": "[42] Upgrading", // TODO
-	"ui.tasks.status.ready": "[151] Ready", // TODO
+	"ui.tasks.status.deliver": "[152] Entregar",
+	"ui.tasks.status.upgrading": "[42] Atualizando",
+	"ui.tasks.status.ready": "[151] Preparar",
 	"ui.tasks.moneybox.hover0": "Valor total a pagar/ganhar",
 	"ui.tasks.moneybox.hover1": "Patrimônio líquido",
 	"ui.tasks.moneybutton.hover": "Alterar visualização",
