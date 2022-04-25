@@ -300,21 +300,23 @@ namespace DeluxeJournal.Menus
             if (ActivePage is QuestLogPage questLogPage && questLogPage.QuestLog != null)
             {
                 questLogPage.draw(b);
+
+                foreach (ClickableTextureComponent tab in _tabs)
+                {
+                    tab.draw(b);
+                }
             }
             else
             {
                 b.Draw(Game1.fadeToBlackRect, Game1.graphics.GraphicsDevice.Viewport.Bounds, Color.Black * 0.75f);
                 drawTextureBox(b, Game1.mouseCursors, new Rectangle(384, 373, 18, 18), xPositionOnScreen, yPositionOnScreen, width, height, Color.White, 4f);
                 SpriteText.drawStringWithScrollCenteredAt(b, _tabs[ActiveTab].hoverText, xPositionOnScreen + width / 2, yPositionOnScreen - 64);
-            }
 
-            foreach (ClickableTextureComponent tab in _tabs)
-            {
-                tab.draw(b);
-            }
+                foreach (ClickableTextureComponent tab in _tabs)
+                {
+                    tab.draw(b);
+                }
 
-            if (ActivePage is not QuestLogPage)
-            {
                 for (IClickableMenu menu = ActivePage; menu != null; menu = menu.GetChildMenu())
                 {
                     menu.draw(b);
