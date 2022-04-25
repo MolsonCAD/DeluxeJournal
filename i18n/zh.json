@@ -15,9 +15,6 @@
 	"task.gift.keywords": "送礼物",
 	"task.sell": "出售",
 	"task.sell.keywords": "出售,售卖",
-	
-	// journal button (when the player has no active quests)
-	"ui.taskbutton.hover": "日志 ({{key}})",
 
 	// tab/page names
 	"ui.tab.quests": "人物",

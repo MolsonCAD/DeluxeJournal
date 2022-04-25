@@ -15,9 +15,6 @@
 	"task.gift.keywords": "gift,give",
 	"task.sell": "Sell",
 	"task.sell.keywords": "sell,ship",
-	
-	// journal button (when the player has no active quests)
-	"ui.taskbutton.hover": "Journal ({{key}})",
 
 	// tab/page names
 	"ui.tab.quests": "Quests",

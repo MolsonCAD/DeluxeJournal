@@ -15,9 +15,6 @@
 	"task.gift.keywords": "presentear,dar",
 	"task.sell": "Vender",
 	"task.sell.keywords": "vender,enviar",
-	
-	// journal button (when the player has no active quests)
-	"ui.taskbutton.hover": "Diário ({{key}})",
 
 	// tab/page names
 	"ui.tab.quests": "Missões",

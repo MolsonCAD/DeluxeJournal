@@ -46,7 +46,7 @@ namespace DeluxeJournal.Menus
         {
             if (Game1.player.visibleQuestCount == 0 && taskButton.containsPoint(x, y))
             {
-                _hoverText = _translation.Get("ui.taskbutton.hover").Tokens(new { key = Game1.options.journalButton[0].ToString() });
+                _hoverText = string.Format(Game1.content.LoadString("Strings\\UI:QuestButton_Hover", Game1.options.journalButton[0].ToString()));
             }
             else
             {
