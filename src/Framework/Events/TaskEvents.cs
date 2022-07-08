@@ -64,7 +64,10 @@ namespace DeluxeJournal.Framework.Events
         {
             foreach (Item item in Game1.getFarm().getShippingBin(Game1.player))
             {
-                OnSell(item);
+                if (item != null)
+                {
+                    OnSell(item);
+                }
             }
         }
 
