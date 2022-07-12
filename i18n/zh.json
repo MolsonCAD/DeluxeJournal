@@ -1,4 +1,4 @@
-﻿{
+{
 	// task names and keywords (for parsing)
 	"task.basic": "基本",
 	"task.blacksmith": "升级工具",
@@ -20,16 +20,16 @@
 	"ui.taskbutton.hover": "日志 ({{key}})",
 
 	// tab/page names
-	"ui.tab.quests": "人物",
-	"ui.tab.tasks": "任务",
+	"ui.tab.quests": "任务",
+	"ui.tab.tasks": "待办",
 	"ui.tab.notes": "笔记",
 	
 	// tasks page
-	"ui.tasks.help": "点击加号新建任务",
-	"ui.tasks.addbutton.hover": "新建任务",
-	"ui.tasks.editbox.hover": "编辑任务",
-	"ui.tasks.removebutton.hover": "取消任务",
-	"ui.tasks.renewbutton.hover": "刷新任务",
+	"ui.tasks.help": "点击加号新建待办",
+	"ui.tasks.addbutton.hover": "新建待办",
+	"ui.tasks.editbox.hover": "编辑待办",
+	"ui.tasks.removebutton.hover": "取消待办",
+	"ui.tasks.renewbutton.hover": "刷新待办",
 	"ui.tasks.renew.day": "{{count}} 天",
 	"ui.tasks.renew.days": "{{count}} 天",
 	"ui.tasks.moneybox.hover0": "净收入/支出或利润",
@@ -37,22 +37,22 @@
 	"ui.tasks.moneybutton.hover": "切换金额",
 
 	// add new task menu
-	"ui.tasks.new": "新建任务",
+	"ui.tasks.new": "新建待办",
 	"ui.tasks.new.optionsbutton.hover": "选项",
 	"ui.tasks.new.cancelbutton.hover": "取消",
 	"ui.tasks.new.smartokbutton.hover": "智能添加",
-	"ui.tasks.new.smarttip": "智能添加选项可以自动为任务应用高级选项.",
+	"ui.tasks.new.smarttip": "智能添加选项可以自动为待办应用高级选项.",
 
 	// task options menu
-	"ui.tasks.options": "任务选项",
-	"ui.tasks.options.name": "任务名",
+	"ui.tasks.options": "待办选项",
+	"ui.tasks.options.name": "待办名称",
 	"ui.tasks.options.renew": "刷新时间",
 	"ui.tasks.options.renew.Never": "从不刷新",
 	"ui.tasks.options.renew.Daily": "每天刷新",
 	"ui.tasks.options.renew.Weekly": "每周刷新",
 	"ui.tasks.options.renew.Monthly": "每月刷新",
 	"ui.tasks.options.renew.Annually": "每年刷新",
-	"ui.tasks.options.type": "任务类型",
+	"ui.tasks.options.type": "待办类型",
 
 	// task parameter names
 	"ui.tasks.parameter.building": "建筑",
