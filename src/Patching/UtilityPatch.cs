@@ -17,7 +17,7 @@ namespace DeluxeJournal.Patching
             Instance = this;
         }
 
-        private static bool Prefix_checkItemFirstInventoryAdd(Item item)
+        private static bool Prefix_addItemToInventoryBool(Item item)
         {
             try
             {
@@ -28,7 +28,7 @@ namespace DeluxeJournal.Patching
             }
             catch (Exception ex)
             {
-                Instance.LogError(ex, nameof(Prefix_checkItemFirstInventoryAdd));
+                Instance.LogError(ex, nameof(Prefix_addItemToInventoryBool));
             }
 
             return true;
@@ -37,8 +37,8 @@ namespace DeluxeJournal.Patching
         public override void Apply(Harmony harmony)
         {
             harmony.Patch(
-                original: AccessTools.Method(typeof(Utility), nameof(Utility.checkItemFirstInventoryAdd)),
-                prefix: new HarmonyMethod(typeof(UtilityPatch), nameof(Prefix_checkItemFirstInventoryAdd))
+                original: AccessTools.Method(typeof(StardewValley.Farmer), nameof(StardewValley.Farmer.addItemToInventoryBool)),
+                prefix: new HarmonyMethod(typeof(UtilityPatch), nameof(Prefix_addItemToInventoryBool))
             );
         }
     }

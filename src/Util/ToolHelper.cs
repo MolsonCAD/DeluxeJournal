@@ -5,6 +5,19 @@ namespace DeluxeJournal.Util
 {
     public static class ToolHelper
     {
+        // TODO: Change all of this to be based off of ToolData so that it supports modded items
+        public class ToolDescription
+        {
+            public byte index;
+            public byte upgradeLevel;
+
+            public ToolDescription(byte index, byte upgradeLevel)
+            {
+                this.index = index;
+                this.upgradeLevel = upgradeLevel;
+            }
+        }
+
         /// <summary>Extract a ToolDescription from a Tool.</summary>
         public static ToolDescription GetToolDescription(Tool tool)
         {
@@ -66,8 +79,7 @@ namespace DeluxeJournal.Util
                 return held.UpgradeLevel;
             }
 
-            Utility.iterateAllItems(searchForTool);
-            Utility.iterateChestsAndStorage(searchForTool);
+            Utility.ForEachItem((Item item) => { return searchForTool(item); });
 
             if (level == -1)
             {
@@ -76,7 +88,7 @@ namespace DeluxeJournal.Util
 
             return level;
 
-            void searchForTool(Item item)
+            bool searchForTool(Item item)
             {
                 if (level == -1 && item is Tool tool && tool.BaseName == name)
                 {
@@ -86,20 +98,20 @@ namespace DeluxeJournal.Util
                     {
                         level = tool.UpgradeLevel;
                     }
-                    else if (!guess)
+                    else if (guess)
                     {
-                        return;
-                    }
-                    else if (lastPlayer == null && (!foundUnownedFallback || tool.UpgradeLevel < fallback))
-                    {
-                        fallback = tool.UpgradeLevel;
-                        foundUnownedFallback = true;
-                    }
-                    else if (!foundUnownedFallback && tool.UpgradeLevel < fallback)
-                    {
-                        fallback = tool.UpgradeLevel;
+                        if (lastPlayer == null && (!foundUnownedFallback || tool.UpgradeLevel < fallback))
+                        {
+                            fallback = tool.UpgradeLevel;
+                            foundUnownedFallback = true;
+                        }
+                        else if (!foundUnownedFallback && tool.UpgradeLevel < fallback)
+                        {
+                            fallback = tool.UpgradeLevel;
+                        }
                     }
                 }
+                return true;
             }
         }
 

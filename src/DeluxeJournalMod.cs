@@ -47,8 +47,9 @@ namespace DeluxeJournal
 
             RuntimeHelpers.RunClassConstructor(typeof(TaskTypes).TypeHandle);
 
-            UiTexture = helper.Content.Load<Texture2D>("assets/ui.png");
-            CharacterIconsTexture = helper.Content.Load<Texture2D>("assets/character-icons.png");
+            UiTexture = helper.ModContent.Load<Texture2D>("assets/ui.png");
+            CharacterIconsTexture = helper.ModContent.Load<Texture2D>("assets/character-icons.png");
+
             Config = helper.ReadConfig<Config>();
             _notesData = helper.Data.ReadGlobalData<NotesData>(NOTES_DATA_KEY) ?? new NotesData();
 

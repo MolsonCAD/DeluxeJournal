@@ -1,20 +1,26 @@
 ﻿using StardewModdingAPI;
 using StardewValley;
+using StardewValley.ItemTypeDefinitions;
+using StardewValley.Minigames;
+using StardewValley.TokenizableStrings;
 using StardewValley.Tools;
+using System.Runtime.CompilerServices;
+using System.Xml.Linq;
+using static DeluxeJournal.Util.ItemOptions;
 
 namespace DeluxeJournal.Util
 {
     /// <summary>Provides a means of querying game objects/data by their corresponding localized display names.</summary>
     public class LocalizedObjects
     {
-        private readonly IDictionary<string, string> _items;
-        private readonly IDictionary<string, string> _npcs;
-        private readonly IDictionary<string, ToolDescription> _tools;
-        private readonly IDictionary<string, BlueprintInfo> _blueprints;
+        private readonly PlainTextMap<string> _items;
+        private readonly PlainTextMap<string> _npcs;
+        private readonly PlainTextMap<ToolHelper.ToolDescription> _tools;
+        private readonly PlainTextMap<BlueprintInfo> _blueprints;
 
         public LocalizedObjects(ITranslationHelper translation)
         {
-            _items = CreateItemMap(translation.LocaleEnum == LocalizedContentManager.LanguageCode.en);
+            _items = CreateItemMap();
             _npcs = CreateNPCMap();
             _tools = CreateToolMap();
             _blueprints = CreateBlueprintMap();
@@ -25,17 +31,29 @@ namespace DeluxeJournal.Util
         /// <param name="fuzzy">Perform a fuzzy search if true, otherwise only return an Item with the exact name.</param>
         public Item? GetItem(string localizedName, bool fuzzy = false)
         {
-            localizedName = localizedName.Trim().ToLowerInvariant();
-
-            if (_tools.ContainsKey(localizedName))
+            ListWithDefault<ToolHelper.ToolDescription>? toolNames = GetValue(_tools, localizedName, fuzzy);
+            if (toolNames != null)
             {
-                return ToolHelper.GetToolFromDescription(_tools[localizedName].index, _tools[localizedName].upgradeLevel);
-            }
-            else if (GetValue(_items, localizedName, fuzzy) is string item)
-            {
-                return Utility.getItemFromStandardTextDescription(item, null);
+                ListWithDefault<Item> tools = new ListWithDefault<Item>();
+                foreach (ToolHelper.ToolDescription tool in toolNames.items)
+                {
+                    Item? new_tool = ToolHelper.GetToolFromDescription(tool.index, tool.upgradeLevel);
+                    if (new_tool != null) tools += new_tool;
+                }
+                return tools.defaultItem;
             }
 
+            ListWithDefault<string>? itemNames = GetValue(_items, localizedName, fuzzy);
+            if (itemNames != null)
+            {
+                ListWithDefault<Item> items = new ListWithDefault<Item>();
+                foreach (string item in itemNames.items)
+                {
+                    items += ItemRegistry.Create(item);
+                }
+
+                return items.defaultItem;
+            }
             return null;
         }
 
@@ -44,23 +62,30 @@ namespace DeluxeJournal.Util
         /// <param name="fuzzy">Perform a fuzzy search if true, otherwise only return the NPC with the exact name.</param>
         public NPC? GetNPC(string localizedName, bool fuzzy = false)
         {
-            if (GetValue(_npcs, localizedName, fuzzy) is string npc)
+            ListWithDefault<string>? npcNames = GetValue(_npcs, localizedName, fuzzy);
+            if (npcNames != null)
             {
-                return Game1.getCharacterFromName(npc);
-            }
+                ListWithDefault<NPC> npcs = new ListWithDefault<NPC>();
+                foreach (string npc in npcNames.items)
+                {
+                    npcs += Game1.getCharacterFromName(npc);
+                }
 
+                return npcs.defaultItem;
+            }
             return null;
         }
 
         /// <summary>Get BlueprintInfo given the display name.</summary>
         /// <param name="localizedName">Localized display name (the one that appears in-game).</param>
         /// <param name="fuzzy">Perform a fuzzy search if true, otherwise only match a blueprint with the exact name.</param>
-        public BlueprintInfo? GetBlueprintInfo(string localizedName, bool fuzzy = false)
+        public BlueprintInfo GetBlueprintInfo(string localizedName, bool fuzzy = false)
         {
-            return GetValue(_blueprints, localizedName, fuzzy);
+            ListWithDefault<BlueprintInfo>? values = GetValue(_blueprints, localizedName, fuzzy);
+            return values != null ? values.defaultItem : null;
         }
 
-        private static T? GetValue<T>(IDictionary<string, T> map, string key, bool fuzzy) where T : class
+        private static ListWithDefault<T>? GetValue<T>(PlainTextMap<T> map, string key, bool fuzzy) where T : class
         {
             key = key.Trim().ToLowerInvariant();
             key = fuzzy ? Utility.fuzzySearch(key, map.Keys.ToList()) : key;
@@ -73,92 +98,95 @@ namespace DeluxeJournal.Util
             return null;
         }
 
-        private static IDictionary<string, string> CreateItemMap(bool isLocaleEnglish)
+        private static PlainTextMap<string> CreateItemMap()
         {
-            IDictionary<int, string> furnitureData = Game1.content.Load<Dictionary<int, string>>("Data\\Furniture");
-            IDictionary<int, string> weaponData = Game1.content.Load<Dictionary<int, string>>("Data\\weapons");
-            IDictionary<int, string> bootsData = Game1.content.Load<Dictionary<int, string>>("Data\\Boots");
-            IDictionary<int, string> hatsData = Game1.content.Load<Dictionary<int, string>>("Data\\hats");
-            IDictionary<string, string> map = new Dictionary<string, string>();
-            string text;
-            string[] values;
+            IDictionary<string, string> furnitureData = DataLoader.Furniture(Game1.content);
+            IDictionary<string, StardewValley.GameData.Weapons.WeaponData> weaponData = DataLoader.Weapons(Game1.content);
+            IDictionary<string, string> bootsData = DataLoader.Boots(Game1.content);
+            IDictionary<string, string> hatsData = DataLoader.Hats(Game1.content);
+            IDictionary<string, StardewValley.GameData.Objects.ObjectData> objectsData = DataLoader.Objects(Game1.content);
+            IDictionary<string, StardewValley.GameData.BigCraftables.BigCraftableData> bigCraftablesData = DataLoader.BigCraftables(Game1.content);
 
-            foreach (int key in Game1.objectInformation.Keys)
+            PlainTextMap<string> map = new PlainTextMap<string>();
+
+
+            foreach (string itemID in furnitureData.Keys)
             {
-                if ((text = Game1.objectInformation[key]) != null)
+                if (furnitureData[itemID] is string text)
                 {
-                    values = text.Split('/');
+                    string plain_name = TokenParser.ParseText(text.Split('/')[7].Trim()).ToLowerInvariant();
+                    string qualifiedID = "(F)" + itemID;
 
-                    if (values[0] != "Weeds" && (values[0] != "Stone" || key == SObject.stone))
+                    map.add(plain_name, qualifiedID);
+                }
+            }
+            foreach (string itemID in weaponData.Keys)
+            {
+                if (TokenParser.ParseText(weaponData[itemID].DisplayName) is string text)
+                {
+                    string plain_name = text.ToLowerInvariant();
+                    string qualifiedID = "(W)" + itemID;
+
+                    map.add(plain_name, qualifiedID);
+                }
+            }
+            foreach (string itemID in bootsData.Keys)
+            {
+                if (bootsData[itemID] is string text)
+                {
+                    string plain_name = TokenParser.ParseText(text.Split('/')[6].Trim()).ToLowerInvariant();
+                    string qualifiedID = "(B)" + itemID;
+
+                    map.add(plain_name, qualifiedID);
+                }
+            }
+            foreach (string itemID in hatsData.Keys)
+            {
+                if (hatsData[itemID] is string text)
+                {
+                    string plain_name = TokenParser.ParseText(text.Split('/')[5].Trim()).ToLowerInvariant();
+                    string qualifiedID = "(H)" + itemID;
+
+                    map.add(plain_name, qualifiedID);
+                }
+            }
+            foreach (string itemID in objectsData.Keys)
+            {
+                if (TokenParser.ParseText(objectsData[itemID].DisplayName) is string text)
+                {
+                    string plain_name = text.ToLowerInvariant();
+                    string qualifiedID = "(O)" + itemID;
+
+                    if (qualifiedID == "(O)390")
                     {
-                        map[values[4].ToLowerInvariant()] = (values[3] == "Ring" ? "R " : "O ") + key + " 1";
+                        // prioritise stone
+                        map.addAsDefault(plain_name, qualifiedID);
                     }
-                }
-            }
-
-            foreach (int key in Game1.bigCraftablesInformation.Keys)
-            {
-                if ((text = Game1.bigCraftablesInformation[key]) != null)
-                {
-                    values = text.Split('/');
-
-                    if (CraftingRecipe.craftingRecipes.ContainsKey(values[0]))
+                    else
                     {
-                        map[values[isLocaleEnglish ? 0 : values.Length - 1].Trim().ToLowerInvariant()] = "BO " + key + " 1";
+                        map.add(plain_name, qualifiedID);
                     }
+
                 }
             }
-
-            foreach (int key in Game1.clothingInformation.Keys)
+            foreach (string itemID in bigCraftablesData.Keys)
             {
-                if ((text = Game1.clothingInformation[key]) != null)
+                if (TokenParser.ParseText(bigCraftablesData[itemID].DisplayName) is string text)
                 {
-                    map[text.Split('/')[isLocaleEnglish ? 0 : 1].ToLowerInvariant()] = "C " + key + " 1";
-                }
-            }
+                    string plain_name = text.ToLowerInvariant();
+                    string qualifiedID = "(BC)" + itemID;
 
-            foreach (int key in furnitureData.Keys)
-            {
-                if ((text = furnitureData[key]) != null)
-                {
-                    values = text.Split('/');
-                    map[values[isLocaleEnglish ? 0 : values.Length - 1].Trim().ToLowerInvariant()] = "F " + key + " 1";
-                }
-            }
-
-            foreach (int key in weaponData.Keys)
-            {
-                if ((text = weaponData[key]) != null)
-                {
-                    values = text.Split('/');
-                    map[values[isLocaleEnglish ? 0 : values.Length - 1].Trim().ToLowerInvariant()] = "W " + key + " 1";
-                }
-            }
-
-            foreach (int key in bootsData.Keys)
-            {
-                if ((text = bootsData[key]) != null)
-                {
-                    values = text.Split('/');
-                    map[values[isLocaleEnglish ? 0 : values.Length - 1].Trim().ToLowerInvariant()] = "B " + key + " 1";
-                }
-            }
-
-            foreach (int key in hatsData.Keys)
-            {
-                if ((text = hatsData[key]) != null)
-                {
-                    values = text.Split('/');
-                    map[values[isLocaleEnglish ? 0 : values.Length - 1].Trim().ToLowerInvariant()] = "H " + key + " 1";
+                    map.add(plain_name, qualifiedID);
                 }
             }
 
             return map;
         }
 
-        private static IDictionary<string, ToolDescription> CreateToolMap()
+        private static PlainTextMap<ToolHelper.ToolDescription> CreateToolMap()
         {
-            IDictionary<string, ToolDescription> map = new Dictionary<string, ToolDescription>();
+            // TODO: Change to a query
+            PlainTextMap < ToolHelper.ToolDescription> map = new PlainTextMap<ToolHelper.ToolDescription>();
             Tool[] tools = {
                 new Axe(),
                 new Hoe(),
@@ -191,43 +219,33 @@ namespace DeluxeJournal.Util
                 for (int level = 0; level <= maxLevel; level++)
                 {
                     tool.UpgradeLevel = level;
-                    map[tool.DisplayName.ToLowerInvariant()] = ToolHelper.GetToolDescription(tool);
+                    map.add(tool.DisplayName.ToLowerInvariant(), ToolHelper.GetToolDescription(tool));
                 }
             }
 
             return map;
         }
 
-        private static IDictionary<string, string> CreateNPCMap()
+        private static PlainTextMap<string> CreateNPCMap()
         {
-            IDictionary<string, string> npcData = Game1.content.Load<Dictionary<string, string>>("Data\\NPCDispositions");
-            IDictionary<string, string> map = new Dictionary<string, string>();
-
-            foreach (KeyValuePair<string, string> pair in npcData)
+            IDictionary<string, StardewValley.GameData.Characters.CharacterData> npcData = DataLoader.Characters(Game1.content);
+            PlainTextMap<string> map = new PlainTextMap<string> ();
+            foreach (KeyValuePair<string, StardewValley.GameData.Characters.CharacterData> pair in npcData)
             {
-                map[pair.Value.Split('/')[11].ToLowerInvariant()] = pair.Key;
+                map.add(TokenParser.ParseText(pair.Value.DisplayName).ToLowerInvariant(), pair.Key);
             }
 
             return map;
         }
 
-        private static IDictionary<string, BlueprintInfo> CreateBlueprintMap()
+        private static PlainTextMap<BlueprintInfo> CreateBlueprintMap()
         {
-            IDictionary<string, string> blueprintData = Game1.content.Load<Dictionary<string, string>>("Data\\Blueprints");
-            IDictionary<string, BlueprintInfo> map = new Dictionary<string, BlueprintInfo>();
-
-            foreach (KeyValuePair<string, string> pair in blueprintData)
+            //TODO: Change this once I understand better how it uses the blueprintinfo
+            IDictionary<string, StardewValley.GameData.Buildings.BuildingData> blueprintData = DataLoader.Buildings(Game1.content);
+            PlainTextMap<BlueprintInfo > map = new PlainTextMap<BlueprintInfo> ();
+            foreach (KeyValuePair<string, StardewValley.GameData.Buildings.BuildingData> pair in blueprintData)
             {
-                string[] fields = pair.Value.Split('/');
-
-                if (fields[0] == "animal")
-                {
-                    map[fields[4].ToLowerInvariant()] = new BlueprintInfo(pair.Key, fields[4], "Animal", int.Parse(fields[1]));
-                }
-                else if (fields.Length > 17)
-                {
-                    map[fields[8].ToLowerInvariant()] = new BlueprintInfo(pair.Key, fields[8], fields[10], int.Parse(fields[17]));
-                }
+                map.add(TokenParser.ParseText(pair.Value.Name).ToLowerInvariant(), new BlueprintInfo(pair.Key, TokenParser.ParseText(pair.Value.Name), pair.Value.BuildingType, pair.Value.BuildCost));
             }
 
             return map;
