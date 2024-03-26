@@ -5,5 +5,8 @@
 	"Description": "Upgrades the journal with new features.",
 	"UniqueID": "MolsonCAD.DeluxeJournal",
 	"EntryDll": "DeluxeJournal.dll",
-	"MinimumApiVersion": "4.0.0"
+	"MinimumApiVersion": "4.0.0",
+	"UpdateKeys": [
+		"Nexus:11436"
+	]
 }
