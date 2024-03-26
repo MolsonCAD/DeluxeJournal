@@ -82,7 +82,7 @@ namespace DeluxeJournal.Menus
 
             ChainNeighborsUpDown(_tabs);
 
-            if (ActiveTab == 0 && Game1.player.visibleQuestCount == 0)
+            if (ActiveTab == 0 && !Game1.player.hasVisibleQuests)
             {
                 ActiveTab = 1;
             }

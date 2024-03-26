@@ -23,7 +23,7 @@ namespace DeluxeJournal.Framework.Listeners
             return true;
         }
 
-        public override bool checkIfComplete(NPC? npc = null, int index = -1, int count = -1, Item? item = null, string? str = null)
+        public override bool checkIfComplete(NPC? npc = null, int index = -1, int count = -1, Item? item = null, string? str = null, bool probe = false)
         {
             OnChecked(npc, index, count, item, str);
             return false;

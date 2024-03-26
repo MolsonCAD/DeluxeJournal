@@ -66,7 +66,8 @@ namespace DeluxeJournal.Framework.Tasks
         public BlacksmithTask(string name, Tool tool) : base(TaskTypes.Blacksmith, name)
         {
             TargetDisplayName = tool.DisplayName;
-            TargetName = tool.BaseName;
+            // compare the class name to see if it instantiates the same tool :. it is the same tool somewhere in the upgrade path
+            TargetName = tool.GetToolData().ClassName;
             Variant = tool.UpgradeLevel;
             MaxCount = 2;
 
@@ -78,7 +79,7 @@ namespace DeluxeJournal.Framework.Tasks
             if (CanUpdate())
             {
                 Tool upgraded = Game1.player.toolBeingUpgraded.Value;
-                Count = (upgraded != null && upgraded.BaseName == TargetName) ? 1 : 0;
+                Count = (upgraded != null && upgraded.GetToolData().ClassName == TargetName) ? 1 : 0;
             }
         }
 
@@ -124,9 +125,12 @@ namespace DeluxeJournal.Framework.Tasks
         {
             if (CanUpdate() && IsTaskOwner(e.Player) && Count == 0)
             {
-                if (e.Salable is Tool tool && tool.BaseName == TargetName)
+                if (e.Salable is Tool tool)
                 {
-                    Count = 1;
+                    if (tool.GetToolData().ClassName == TargetName)
+                    {
+                        Count = 1;
+                    }
                 }
             }
         }
@@ -137,7 +141,7 @@ namespace DeluxeJournal.Framework.Tasks
             {
                 foreach (Item item in e.Added)
                 {
-                    if (item is Tool tool && tool.BaseName == TargetName)
+                    if (item is Tool tool && tool.GetToolData().ClassName == TargetName)
                     {
                         Count = MaxCount;
                         MarkAsCompleted();

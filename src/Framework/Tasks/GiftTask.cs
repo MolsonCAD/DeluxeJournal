@@ -29,7 +29,8 @@ namespace DeluxeJournal.Framework.Tasks
             public override void Initialize(ITask task, ITranslationHelper translation)
             {
                 NPC = new LocalizedObjects(translation).GetNPC(task.TargetName);
-                Item = (task.TargetIndex == -1) ? null : Utility.getItemFromStandardTextDescription("O " + task.TargetIndex + " 1", null);
+                // I hate this but changing it is a breaking change so it will be coming in projournal
+                Item = (task.TargetIndex == -1) ? null : ItemRegistry.Create("(O)" + task.TargetIndex);
             }
 
             public override ITask? Create(string name)

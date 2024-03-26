@@ -44,10 +44,7 @@ namespace DeluxeJournal.Framework.Events
         {
             Vector2 tile = new Vector2(message.TileX, message.TileY);
 
-            if (Game1.getLocationFromName(message.LocationName) is not BuildableGameLocation location)
-            {
-                throw new ArgumentException(string.Format("No BuildableGameLocation with name '{0}'.", message.LocationName));
-            }
+            GameLocation location = Game1.getLocationFromName(message.LocationName);
             
             if (location.getBuildingAt(tile) is not Building building)
             {

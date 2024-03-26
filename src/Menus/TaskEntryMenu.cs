@@ -67,7 +67,7 @@ namespace DeluxeJournal.Menus
                 {
                     _task.Complete = !_task.Complete;
                     _task.MarkAsViewed();
-                    Game1.playSoundPitched("tinyWhip", _task.Complete ? 2000 : 1000);
+                    Game1.playSound("tinyWhip", _task.Complete ? 2000 : 1000);
                 }
                 else
                 {
