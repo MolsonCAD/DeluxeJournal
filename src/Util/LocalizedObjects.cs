@@ -237,13 +237,16 @@ namespace DeluxeJournal.Util
         private static PlainTextMap<string> CreateNPCMap()
         {
             // broken character mods make reading the data from them return null
-            IDictionary<string, StardewValley.GameData.Characters.CharacterData?> npcData = DataLoader.Characters(Game1.content);
+            IDictionary<string?, StardewValley.GameData.Characters.CharacterData?>? npcData = DataLoader.Characters(Game1.content);
             PlainTextMap<string> map = new PlainTextMap<string> ();
-            foreach (KeyValuePair<string, StardewValley.GameData.Characters.CharacterData?> pair in npcData)
+            if (npcData != null)
             {
-                if (pair.Value != null)
+                foreach (KeyValuePair<string?, StardewValley.GameData.Characters.CharacterData?> pair in npcData)
                 {
-                    map.add(TokenParser.ParseText(pair.Value.DisplayName).ToLowerInvariant(), pair.Key);
+                    if (pair.Value != null && pair.Key != null)
+                    {
+                        map.add(TokenParser.ParseText(pair.Value.DisplayName).ToLowerInvariant(), pair.Key);
+                    }
                 }
             }
 
@@ -253,13 +256,16 @@ namespace DeluxeJournal.Util
         private static PlainTextMap<BlueprintInfo> CreateBlueprintMap()
         {
             //TODO: Change this once I understand better how it uses the blueprintinfo
-            IDictionary<string, StardewValley.GameData.Buildings.BuildingData?> blueprintData = DataLoader.Buildings(Game1.content);
+            IDictionary<string?, StardewValley.GameData.Buildings.BuildingData?>? blueprintData = DataLoader.Buildings(Game1.content);
             PlainTextMap<BlueprintInfo > map = new PlainTextMap<BlueprintInfo> ();
-            foreach (KeyValuePair<string, StardewValley.GameData.Buildings.BuildingData?> pair in blueprintData)
+            if (blueprintData != null)
             {
-                if (pair.Value != null)
+                foreach (KeyValuePair<string?, StardewValley.GameData.Buildings.BuildingData?> pair in blueprintData)
                 {
-                    map.add(TokenParser.ParseText(pair.Value.Name).ToLowerInvariant(), new BlueprintInfo(pair.Key, TokenParser.ParseText(pair.Value.Name), pair.Value.BuildingType, pair.Value.BuildCost));
+                    if (pair.Value != null && pair.Key != null)
+                    {
+                        map.add(TokenParser.ParseText(pair.Value.Name).ToLowerInvariant(), new BlueprintInfo(pair.Key, TokenParser.ParseText(pair.Value.Name), pair.Value.BuildingType, pair.Value.BuildCost));
+                    }
                 }
             }
 
