@@ -241,11 +241,11 @@ namespace DeluxeJournal.Util
             PlainTextMap<string> map = new PlainTextMap<string> ();
             if (npcData != null)
             {
-                foreach (KeyValuePair<string?, StardewValley.GameData.Characters.CharacterData?> pair in npcData)
+                foreach (string? key in npcData.Keys)
                 {
-                    if (pair.Value != null && pair.Key != null)
+                    if (key != null && npcData[key] != null)
                     {
-                        map.add(TokenParser.ParseText(pair.Value.DisplayName).ToLowerInvariant(), pair.Key);
+                        map.add(TokenParser.ParseText(npcData[key].DisplayName).ToLowerInvariant(), key);
                     }
                 }
             }
@@ -260,11 +260,11 @@ namespace DeluxeJournal.Util
             PlainTextMap<BlueprintInfo > map = new PlainTextMap<BlueprintInfo> ();
             if (blueprintData != null)
             {
-                foreach (KeyValuePair<string?, StardewValley.GameData.Buildings.BuildingData?> pair in blueprintData)
+                foreach (string? key in blueprintData.Keys)
                 {
-                    if (pair.Value != null && pair.Key != null)
+                    if (key != null && blueprintData[key] != null)
                     {
-                        map.add(TokenParser.ParseText(pair.Value.Name).ToLowerInvariant(), new BlueprintInfo(pair.Key, TokenParser.ParseText(pair.Value.Name), pair.Value.BuildingType, pair.Value.BuildCost));
+                        map.add(TokenParser.ParseText(blueprintData[key].Name).ToLowerInvariant(), new BlueprintInfo(key, TokenParser.ParseText(blueprintData[key].Name), blueprintData[key].BuildingType, blueprintData[key].BuildCost));
                     }
                 }
             }
