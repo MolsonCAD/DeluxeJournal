@@ -1,4 +1,5 @@
-﻿using StardewModdingAPI;
+﻿using Microsoft.Xna.Framework.Input;
+using StardewModdingAPI;
 using StardewValley;
 using StardewValley.ItemTypeDefinitions;
 using StardewValley.Minigames;
@@ -112,79 +113,120 @@ namespace DeluxeJournal.Util
 
             foreach (string itemID in furnitureData.Keys)
             {
-                if (furnitureData[itemID] is string text)
+                try
                 {
-                    string plain_name = TokenParser.ParseText(text.Split('/')[7].Trim()).ToLowerInvariant();
-                    string qualifiedID = "(F)" + itemID;
+                    if (furnitureData[itemID] is string text)
+                    {
+                        string plain_name = TokenParser.ParseText(text.Split('/')[7].Trim()).ToLowerInvariant();
+                        string qualifiedID = "(F)" + itemID;
 
-                    map.add(plain_name, qualifiedID);
+                        map.add(plain_name, qualifiedID);
+                    }
+                }
+                catch
+                {
+                    continue;
                 }
             }
             foreach (string itemID in weaponData.Keys)
             {
-                if (weaponData[itemID] is StardewValley.GameData.Weapons.WeaponData data)
+                try
                 {
-                    if (TokenParser.ParseText(data.DisplayName) is string text)
+                    if (weaponData[itemID] is StardewValley.GameData.Weapons.WeaponData data)
                     {
-                        string plain_name = text.ToLowerInvariant();
-                        string qualifiedID = "(W)" + itemID;
+                        if (TokenParser.ParseText(data.DisplayName) is string text)
+                        {
+                            string plain_name = text.ToLowerInvariant();
+                            string qualifiedID = "(W)" + itemID;
 
-                        map.add(plain_name, qualifiedID);
+                            map.add(plain_name, qualifiedID);
+                        }
                     }
+                }
+                catch
+                {
+                    continue;
                 }
             }
             foreach (string itemID in bootsData.Keys)
             {
-                if (bootsData[itemID] is string text)
+                try
                 {
-                    string plain_name = TokenParser.ParseText(text.Split('/')[6].Trim()).ToLowerInvariant();
-                    string qualifiedID = "(B)" + itemID;
+                    if (bootsData[itemID] is string text)
+                    {
+                        string plain_name = TokenParser.ParseText(text.Split('/')[6].Trim()).ToLowerInvariant();
+                        string qualifiedID = "(B)" + itemID;
 
-                    map.add(plain_name, qualifiedID);
+                        map.add(plain_name, qualifiedID);
+                    }
+                }
+                catch
+                {
+                    continue;
                 }
             }
             foreach (string itemID in hatsData.Keys)
             {
-                if (hatsData[itemID] is string text)
+                try
                 {
-                    string plain_name = TokenParser.ParseText(text.Split('/')[5].Trim()).ToLowerInvariant();
-                    string qualifiedID = "(H)" + itemID;
+                    if (hatsData[itemID] is string text)
+                    {
+                        string plain_name = TokenParser.ParseText(text.Split('/')[5].Trim()).ToLowerInvariant();
+                        string qualifiedID = "(H)" + itemID;
 
-                    map.add(plain_name, qualifiedID);
+                        map.add(plain_name, qualifiedID);
+                    }
+                }
+                catch {
+                    continue;
                 }
             }
             foreach (string itemID in objectsData.Keys)
             {
-                if (objectsData[itemID] is StardewValley.GameData.Objects.ObjectData data)
+                try
                 {
-                    if (TokenParser.ParseText(data.DisplayName) is string text)
+                    if (objectsData[itemID] is StardewValley.GameData.Objects.ObjectData data)
                     {
-                        string plain_name = text.ToLowerInvariant();
-                        string qualifiedID = "(O)" + itemID;
-
-                        if (qualifiedID == "(O)390")
+                        if (TokenParser.ParseText(data.DisplayName) is string text)
                         {
-                            // prioritise stone
-                            map.addAsDefault(plain_name, qualifiedID);
-                        }
-                        else
-                        {
-                            map.add(plain_name, qualifiedID);
-                        }
+                            string plain_name = text.ToLowerInvariant();
+                            string qualifiedID = "(O)" + itemID;
 
+                            if (qualifiedID == "(O)390")
+                            {
+                                // prioritise stone
+                                map.addAsDefault(plain_name, qualifiedID);
+                            }
+                            else
+                            {
+                                map.add(plain_name, qualifiedID);
+                            }
+
+                        }
                     }
+                }
+                catch
+                {
+                    continue;
                 }
             }
             foreach (string itemID in bigCraftablesData.Keys)
             {
-                if (bigCraftablesData[itemID] is StardewValley.GameData.BigCraftables.BigCraftableData data){ 
-                    if (TokenParser.ParseText(data.DisplayName) is string text)
+                try
+                {
+                    if (bigCraftablesData[itemID] is StardewValley.GameData.BigCraftables.BigCraftableData data)
                     {
-                        string plain_name = text.ToLowerInvariant();
-                        string qualifiedID = "(BC)" + itemID;
+                        if (TokenParser.ParseText(data.DisplayName) is string text)
+                        {
+                            string plain_name = text.ToLowerInvariant();
+                            string qualifiedID = "(BC)" + itemID;
 
-                        map.add(plain_name, qualifiedID);
+                            map.add(plain_name, qualifiedID);
+                        }
                     }
+                }
+                catch {
+                    continue;
                 }
             }
 
@@ -237,35 +279,37 @@ namespace DeluxeJournal.Util
         private static PlainTextMap<string> CreateNPCMap()
         {
             // broken character mods make reading the data from them return null
-            IDictionary<string?, StardewValley.GameData.Characters.CharacterData?>? npcData = DataLoader.Characters(Game1.content);
             PlainTextMap<string> map = new PlainTextMap<string> ();
-            if (npcData != null)
+            DeluxeJournalMod.Instance.Monitor.Log("NPC count: " + Game1.characterData.Count);
+
+            foreach (KeyValuePair<string, StardewValley.GameData.Characters.CharacterData> entry in Game1.characterData)
             {
-                foreach (string? key in npcData.Keys)
+                try
                 {
-                    if (key != null && npcData[key] != null)
-                    {
-                        map.add(TokenParser.ParseText(npcData[key].DisplayName).ToLowerInvariant(), key);
-                    }
+                    map.add(TokenParser.ParseText(entry.Value.DisplayName).ToLowerInvariant(), entry.Key);
+                }
+                catch (NullReferenceException)
+                {
+                    continue;
                 }
             }
-
             return map;
         }
 
         private static PlainTextMap<BlueprintInfo> CreateBlueprintMap()
         {
             //TODO: Change this once I understand better how it uses the blueprintinfo
-            IDictionary<string?, StardewValley.GameData.Buildings.BuildingData?>? blueprintData = DataLoader.Buildings(Game1.content);
             PlainTextMap<BlueprintInfo > map = new PlainTextMap<BlueprintInfo> ();
-            if (blueprintData != null)
+
+            foreach (KeyValuePair<string, StardewValley.GameData.Buildings.BuildingData> entry in DataLoader.Buildings(Game1.content))
             {
-                foreach (string? key in blueprintData.Keys)
+                try
                 {
-                    if (key != null && blueprintData[key] != null)
-                    {
-                        map.add(TokenParser.ParseText(blueprintData[key].Name).ToLowerInvariant(), new BlueprintInfo(key, TokenParser.ParseText(blueprintData[key].Name), blueprintData[key].BuildingType, blueprintData[key].BuildCost));
-                    }
+                    map.add(TokenParser.ParseText(entry.Value.Name).ToLowerInvariant(), new BlueprintInfo(entry.Key, TokenParser.ParseText(entry.Value.Name), entry.Value.BuildingType, entry.Value.BuildCost));
+                }
+                catch (NullReferenceException)
+                {
+                    continue;
                 }
             }
 
