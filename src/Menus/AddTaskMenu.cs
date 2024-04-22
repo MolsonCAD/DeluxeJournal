@@ -300,7 +300,7 @@ namespace DeluxeJournal.Menus
             }
 
             string title = _translation.Get("ui.tasks.new");
-            Vector2 iconOffset = Vector2.Zero;
+            Point iconLocation = new(_smartIcons.Location.X, okButton.bounds.Y);
 
             b.Draw(Game1.fadeToBlackRect, Game1.graphics.GraphicsDevice.Viewport.Bounds, Color.Black * 0.75f);
             SpriteText.drawStringWithScrollCenteredAt(b, title, xPositionOnScreen + width / 2, yPositionOnScreen - 96);
@@ -313,7 +313,7 @@ namespace DeluxeJournal.Menus
                 int extraLineSpacing = Math.Max(0, text.Count(c => c == '\n') - 1) * Game1.smallFont.LineSpacing;
 
                 DrawInfoBox(b, text, new Rectangle(_textBox.X - 32, _textBox.Y + 34, 544, 140 + extraLineSpacing));
-                iconOffset.Y = 80 + extraLineSpacing;
+                iconLocation.Y += extraLineSpacing + 80;
 
                 if (new Rectangle(_textBox.X, _textBox.Y + 72, 480, 76).Contains(Game1.getOldMouseX(), Game1.getOldMouseY()))
                 {
@@ -326,7 +326,8 @@ namespace DeluxeJournal.Menus
             okButton.draw(b, (_textBox.Text.Length > 0) ? Color.White : Color.Gray * 0.8f, 0.88f);
             smartOkButton.draw(b, (_textBox.Text.Length > 0 && _taskParser.MatchFound()) ? Color.White : Color.Gray * 0.8f, 0.88f);
 
-            _smartIcons.Draw(b, iconOffset, Color.White);
+            _smartIcons.Location = iconLocation;
+            _smartIcons.Draw(b, Color.White);
 
             if (_hoverText.Length > 0)
             {

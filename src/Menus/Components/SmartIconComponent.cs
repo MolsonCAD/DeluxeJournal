@@ -27,7 +27,35 @@ namespace DeluxeJournal.Menus.Components
         private readonly IList<ClickableComponent> _taskTargetIcons;
         private readonly TaskParser _taskParser;
         private readonly SmartIconFlags _mask;
+        private Rectangle _bounds;
         private bool _visible;
+
+        public Point Location
+        {
+            get => _bounds.Location;
+
+            set
+            {
+                Point translate = value - _bounds.Location;
+
+                if (translate == Point.Zero)
+                {
+                    return;
+                }
+
+                _bounds.Location = value;
+
+                if (_taskTypeIcon != null)
+                {
+                    _taskTypeIcon.bounds.Location += translate;
+                }
+
+                foreach (var target in _taskTargetIcons)
+                {
+                    target.bounds.Location += translate;
+                }
+            }
+        }
 
         public bool Visible
         {
@@ -61,6 +89,7 @@ namespace DeluxeJournal.Menus.Components
             _taskTargetIcons = new List<ClickableComponent>();
             _taskParser = taskParser;
             _mask = mask;
+            _bounds = bounds;
             _visible = true;
 
             if (showType)
@@ -160,37 +189,27 @@ namespace DeluxeJournal.Menus.Components
 
         public void Draw(SpriteBatch b, Color color, bool shadow = false)
         {
-            Draw(b, Vector2.Zero, color, shadow);
-        }
-
-        public void Draw(SpriteBatch b, Vector2 offset, Color color, bool shadow = false)
-        {
             if (Visible = _taskParser.MatchFound())
             {
                 SmartIconFlags flag = SmartIconFlags.All;
                 int parsedCount = _taskParser.ShouldShowCount() ? _taskParser.Count : 0;
                 int targetIconIndex = 0;
-                Rectangle bounds;
 
                 if (_taskTypeIcon != null)
                 {
-                    bounds = _taskTypeIcon.bounds;
-                    bounds.Offset(offset.X, offset.Y);
-                    TaskRegistry.GetTaskIcon(_taskParser.ID).DrawIcon(b, bounds, color);
+                    TaskRegistry.GetTaskIcon(_taskParser.ID).DrawIcon(b, _taskTypeIcon.bounds, color);
                 }
 
                 for (; targetIconIndex < _taskTargetIcons.Count; targetIconIndex++)
                 {
                     ClickableComponent targetIcon = _taskTargetIcons[targetIconIndex];
-                    bounds = targetIcon.bounds;
-                    bounds.Offset(offset.X, offset.Y);
 
                     if (ComparePriority(ref flag, SmartIconFlags.Npc, _mask, true) && _taskParser.ShouldShowSmartIcon(SmartIconFlags.Npc))
                     {
                         DrawIconWithBackground(b,
                             DeluxeJournalMod.CharacterIconsTexture,
-                            ConvertInnerBounds(bounds),
-                            bounds,
+                            ConvertInnerBounds(targetIcon.bounds),
+                            targetIcon.bounds,
                             CharacterIconIds?.GetValueOrDefault(_taskParser.NpcName) ?? 0,
                             0,
                             color,
@@ -200,8 +219,8 @@ namespace DeluxeJournal.Menus.Components
                     {
                         DrawIconWithBackground(b,
                             DeluxeJournalMod.AnimalIconsTexture,
-                            ConvertInnerBounds(bounds),
-                            bounds,
+                            ConvertInnerBounds(targetIcon.bounds),
+                            targetIcon.bounds,
                             AnimalIconIds?.GetValueOrDefault(_taskParser.FarmAnimals?.FirstOrDefault() ?? string.Empty) ?? 0,
                             0,
                             color,
@@ -214,7 +233,7 @@ namespace DeluxeJournal.Menus.Components
                         {
                             DrawIcon(b,
                                 DeluxeJournalMod.BuildingIconsTexture,
-                                bounds,
+                                targetIcon.bounds,
                                 buildingIconData.SpriteIndex,
                                 OuterIconPixels,
                                 color,
@@ -225,14 +244,14 @@ namespace DeluxeJournal.Menus.Components
                     }
                     else if (ComparePriority(ref flag, SmartIconFlags.Item, _mask, true) && _taskParser.ShouldShowSmartIcon(SmartIconFlags.Item) && _taskParser.ProxyItem is Item item)
                     {
-                        DrawIconBackground(b, bounds, 1, color, shadow);
+                        DrawIconBackground(b, targetIcon.bounds, 1, color, shadow);
                         item.drawInMenu(b,
-                            new Vector2(bounds.X - 4, bounds.Y - (item is WateringCan ? -4 : 4)),
+                            new Vector2(targetIcon.bounds.X - 4, targetIcon.bounds.Y - (item is WateringCan ? -4 : 4)),
                             0.75f, 1.0f, 0.9f,
                             StackDrawType.Hide,
                             color,
                             false);
-                        DrawDigits(b, parsedCount, bounds, color);
+                        DrawDigits(b, parsedCount, targetIcon.bounds, color);
                     }
                     else
                     {
