@@ -1,6 +1,6 @@
-﻿using DeluxeJournal.Framework.Tasks;
+﻿using DeluxeJournal.Task.Tasks;
 
-namespace DeluxeJournal.Tasks
+namespace DeluxeJournal.Task
 {
     /// <summary>Basic task with no auto-completion features.</summary>
     public class BasicTask : TaskBase

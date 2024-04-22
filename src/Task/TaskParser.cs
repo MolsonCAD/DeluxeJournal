@@ -2,12 +2,12 @@
 using StardewValley;
 using StardewValley.GameData.Tools;
 using StardewValley.TokenizableStrings;
-using DeluxeJournal.Framework.Tasks;
+using DeluxeJournal.Task.Tasks;
 using DeluxeJournal.Util;
 
-using static DeluxeJournal.Tasks.TaskParameterAttribute;
+using static DeluxeJournal.Task.TaskParameterAttribute;
 
-namespace DeluxeJournal.Tasks
+namespace DeluxeJournal.Task
 {
     /// <summary>Parses text into tasks.</summary>
     public class TaskParser

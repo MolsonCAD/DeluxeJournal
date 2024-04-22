@@ -2,15 +2,14 @@
 using StardewModdingAPI.Events;
 using StardewValley;
 using DeluxeJournal.Events;
-using DeluxeJournal.Tasks;
 
-using static DeluxeJournal.Tasks.TaskParameterAttribute;
+using static DeluxeJournal.Task.TaskParameterAttribute;
 
-namespace DeluxeJournal.Framework.Tasks
+namespace DeluxeJournal.Task.Tasks
 {
     internal class BuildTask : TaskBase
     {
-        public class Factory : DeluxeJournal.Tasks.TaskFactory
+        public class Factory : TaskFactory
         {
             [TaskParameter(TaskParameterNames.Building, TaskParameterTag.Building)]
             public string? BuildingType { get; set; }

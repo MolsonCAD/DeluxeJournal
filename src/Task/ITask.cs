@@ -4,7 +4,7 @@ using StardewValley;
 using DeluxeJournal.Events;
 using DeluxeJournal.Framework.Serialization;
 
-namespace DeluxeJournal.Tasks
+namespace DeluxeJournal.Task
 {
     /// <summary>Task interface.</summary>
     /// <remarks>Note: This should not be implemented directly. Please inherit from <see cref="TaskBase"/>.</remarks>

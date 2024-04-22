@@ -1,4 +1,4 @@
-﻿namespace DeluxeJournal.Tasks
+﻿namespace DeluxeJournal.Task
 {
     /// <summary>Settings for a <see cref="TaskParser"/> object.</summary>
     public class TaskParserSettings

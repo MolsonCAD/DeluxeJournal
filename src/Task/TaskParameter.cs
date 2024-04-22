@@ -4,9 +4,9 @@ using StardewValley.GameData.Tools;
 using StardewValley.ItemTypeDefinitions;
 using DeluxeJournal.Util;
 
-using static DeluxeJournal.Tasks.TaskParameterAttribute;
+using static DeluxeJournal.Task.TaskParameterAttribute;
 
-namespace DeluxeJournal.Tasks
+namespace DeluxeJournal.Task
 {
     /// <summary>TaskFactory parameter.</summary>
     public class TaskParameter
@@ -37,7 +37,7 @@ namespace DeluxeJournal.Tasks
             set
             {
                 _revalidate = true;
-                Property.SetValue(Factory, (value == null && Type.IsValueType) ? Activator.CreateInstance(Type) : value);
+                Property.SetValue(Factory, value == null && Type.IsValueType ? Activator.CreateInstance(Type) : value);
             }
         }
 

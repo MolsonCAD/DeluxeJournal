@@ -1,7 +1,7 @@
 ﻿using StardewModdingAPI;
 using StardewValley;
 using StardewValley.BellsAndWhistles;
-using DeluxeJournal.Tasks;
+using DeluxeJournal.Task;
 
 namespace DeluxeJournal.Util
 {
@@ -34,7 +34,7 @@ namespace DeluxeJournal.Util
         private readonly IDictionary<string, HashSet<T>> _data;
 
         /// <summary>Parser settings.</summary>
-        public TaskParserSettings Settings => _settings;
+        protected TaskParserSettings Settings => _settings;
 
         /// <summary>Translation helper.</summary>
         protected ITranslationHelper Translation => _translation;

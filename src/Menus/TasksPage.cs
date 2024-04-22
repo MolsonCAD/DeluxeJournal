@@ -6,9 +6,9 @@ using StardewValley;
 using StardewValley.BellsAndWhistles;
 using StardewValley.Menus;
 using DeluxeJournal.Framework;
-using DeluxeJournal.Framework.Tasks;
+using DeluxeJournal.Framework.Task;
 using DeluxeJournal.Menus.Components;
-using DeluxeJournal.Tasks;
+using DeluxeJournal.Task;
 
 using static StardewValley.Menus.ClickableComponent;
 

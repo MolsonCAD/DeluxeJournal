@@ -1,14 +1,13 @@
 ﻿using StardewModdingAPI;
 using DeluxeJournal.Events;
-using DeluxeJournal.Tasks;
 
-using static DeluxeJournal.Tasks.TaskParameterAttribute;
+using static DeluxeJournal.Task.TaskParameterAttribute;
 
-namespace DeluxeJournal.Framework.Tasks
+namespace DeluxeJournal.Task.Tasks
 {
     internal class GiftTask : TaskBase
     {
-        public class Factory : DeluxeJournal.Tasks.TaskFactory
+        public class Factory : TaskFactory
         {
             [TaskParameter(TaskParameterNames.Item, TaskParameterTag.ItemList, Constraints = Constraint.SObject)]
             public IList<string>? ItemIds { get; set; }

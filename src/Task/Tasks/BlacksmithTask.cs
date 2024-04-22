@@ -4,16 +4,15 @@ using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.GameData.Tools;
 using DeluxeJournal.Events;
-using DeluxeJournal.Tasks;
 using DeluxeJournal.Util;
 
-using static DeluxeJournal.Tasks.TaskParameterAttribute;
+using static DeluxeJournal.Task.TaskParameterAttribute;
 
-namespace DeluxeJournal.Framework.Tasks
+namespace DeluxeJournal.Task.Tasks
 {
     internal class BlacksmithTask : TaskBase
     {
-        public class Factory : DeluxeJournal.Tasks.TaskFactory
+        public class Factory : TaskFactory
         {
             [TaskParameter(TaskParameterNames.Tool, TaskParameterTag.ItemList, Constraints = Constraint.Upgradable | Constraint.NotEmpty)]
             public IList<string>? ItemIds { get; set; }
@@ -80,7 +79,7 @@ namespace DeluxeJournal.Framework.Tasks
         {
             if (CanUpdate())
             {
-                Count = (Game1.player.toolBeingUpgraded.Value is Tool tool && IsTargetTool(tool)) ? StageWaiting : StageDeliver;
+                Count = Game1.player.toolBeingUpgraded.Value is Tool tool && IsTargetTool(tool) ? StageWaiting : StageDeliver;
             }
         }
 
@@ -107,7 +106,7 @@ namespace DeluxeJournal.Framework.Tasks
 
         public override int GetPrice()
         {
-            return (Count > StageDeliver || ItemId == ItemRegistry.type_tool + "Pan") ? 0 : ToolHelper.PriceForToolUpgradeLevel(UpgradeLevel);
+            return Count > StageDeliver || ItemId == ItemRegistry.type_tool + "Pan" ? 0 : ToolHelper.PriceForToolUpgradeLevel(UpgradeLevel);
         }
 
         public override void EventSubscribe(ITaskEvents events)

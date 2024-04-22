@@ -3,9 +3,9 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using DeluxeJournal.Events;
 using DeluxeJournal.Framework.Data;
-using DeluxeJournal.Tasks;
+using DeluxeJournal.Task;
 
-namespace DeluxeJournal.Framework.Tasks
+namespace DeluxeJournal.Framework.Task
 {
     internal class TaskManager
     {

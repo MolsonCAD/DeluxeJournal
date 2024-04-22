@@ -3,8 +3,8 @@ using Newtonsoft.Json.Linq;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.GameData.Tools;
-using DeluxeJournal.Framework.Tasks;
-using DeluxeJournal.Tasks;
+using DeluxeJournal.Task;
+using DeluxeJournal.Task.Tasks;
 using DeluxeJournal.Util;
 
 namespace DeluxeJournal.Framework.Serialization

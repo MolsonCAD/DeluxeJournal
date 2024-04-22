@@ -3,9 +3,9 @@ using StardewValley;
 using DeluxeJournal.Events;
 using DeluxeJournal.Framework;
 
-using static DeluxeJournal.Tasks.ITask;
+using static DeluxeJournal.Task.ITask;
 
-namespace DeluxeJournal.Tasks
+namespace DeluxeJournal.Task
 {
     /// <summary>Task base class. All tasks should derive from this.</summary>
     public abstract class TaskBase : ITask

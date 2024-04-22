@@ -4,9 +4,8 @@ using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
 using StardewValley.Tools;
-using DeluxeJournal.Tasks;
+using DeluxeJournal.Task;
 using DeluxeJournal.Framework.Data;
-using DeluxeJournal.Framework.Tasks;
 
 using static StardewValley.Menus.ClickableComponent;
 

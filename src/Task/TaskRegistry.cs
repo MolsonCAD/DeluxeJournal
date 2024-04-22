@@ -1,9 +1,9 @@
 ﻿using StardewModdingAPI;
-using DeluxeJournal.Tasks;
+using DeluxeJournal.Task.Tasks;
 
-namespace DeluxeJournal.Framework.Tasks
+namespace DeluxeJournal.Task
 {
-    internal static class TaskRegistry
+    public static class TaskRegistry
     {
         private struct RegistryEntry
         {
@@ -25,7 +25,7 @@ namespace DeluxeJournal.Framework.Tasks
         }
 
         /// <summary>Basic task factory instance.</summary>
-        public static readonly DeluxeJournal.Tasks.TaskFactory BasicFactory = new BasicFactory<BasicTask>();
+        public static readonly TaskFactory BasicFactory = new BasicFactory<BasicTask>();
 
         /// <summary>Number of registered tasks.</summary>
         public static int Count => Registry.Count;
@@ -96,14 +96,14 @@ namespace DeluxeJournal.Framework.Tasks
         /// <param name="id">Registered task ID.</param>
         /// <exception cref="KeyNotFoundException">The task with <paramref name="id"/> was not registered.</exception>
         /// <exception cref="InvalidOperationException">The factory could not be instantiated.</exception>
-        public static DeluxeJournal.Tasks.TaskFactory CreateFactoryInstance(string id)
+        public static TaskFactory CreateFactoryInstance(string id)
         {
             if (id == TaskTypes.Basic)
             {
                 return BasicFactory;
             }
             
-            if (Activator.CreateInstance(Registry[id].FactoryType) is not DeluxeJournal.Tasks.TaskFactory factory)
+            if (Activator.CreateInstance(Registry[id].FactoryType) is not TaskFactory factory)
             {
                 throw new InvalidOperationException("Unable to instantiate TaskFactory: " + Registry[id].FactoryType.FullName);
             }

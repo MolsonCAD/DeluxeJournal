@@ -9,7 +9,7 @@ using StardewValley.Menus;
 
 using DeluxeJournal.Framework;
 using DeluxeJournal.Menus.Components;
-using DeluxeJournal.Tasks;
+using DeluxeJournal.Task;
 
 using static StardewValley.Menus.ClickableComponent;
 

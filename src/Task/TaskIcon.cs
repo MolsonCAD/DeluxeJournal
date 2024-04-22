@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 
-namespace DeluxeJournal.Tasks
+namespace DeluxeJournal.Task
 {
     public class TaskIcon
     {

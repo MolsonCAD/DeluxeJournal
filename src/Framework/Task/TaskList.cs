@@ -1,8 +1,8 @@
-﻿using DeluxeJournal.Events;
-using DeluxeJournal.Tasks;
-using System.Collections;
+﻿using System.Collections;
+using DeluxeJournal.Events;
+using DeluxeJournal.Task;
 
-namespace DeluxeJournal.Framework.Tasks
+namespace DeluxeJournal.Framework.Task
 {
     /// <summary>A List wrapper for conveniently managing ITasks.</summary>
     internal class TaskList : IList<ITask>, IReadOnlyList<ITask>

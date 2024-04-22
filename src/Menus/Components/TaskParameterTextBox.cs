@@ -1,9 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
-using DeluxeJournal.Tasks;
+using DeluxeJournal.Task;
 
-using static DeluxeJournal.Tasks.TaskParameterAttribute;
+using static DeluxeJournal.Task.TaskParameterAttribute;
 
 namespace DeluxeJournal.Menus.Components
 {
@@ -16,7 +16,7 @@ namespace DeluxeJournal.Menus.Components
 
         public string Label { get; set; } = string.Empty;
 
-        public TaskParameterTextBox(TaskParameter parameter, Tasks.TaskFactory factory, Texture2D? textBoxTexture, Texture2D? caretTexture, SpriteFont font, Color textColor, ITranslationHelper translation)
+        public TaskParameterTextBox(TaskParameter parameter, Task.TaskFactory factory, Texture2D? textBoxTexture, Texture2D? caretTexture, SpriteFont font, Color textColor, ITranslationHelper translation)
             : base(textBoxTexture, caretTexture, font, textColor)
         {
             TaskParameter = parameter;

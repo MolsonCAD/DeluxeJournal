@@ -1,16 +1,15 @@
 ﻿using Newtonsoft.Json;
 using StardewModdingAPI;
 using DeluxeJournal.Events;
-using DeluxeJournal.Tasks;
 using DeluxeJournal.Util;
 
-using static DeluxeJournal.Tasks.TaskParameterAttribute;
+using static DeluxeJournal.Task.TaskParameterAttribute;
 
-namespace DeluxeJournal.Framework.Tasks
+namespace DeluxeJournal.Task.Tasks
 {
     internal class CollectTask : TaskBase
     {
-        public class Factory : DeluxeJournal.Tasks.TaskFactory
+        public class Factory : TaskFactory
         {
             [TaskParameter(TaskParameterNames.Item, TaskParameterTag.ItemList, Constraints = Constraint.SObject | Constraint.NotEmpty)]
             public IList<string>? ItemIds { get; set; }

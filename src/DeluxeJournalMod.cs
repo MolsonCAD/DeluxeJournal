@@ -9,10 +9,11 @@ using DeluxeJournal.Api;
 using DeluxeJournal.Framework;
 using DeluxeJournal.Framework.Data;
 using DeluxeJournal.Framework.Events;
-using DeluxeJournal.Framework.Tasks;
+using DeluxeJournal.Framework.Task;
 using DeluxeJournal.Menus;
 using DeluxeJournal.Menus.Components;
 using DeluxeJournal.Patching;
+using DeluxeJournal.Task.Tasks;
 
 namespace DeluxeJournal
 {

@@ -1,4 +1,4 @@
-﻿namespace DeluxeJournal.Tasks
+﻿namespace DeluxeJournal.Task
 {
     /// <summary>Attribute to mark a TaskFactory property as a TaskParameter.</summary>
     [AttributeUsage(AttributeTargets.Property)]

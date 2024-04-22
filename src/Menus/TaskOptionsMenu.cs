@@ -6,11 +6,12 @@ using StardewValley;
 using StardewValley.BellsAndWhistles;
 using StardewValley.Menus;
 
-using DeluxeJournal.Framework.Tasks;
+using DeluxeJournal.Framework.Task;
 using DeluxeJournal.Menus.Components;
-using DeluxeJournal.Tasks;
+using DeluxeJournal.Task;
+using DeluxeJournal.Task.Tasks;
 
-using Period = DeluxeJournal.Tasks.ITask.Period;
+using Period = DeluxeJournal.Task.ITask.Period;
 using static StardewValley.Menus.ClickableComponent;
 
 namespace DeluxeJournal.Menus
@@ -50,7 +51,7 @@ namespace DeluxeJournal.Menus
         private readonly Rectangle _fixedContentBounds;
         private readonly ITask? _task;
 
-        private Tasks.TaskFactory? _taskFactory;
+        private Task.TaskFactory? _taskFactory;
         private OptionsElement? _optionHeld;
         private string _selectedTaskID;
         private string _hoverText;

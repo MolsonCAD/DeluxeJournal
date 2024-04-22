@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
-using DeluxeJournal.Tasks;
+using DeluxeJournal.Task;
 
 namespace DeluxeJournal.Menus.Components
 {

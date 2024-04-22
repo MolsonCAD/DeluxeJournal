@@ -1,4 +1,4 @@
-﻿namespace DeluxeJournal.Tasks
+﻿namespace DeluxeJournal.Task
 {
     /// <summary>Flags for enabling smart icons in the task menu.</summary>
     [Flags]

@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
-using DeluxeJournal.Tasks;
 
-namespace DeluxeJournal.Framework.Tasks
+namespace DeluxeJournal.Task.Tasks
 {
     internal static class TaskTypes
     {

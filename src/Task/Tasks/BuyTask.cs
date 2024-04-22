@@ -2,16 +2,15 @@
 using StardewModdingAPI;
 using StardewValley;
 using DeluxeJournal.Events;
-using DeluxeJournal.Tasks;
 using DeluxeJournal.Util;
 
-using static DeluxeJournal.Tasks.TaskParameterAttribute;
+using static DeluxeJournal.Task.TaskParameterAttribute;
 
-namespace DeluxeJournal.Framework.Tasks
+namespace DeluxeJournal.Task.Tasks
 {
-    internal class SellTask : TaskBase
+    internal class BuyTask : TaskBase
     {
-        public class Factory : DeluxeJournal.Tasks.TaskFactory
+        public class Factory : TaskFactory
         {
             [TaskParameter(TaskParameterNames.Item, TaskParameterTag.ItemList, Constraints = Constraint.ItemId | Constraint.NotEmpty)]
             public IList<string>? ItemIds { get; set; }
@@ -25,20 +24,20 @@ namespace DeluxeJournal.Framework.Tasks
 
             public override void Initialize(ITask task, ITranslationHelper translation)
             {
-                if (task is SellTask sellTask)
+                if (task is BuyTask buyTask)
                 {
-                    ItemIds = sellTask.ItemIds;
-                    Count = sellTask.MaxCount;
+                    ItemIds = buyTask.ItemIds;
+                    Count = buyTask.MaxCount;
                 }
             }
 
             public override ITask? Create(string name)
             {
-                return ItemIds != null && ItemIds.Count > 0 ? new SellTask(name, ItemIds, Count) : null;
+                return ItemIds != null && ItemIds.Count > 0 ? new BuyTask(name, ItemIds, Count) : null;
             }
         }
 
-        /// <summary>The qualified item IDs of the items to be sold.</summary>
+        /// <summary>The qualified item IDs of the items to be bought.</summary>
         public IList<string> ItemIds { get; set; }
 
         /// <summary>The qualified base item IDs of the items to be bought. Stripped of any encoded flavor ID information.</summary>
@@ -50,21 +49,16 @@ namespace DeluxeJournal.Framework.Tasks
         private string? PreserveItemId { get; set; }
 
         /// <summary>Serialization constructor.</summary>
-        public SellTask() : base(TaskTypes.Sell)
+        public BuyTask() : base(TaskTypes.Buy)
         {
             ItemIds = Array.Empty<string>();
         }
 
-        public SellTask(string name, IList<string> itemIds, int count) : base(TaskTypes.Sell, name)
+        public BuyTask(string name, IList<string> itemIds, int count) : base(TaskTypes.Buy, name)
         {
             ItemIds = itemIds;
             MaxCount = count;
-
-            if (ItemRegistry.Create(itemIds.First()) is Item item)
-            {
-                BasePrice = item is SObject obj ? obj.sellToStorePrice() : item.salePrice();
-            }
-
+            BasePrice = ItemRegistry.Create(itemIds.First()).salePrice();
             Validate();
         }
 
@@ -80,25 +74,20 @@ namespace DeluxeJournal.Framework.Tasks
             return true;
         }
 
-        public override int GetPrice()
-        {
-            return -base.GetPrice();
-        }
-
         public override void EventSubscribe(ITaskEvents events)
         {
-            events.SalableSold += OnSalableSold;
+            events.SalablePurchased += OnSalablePurchased;
         }
 
         public override void EventUnsubscribe(ITaskEvents events)
         {
-            events.SalableSold -= OnSalableSold;
+            events.SalablePurchased -= OnSalablePurchased;
         }
 
-        private void OnSalableSold(object? sender, SalableEventArgs e)
+        private void OnSalablePurchased(object? sender, SalableEventArgs e)
         {
             if (CanUpdate() && IsTaskOwner(e.Player) && e.Salable is Item item && BaseItemIds.Contains(item.QualifiedItemId)
-                && (string.IsNullOrEmpty(PreserveItemId) || (item is SObject obj && PreserveItemId == obj.preservedParentSheetIndex.Value)))
+                && (string.IsNullOrEmpty(PreserveItemId) || item is SObject obj && PreserveItemId == obj.preservedParentSheetIndex.Value))
             {
                 IncrementCount(e.Amount);
             }

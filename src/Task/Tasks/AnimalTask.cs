@@ -1,15 +1,15 @@
 ﻿using StardewModdingAPI;
 using StardewValley;
 using DeluxeJournal.Events;
-using DeluxeJournal.Tasks;
+using DeluxeJournal.Framework.Task;
 
-using static DeluxeJournal.Tasks.TaskParameterAttribute;
+using static DeluxeJournal.Task.TaskParameterAttribute;
 
-namespace DeluxeJournal.Framework.Tasks
+namespace DeluxeJournal.Task.Tasks
 {
     internal class AnimalTask : TaskBase
     {
-        public class Factory : DeluxeJournal.Tasks.TaskFactory
+        public class Factory : TaskFactory
         {
             [TaskParameter(TaskParameterNames.FarmAnimal, TaskParameterTag.FarmAnimalList)]
             public IList<string>? FarmAnimalTypes { get; set; }
@@ -54,7 +54,7 @@ namespace DeluxeJournal.Framework.Tasks
         {
             FarmAnimalTypes = farmAnimalTypes;
             MaxCount = count;
-            
+
             if (Game1.farmAnimalData.TryGetValue(farmAnimalTypes.First(), out var data))
             {
                 BasePrice = data.PurchasePrice * 2;

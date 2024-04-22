@@ -5,7 +5,7 @@ using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
 using DeluxeJournal.Menus.Components;
-using DeluxeJournal.Tasks;
+using DeluxeJournal.Task;
 
 namespace DeluxeJournal.Menus
 {

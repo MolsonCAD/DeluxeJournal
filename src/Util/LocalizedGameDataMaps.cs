@@ -9,12 +9,12 @@ using StardewValley.GameData.Tools;
 using StardewValley.GameData.Weapons;
 using StardewValley.ItemTypeDefinitions;
 using StardewValley.TokenizableStrings;
-using DeluxeJournal.Tasks;
+using DeluxeJournal.Task;
 
 namespace DeluxeJournal.Util
 {
     /// <summary>Provides a collection of <see cref="LocalizedGameDataMap{T}"/> objects.</summary>
-    public class LocalizedGameDataMaps
+    public sealed class LocalizedGameDataMaps
     {
         /// <inheritdoc cref="LocalizedItemMap"/>
         public LocalizedGameDataMap LocalizedItems { get; }

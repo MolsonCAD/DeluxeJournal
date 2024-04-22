@@ -1,6 +1,6 @@
 ﻿using StardewModdingAPI;
 
-namespace DeluxeJournal.Tasks
+namespace DeluxeJournal.Task
 {
     /// <summary>Task factory used to create ITask instances.</summary>
     public abstract class TaskFactory

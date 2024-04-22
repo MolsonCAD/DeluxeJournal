@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using StardewModdingAPI;
 using DeluxeJournal.Framework.Serialization;
-using DeluxeJournal.Tasks;
+using DeluxeJournal.Task;
 
 namespace DeluxeJournal.Framework.Data
 {

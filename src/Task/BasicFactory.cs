@@ -1,6 +1,6 @@
 ﻿using StardewModdingAPI;
 
-namespace DeluxeJournal.Tasks
+namespace DeluxeJournal.Task
 {
     /// <summary>Generic factory for an <see cref="ITask"/> without state.</summary>
     public class BasicFactory<T> : TaskFactory where T : ITask, new()
