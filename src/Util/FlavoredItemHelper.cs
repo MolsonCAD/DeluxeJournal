@@ -89,40 +89,35 @@ namespace DeluxeJournal.Util
             return qualify ? ItemRegistry.type_object + flavoredId[seperatorIndex..] : flavoredId[seperatorIndex..];
         }
 
-        /// <summary>Convert a list of flavored item IDs to a list of ingredients.</summary>
+        /// <summary>Convert a list of flavored item IDs to a list of base item IDs with the encoded flavor information removed.</summary>
         /// <param name="flavoredIds">List of encoded flavor IDs.</param>
-        /// <param name="ingredientIds">List of qualified ingredient IDs.</param>
-        /// <param name="qualifyPreserveId">Qualify the preserve ID.</param>
-        /// <param name="qualifyIngredientIds">Qualify the ingredient IDs.</param>
+        /// <param name="baseIds">List of base item IDs.</param>
+        /// <param name="qualifyIngredientId">Qualify the ingredient ID.</param>
         /// <param name="keepOnDecodeError">Keep IDs that could not be decoded. Lists that may have a mix of flavored and unflavored IDs should enable this.</param>
         /// <returns>
-        /// The qualified base preserve item ID or <c>null</c> if none was found. If the <paramref name="flavoredIds"/>
+        /// The removed ingredient ID or <c>null</c> if none was found. If the <paramref name="flavoredIds"/>
         /// contains a mix of preserve types, then it always returns the last one seen.
         /// </returns>
-        public static string? ConvertFlavoredList(IList<string> flavoredIds, out IList<string> ingredientIds, bool qualifyPreserveId = true, bool qualifyIngredientIds = true, bool keepOnDecodeError = true)
+        public static string? ConvertFlavoredList(IList<string> flavoredIds, out IList<string> baseIds, bool qualifyIngredientId = true, bool keepOnDecodeError = true)
         {
-            string? preserveId = null;
-            ingredientIds = new List<string>();
+            string? ingredientId = null;
+            baseIds = new List<string>();
 
             foreach (string flavoredId in flavoredIds)
             {
-                if (DecodeFlavoredItemId(flavoredId, out string preserveIdDecode, out string ingredientId, qualifyIngredientIds))
+                if (DecodeFlavoredItemId(flavoredId, out string preserveId, out string ingredientIdDecode, qualifyIngredientId))
                 {
-                    preserveId = preserveIdDecode;
-                    ingredientIds.Add(ingredientId);
+                    ingredientId = ingredientIdDecode;
+                    baseIds.Add(preserveId);
                 }
                 else if (keepOnDecodeError)
                 {
-                    ingredientIds.Add(flavoredId);
+                    baseIds.Add(flavoredId);
+                    continue;
                 }
             }
 
-            if (preserveId != null && preserveId.StartsWith(ItemRegistry.type_object) && !qualifyPreserveId)
-            {
-                preserveId = preserveId[3..];
-            }
-
-            return preserveId;
+            return ingredientId;
         }
 
         /// <summary>Create a flavored item instance from an encoded flavored item ID.</summary>
