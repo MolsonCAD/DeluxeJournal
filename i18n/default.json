@@ -24,7 +24,7 @@
 	"ui.tab.notes": "Notes",
 	
 	// tasks page
-	"ui.tasks.help": "Press the Add Task button",
+	"ui.tasks.help": "Press the Add Task button below",
 	"ui.tasks.addbutton.hover": "Add Task",
 	"ui.tasks.editbox.hover": "Edit Task",
 	"ui.tasks.removebutton.hover": "Remove Task",

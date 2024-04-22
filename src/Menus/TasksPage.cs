@@ -146,6 +146,7 @@ namespace DeluxeJournal.Menus
         public void AddTask(ITask task)
         {
             _taskManager.Tasks.Insert(0, task);
+            _config.ShowAddTaskHelpMessage = false;
             scrollComponent.ContentHeight += scrollComponent.ScrollDistance;
             scrollComponent.Refresh();
         }
@@ -497,7 +498,7 @@ namespace DeluxeJournal.Menus
                     taskEntries[i].Draw(b, tasks[i + scrollOffset]);
                 }
             }
-            else
+            else if (_config.ShowAddTaskHelpMessage)
             {
                 string helpText = _translation.Get("ui.tasks.help");
                 Vector2 helpTextSize = Game1.dialogueFont.MeasureString(helpText);

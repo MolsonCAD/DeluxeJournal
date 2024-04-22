@@ -41,6 +41,7 @@ after they've been completed.
 task(s) will show up in the money box at the bottom of the tasks page.*
 
 #### Tips
+- *Shortcuts*: Press the spacebar while on the tasks page to quickly open up the "Add Task" menu.
 - *Task Options*: When adding a task, the above task types can be applied automatically (simply by
 	typing a name that matches the format of the desired type) or manually by opening the options
 	menu. This can also be changed after task creation by pressing the body of the task.
