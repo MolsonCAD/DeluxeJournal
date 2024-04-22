@@ -3,8 +3,10 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
+using StardewValley.Objects;
 using StardewValley.Tools;
 using DeluxeJournal.Task;
+using DeluxeJournal.Task.Tasks;
 using DeluxeJournal.Framework.Data;
 
 using static StardewValley.Menus.ClickableComponent;
@@ -251,7 +253,11 @@ namespace DeluxeJournal.Menus.Components
                             StackDrawType.Hide,
                             color,
                             false);
-                        DrawDigits(b, parsedCount, targetIcon.bounds, color);
+
+                        if (item is not Ring || _taskParser.ID == TaskTypes.Buy || _taskParser.ID == TaskTypes.Sell)
+                        {
+                            DrawDigits(b, parsedCount, targetIcon.bounds, color);
+                        }
                     }
                     else
                     {

@@ -61,7 +61,7 @@ namespace DeluxeJournal.Task.Tasks
 
             if (ItemRegistry.Create(itemIds.First()) is Item item)
             {
-                BasePrice = item is SObject obj ? obj.sellToStorePrice() : item.salePrice();
+                BasePrice = item.sellToStorePrice();
             }
 
             Validate();
@@ -97,7 +97,7 @@ namespace DeluxeJournal.Task.Tasks
         private void OnSalableSold(object? sender, SalableEventArgs e)
         {
             if (CanUpdate() && IsTaskOwner(e.Player) && e.Salable is Item item && BaseItemIds.Contains(item.QualifiedItemId)
-                && (string.IsNullOrEmpty(PreserveItemId) || item is SObject obj && PreserveItemId == obj.preservedParentSheetIndex.Value))
+                && (string.IsNullOrEmpty(PreserveItemId) || (item is SObject obj && PreserveItemId == obj.preservedParentSheetIndex.Value)))
             {
                 IncrementCount(e.Amount);
             }

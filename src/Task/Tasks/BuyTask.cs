@@ -87,7 +87,7 @@ namespace DeluxeJournal.Task.Tasks
         private void OnSalablePurchased(object? sender, SalableEventArgs e)
         {
             if (CanUpdate() && IsTaskOwner(e.Player) && e.Salable is Item item && BaseItemIds.Contains(item.QualifiedItemId)
-                && (string.IsNullOrEmpty(PreserveItemId) || item is SObject obj && PreserveItemId == obj.preservedParentSheetIndex.Value))
+                && (string.IsNullOrEmpty(PreserveItemId) || (item is SObject obj && PreserveItemId == obj.preservedParentSheetIndex.Value)))
             {
                 IncrementCount(e.Amount);
             }

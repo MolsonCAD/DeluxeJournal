@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.Objects;
 using StardewValley.Quests;
 using DeluxeJournal.Events;
 using DeluxeJournal.Framework.Events;
@@ -22,9 +23,9 @@ namespace DeluxeJournal.Patching
         {
             try
             {
-                if (item is SObject obj && !obj.HasBeenInInventory)
+                if ((item is SObject obj && !obj.HasBeenInInventory) || item is Ring)
                 {
-                    Instance.EventManager.ItemCollected.Raise(__instance, new ItemReceivedEventArgs(__instance, obj, countAdded));
+                    Instance.EventManager.ItemCollected.Raise(__instance, new ItemReceivedEventArgs(__instance, item, countAdded));
                 }
             }
             catch (Exception ex)
@@ -49,9 +50,9 @@ namespace DeluxeJournal.Patching
         {
             try
             {
-                if (questType == Quest.type_crafting && item is SObject obj)
+                if (questType == Quest.type_crafting && (item is SObject || item is Ring))
                 {
-                    Instance.EventManager.ItemCrafted.Raise(__instance, new ItemReceivedEventArgs(__instance, obj, obj.Stack));
+                    Instance.EventManager.ItemCrafted.Raise(__instance, new ItemReceivedEventArgs(__instance, item, item.Stack));
                 }
             }
             catch (Exception ex)

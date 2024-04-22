@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using StardewModdingAPI;
+using StardewValley;
 using DeluxeJournal.Events;
 using DeluxeJournal.Util;
 
@@ -56,7 +57,12 @@ namespace DeluxeJournal.Task.Tasks
         public CollectTask(string name, IList<string> itemIds, int count) : base(TaskTypes.Collect, name)
         {
             ItemIds = itemIds;
-            MaxCount = count;
+
+            if (itemIds.Count == 0 || ItemRegistry.GetDataOrErrorItem(itemIds.First()).Category != SObject.ringCategory)
+            {
+                MaxCount = count;
+            }
+
             Validate();
         }
 
@@ -85,7 +91,7 @@ namespace DeluxeJournal.Task.Tasks
         private void OnItemCollected(object? sender, ItemReceivedEventArgs e)
         {
             if (CanUpdate() && IsTaskOwner(e.Player) && BaseItemIds.Contains(e.Item.QualifiedItemId)
-                && (string.IsNullOrEmpty(PreserveItemId) || PreserveItemId == e.Item.preservedParentSheetIndex.Value))
+                && (string.IsNullOrEmpty(PreserveItemId) || (e.Item is SObject obj && PreserveItemId == obj.preservedParentSheetIndex.Value)))
             {
                 IncrementCount(e.Count);
             }

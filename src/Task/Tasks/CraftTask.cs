@@ -1,4 +1,5 @@
 ﻿using StardewModdingAPI;
+using StardewValley;
 using DeluxeJournal.Events;
 
 using static DeluxeJournal.Task.TaskParameterAttribute;
@@ -46,7 +47,11 @@ namespace DeluxeJournal.Task.Tasks
         public CraftTask(string name, IList<string> itemIds, int count) : base(TaskTypes.Craft, name)
         {
             ItemIds = itemIds;
-            MaxCount = count;
+
+            if (itemIds.Count == 0 || ItemRegistry.GetDataOrErrorItem(itemIds.First()).Category != SObject.ringCategory)
+            {
+                MaxCount = count;
+            }
         }
 
         public override bool ShouldShowProgress()
