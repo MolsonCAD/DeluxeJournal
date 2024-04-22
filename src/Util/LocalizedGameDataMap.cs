@@ -76,7 +76,7 @@ namespace DeluxeJournal.Util
 
             if (key != null && _data.TryGetValue(key, out var matches))
             {
-#if TRACE
+#if DEBUG
                 if (Monitor is IMonitor monitor)
                 {
                     monitor.Log($"LocalizedGameDataMap.TryGetValues: '{key}' => '{string.Join(',', matches)}'");
@@ -122,7 +122,7 @@ namespace DeluxeJournal.Util
             {
                 _data.Add(key, new HashSet<T>());
             }
-#if TRACE
+#if DEBUG
             else if (Monitor is IMonitor monitor)
             {
                 monitor.LogOnce($"LocalizedGameDataMap.Add: Added duplicate key='{key}' with value='{value}'");
