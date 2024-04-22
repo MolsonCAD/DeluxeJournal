@@ -13,6 +13,7 @@ using DeluxeJournal.Task.Tasks;
 
 using Period = DeluxeJournal.Task.ITask.Period;
 using static StardewValley.Menus.ClickableComponent;
+using static DeluxeJournal.Task.TaskParameterAttribute;
 
 namespace DeluxeJournal.Menus
 {
@@ -376,9 +377,18 @@ namespace DeluxeJournal.Menus
                         fullyImmutable = true
                     });
 
-                    if (_taskFactory.EnabledSmartIcons != SmartIconFlags.None)
+                    SmartIconFlags mask = _taskFactory.EnabledSmartIcons & parameter.Attribute.Tag switch
                     {
-                        _parameterIcons.Add(i, new SmartIconComponent(iconBounds, textBox.TaskParser, ParameterIconId + i, _taskFactory.EnabledSmartIcons, 1, false));
+                        TaskParameterTag.ItemList => SmartIconFlags.Item,
+                        TaskParameterTag.Building => SmartIconFlags.Building,
+                        TaskParameterTag.FarmAnimalList => SmartIconFlags.Animal,
+                        TaskParameterTag.NpcName => SmartIconFlags.Npc,
+                        _ => SmartIconFlags.None
+                    };
+
+                    if (mask != SmartIconFlags.None)
+                    {
+                        _parameterIcons.Add(i, new SmartIconComponent(iconBounds, textBox.TaskParser, ParameterIconId + i, mask, 1, false));
                     }
                 }
             }

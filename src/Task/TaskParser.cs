@@ -352,7 +352,10 @@ namespace DeluxeJournal.Task
                 case ParseMode.UpdateFactory:
                     foreach (var parameter in Factory.GetParameters())
                     {
-                        SetParameterValue(parameter);
+                        if (!SetParameterValue(parameter))
+                        {
+                            ApplyParameterValue(parameter);
+                        }
                     }
 
                     return Factory.IsReady();
@@ -415,11 +418,11 @@ namespace DeluxeJournal.Task
             }
             else if (tag.Equals(TaskParameterTag.ItemList))
             {
-                ItemIds = parameter.Value is IList<string> itemIds ? itemIds.ToList() : Array.Empty<string>();
+                ItemIds = parameter.Value is IList<string> itemIds ? itemIds.ToList() : null;
             }
             else if (tag.Equals(TaskParameterTag.FarmAnimalList))
             {
-                FarmAnimals = parameter.Value is IList<string> farmAnimals ? farmAnimals.ToList() : Array.Empty<string>();
+                FarmAnimals = parameter.Value is IList<string> farmAnimals ? farmAnimals.ToList() : null;
             }
             else if (tag.Equals(TaskParameterTag.Count))
             {

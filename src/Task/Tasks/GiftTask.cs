@@ -1,5 +1,7 @@
-﻿using StardewModdingAPI;
+﻿using Newtonsoft.Json;
+using StardewModdingAPI;
 using DeluxeJournal.Events;
+using DeluxeJournal.Util;
 
 using static DeluxeJournal.Task.TaskParameterAttribute;
 
@@ -37,6 +39,14 @@ namespace DeluxeJournal.Task.Tasks
         /// <summary>The qualified item IDs of the item to be gifted.</summary>
         public IList<string>? ItemIds { get; set; }
 
+        /// <summary>The qualified base item IDs of the item to be gifted. Stripped of any encoded flavor ID information.</summary>
+        [JsonIgnore]
+        private List<string> BaseItemIds { get; set; } = new List<string>();
+
+        /// <summary>The preserve item ID parent, if applicable.</summary>
+        [JsonIgnore]
+        private string? PreserveItemId { get; set; }
+
         /// <summary>The internal name of the target NPC.</summary>
         public string NpcName { get; set; }
 
@@ -50,6 +60,17 @@ namespace DeluxeJournal.Task.Tasks
         {
             NpcName = npcName;
             ItemIds = itemIds;
+            Validate();
+        }
+
+        public override void Validate()
+        {
+            if (ItemIds != null)
+            {
+                PreserveItemId = FlavoredItemHelper.ConvertFlavoredList(ItemIds, out var baseItemIds, false);
+                BaseItemIds.Clear();
+                BaseItemIds.AddRange(baseItemIds);
+            }
         }
 
         public override void EventSubscribe(ITaskEvents events)
@@ -64,9 +85,14 @@ namespace DeluxeJournal.Task.Tasks
 
         private void OnItemGifted(object? sender, GiftEventArgs e)
         {
-            if (CanUpdate() && IsTaskOwner(e.Player) && NpcName == e.NPC.Name && (ItemIds == null || ItemIds.Contains(e.Item.QualifiedItemId)))
+            if (CanUpdate() && IsTaskOwner(e.Player) && NpcName == e.NPC.Name)
             {
-                MarkAsCompleted();
+                if (BaseItemIds.Count == 0
+                    || (BaseItemIds.Contains(e.Item.QualifiedItemId)
+                        && (string.IsNullOrEmpty(PreserveItemId) || (e.Item is SObject obj && PreserveItemId == obj.preservedParentSheetIndex.Value))))
+                {
+                    MarkAsCompleted();
+                }
             }
         }
     }
