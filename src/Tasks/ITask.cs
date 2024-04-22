@@ -7,7 +7,7 @@ using DeluxeJournal.Framework.Serialization;
 namespace DeluxeJournal.Tasks
 {
     /// <summary>Task interface.</summary>
-    /// <remarks>Note: This should not be implemented directly. Please subclass from TaskBase.</remarks>
+    /// <remarks>Note: This should not be implemented directly. Please inherit from <see cref="TaskBase"/>.</remarks>
     public interface ITask : IComparable<ITask>
     {
         /// <summary>Renew periods.</summary>
@@ -38,7 +38,7 @@ namespace DeluxeJournal.Tasks
         long OwnerUMID { get; set; }
 
         /// <summary>Renew period. Tasks will be renewed at the end of the period.</summary>
-        /// /// <remarks>Note: Tasks marked as completed are removed at the end of the day if the period is "Never".</remarks>
+        /// <remarks>Note: Tasks marked as completed are removed at the end of the day if the period is "Never".</remarks>
         [JsonConverter(typeof(StringEnumConverter))]
         Period RenewPeriod { get; set; }
 
@@ -46,22 +46,10 @@ namespace DeluxeJournal.Tasks
         [JsonConverter(typeof(WorldDateConverter))]
         WorldDate RenewDate { get; set; }
 
-        /// <summary>Generic value. Typically used for storing localized names.</summary>
-        string TargetDisplayName { get; set; }
-
-        /// <summary>Generic value.</summary>
-        string TargetName { get; set; }
-
-        /// <summary>Generic value.</summary>
-        int TargetIndex { get; set; }
-
-        /// <summary>Generic value. Typically used for storing a meta-type on another generic value.</summary>
-        int Variant { get; set; }
-
-        /// <summary>Current count. Used for progress.</summary>
+        /// <summary>Current count. Used for tracking progress.</summary>
         int Count { get; set; }
 
-        /// <summary>Target count. Used for progress</summary>
+        /// <summary>Target count. Used for tracking progress.</summary>
         int MaxCount { get; set; }
 
         /// <summary>Starting price value.</summary>

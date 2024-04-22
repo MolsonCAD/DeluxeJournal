@@ -1,9 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
-using DeluxeJournal.Framework;
 
 namespace DeluxeJournal.Menus
 {
@@ -12,14 +10,11 @@ namespace DeluxeJournal.Menus
     {
         public readonly ClickableTextureComponent taskButton;
 
-        private readonly ITranslationHelper _translation;
         private string _hoverText;
 
-        internal JournalButton(ITranslationHelper translation) :
-            base(Game1.uiViewport.Width - 88, 248, 44, 46)
+        internal JournalButton() : base(Game1.uiViewport.Width - 88, 248, 44, 46)
         {
-            _translation = translation;
-            _hoverText = "";
+            _hoverText = string.Empty;
 
             taskButton = new ClickableTextureComponent(
                 new Rectangle(xPositionOnScreen, yPositionOnScreen, width, height),
@@ -30,7 +25,7 @@ namespace DeluxeJournal.Menus
 
         public override void receiveLeftClick(int x, int y, bool playSound = true)
         {
-            if (Game1.player.visibleQuestCount == 0 && taskButton.containsPoint(x, y) &&
+            if (!Game1.player.hasVisibleQuests && taskButton.containsPoint(x, y) &&
                 Game1.player.CanMove && !Game1.dialogueUp && !Game1.eventUp && Game1.farmEvent == null)
             {
                 Game1.activeClickableMenu = new QuestLog();
@@ -44,19 +39,19 @@ namespace DeluxeJournal.Menus
 
         public override void performHoverAction(int x, int y)
         {
-            if (Game1.player.visibleQuestCount == 0 && taskButton.containsPoint(x, y))
+            if (!Game1.player.hasVisibleQuests && taskButton.containsPoint(x, y))
             {
                 _hoverText = string.Format(Game1.content.LoadString("Strings\\UI:QuestButton_Hover", Game1.options.journalButton[0].ToString()));
             }
             else
             {
-                _hoverText = "";
+                _hoverText = string.Empty;
             }
         }
 
         public override void draw(SpriteBatch b)
         {
-            if (Game1.player.visibleQuestCount == 0)
+            if (!Game1.player.hasVisibleQuests)
             {
                 UpdatePosition();
                 taskButton.draw(b);

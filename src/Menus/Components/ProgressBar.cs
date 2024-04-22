@@ -16,6 +16,9 @@ namespace DeluxeJournal.Menus.Components
 
         public const int DefaultHeight = 48;
 
+        public static readonly Color DefaultCompleteColor = new Color(38, 192, 32);
+        public static readonly Color DefaultProgressColor = new Color(255, 145, 5);
+
         private readonly int _sections;
 
         public Texture2D texture;
@@ -32,13 +35,13 @@ namespace DeluxeJournal.Menus.Components
 
         public TextAlignment AlignText { get; set; }
 
-        public ProgressBar(Rectangle bounds, int sections) :
-            this(bounds, sections, Color.Red, Color.LimeGreen)
+        public ProgressBar(Rectangle bounds, int sections)
+            : this(bounds, sections, DefaultProgressColor, DefaultCompleteColor)
         {
         }
 
-        public ProgressBar(Rectangle bounds, int sections, Color progressColor, Color completeColor) :
-            base(bounds, string.Empty)
+        public ProgressBar(Rectangle bounds, int sections, Color progressColor, Color completeColor)
+            : base(bounds, string.Empty)
         {
             _sections = sections;
             _progressColor = progressColor;

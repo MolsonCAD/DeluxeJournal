@@ -1,10 +1,11 @@
-﻿using StardewModdingAPI;
+﻿using Newtonsoft.Json;
+using StardewModdingAPI;
 using StardewValley;
 using DeluxeJournal.Events;
 using DeluxeJournal.Tasks;
 using DeluxeJournal.Util;
 
-using Constraint = DeluxeJournal.Tasks.TaskParameter.Constraint;
+using static DeluxeJournal.Tasks.TaskParameterAttribute;
 
 namespace DeluxeJournal.Framework.Tasks
 {
@@ -12,48 +13,66 @@ namespace DeluxeJournal.Framework.Tasks
     {
         public class Factory : DeluxeJournal.Tasks.TaskFactory
         {
-            [TaskParameter("item")]
-            public Item? Item { get; set; }
+            [TaskParameter(TaskParameterNames.Item, TaskParameterTag.ItemList, Constraints = Constraint.ItemId | Constraint.NotEmpty)]
+            public IList<string>? ItemIds { get; set; }
 
-            [TaskParameter("count", Tag = "count", Constraints = Constraint.GT0)]
+            [TaskParameter(TaskParameterNames.Count, TaskParameterTag.Count, Constraints = Constraint.GE1)]
             public int Count { get; set; } = 1;
 
-            public override Item? SmartIconItem()
-            {
-                return Item;
-            }
+            public override SmartIconFlags EnabledSmartIcons => SmartIconFlags.Item;
+
+            public override bool EnableSmartIconCount => true;
 
             public override void Initialize(ITask task, ITranslationHelper translation)
             {
-                Item = new LocalizedObjects(translation).GetItem(task.TargetDisplayName);
-                Count = task.MaxCount;
+                if (task is SellTask sellTask)
+                {
+                    ItemIds = sellTask.ItemIds;
+                    Count = sellTask.MaxCount;
+                }
             }
 
             public override ITask? Create(string name)
             {
-                return Item != null ? new SellTask(name, Item, Count) : null;
+                return ItemIds != null && ItemIds.Count > 0 ? new SellTask(name, ItemIds, Count) : null;
             }
         }
+
+        /// <summary>The qualified item IDs of the items to be sold.</summary>
+        public IList<string> ItemIds { get; set; }
+
+        /// <summary>The qualified base item IDs of the items to be bought. Stripped of any encoded flavor ID information.</summary>
+        [JsonIgnore]
+        private List<string> BaseItemIds { get; set; } = new List<string>();
+
+        /// <summary>The preserve item ID, if applicable.</summary>
+        [JsonIgnore]
+        private string? PreserveItemId { get; set; }
 
         /// <summary>Serialization constructor.</summary>
         public SellTask() : base(TaskTypes.Sell)
         {
+            ItemIds = Array.Empty<string>();
         }
 
-        public SellTask(string name, Item item, int count) : base(TaskTypes.Sell, name)
+        public SellTask(string name, IList<string> itemIds, int count) : base(TaskTypes.Sell, name)
         {
-            TargetDisplayName = item.DisplayName;
-            TargetIndex = item.ParentSheetIndex;
+            ItemIds = itemIds;
             MaxCount = count;
 
-            if (item is SObject obj)
+            if (ItemRegistry.Create(itemIds.First()) is Item item)
             {
-                BasePrice = obj.sellToStorePrice();
+                BasePrice = item is SObject obj ? obj.sellToStorePrice() : item.salePrice();
             }
-            else
-            {
-                BasePrice = item.salePrice();
-            }
+
+            Validate();
+        }
+
+        public override void Validate()
+        {
+            PreserveItemId = FlavoredItemHelper.ConvertFlavoredList(ItemIds, out var baseItemIds, false);
+            BaseItemIds.Clear();
+            BaseItemIds.AddRange(baseItemIds);
         }
 
         public override bool ShouldShowProgress()
@@ -76,11 +95,12 @@ namespace DeluxeJournal.Framework.Tasks
             events.SalableSold -= OnSalableSold;
         }
 
-        private void OnSalableSold(object? sender, SalableSoldEventArgs e)
+        private void OnSalableSold(object? sender, SalableEventArgs e)
         {
-            if (CanUpdate() && IsTaskOwner(e.Player) && e.Salable is Item item && TargetIndex == item.ParentSheetIndex)
+            if (CanUpdate() && IsTaskOwner(e.Player) && e.Salable is Item item && BaseItemIds.Contains(item.QualifiedItemId)
+                && (string.IsNullOrEmpty(PreserveItemId) || (item is SObject obj && PreserveItemId == obj.preservedParentSheetIndex.Value)))
             {
-                IncrementCount(item.Stack);
+                IncrementCount(e.Amount);
             }
         }
     }

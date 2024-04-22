@@ -25,8 +25,8 @@ namespace DeluxeJournal.Menus.Components
         private bool _hovering;
         private bool _nameTruncated;
 
-        public TaskEntryComponent(Rectangle bounds, string name, ITranslationHelper translation) :
-            base(bounds, name)
+        public TaskEntryComponent(Rectangle bounds, string name, ITranslationHelper translation)
+            : base(bounds, name)
         {
             if (DeluxeJournalMod.UiTexture == null)
             {
@@ -55,11 +55,7 @@ namespace DeluxeJournal.Menus.Components
                 new Rectangle(61, 16, 10, 10),
                 4f);
 
-            progressBar = new ProgressBar(
-                new Rectangle(bounds.Right - 260, _centerY - 30, 248, 56),
-                0,
-                Color.DarkOrange,
-                Color.LimeGreen)
+            progressBar = new ProgressBar(new Rectangle(bounds.Right - 260, _centerY - 30, 248, 56), 0)
             {
                 texture = DeluxeJournalMod.UiTexture,
                 barLeftSourceRect = new Rectangle(0, 64, 5, 14),

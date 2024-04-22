@@ -16,8 +16,8 @@ namespace DeluxeJournal.Menus
         /// <summary>Source rect for the tab texture.</summary>
         public Rectangle TabSourceRect { get; set; }
 
-        public PageBase(string name, string title, int x, int y, int width, int height, Texture2D tabTexture, Rectangle tabSourceRect) :
-            base(name, title, x, y, width, height)
+        public PageBase(string name, string title, int x, int y, int width, int height, Texture2D tabTexture, Rectangle tabSourceRect)
+            : base(name, title, x, y, width, height)
         {
             TabTexture = tabTexture;
             TabSourceRect = tabSourceRect;
@@ -55,7 +55,7 @@ namespace DeluxeJournal.Menus
 
         public override void performHoverAction(int x, int y)
         {
-            HoverText = "";
+            HoverText = string.Empty;
         }
 
         protected override void cleanupBeforeExit()

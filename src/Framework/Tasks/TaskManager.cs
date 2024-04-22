@@ -11,9 +11,11 @@ namespace DeluxeJournal.Framework.Tasks
     {
         private readonly ITaskEvents _events;
         private readonly IDataHelper _dataHelper;
-        private readonly TaskData _data;
+        private readonly ISemanticVersion _version;
         private readonly IDictionary<long, TaskList> _tasks;
+        private TaskData? _data;
 
+        /// <summary>A list of tasks for the active player.</summary>
         public IList<ITask> Tasks
         {
             get
@@ -27,11 +29,26 @@ namespace DeluxeJournal.Framework.Tasks
             }
         }
 
-        public TaskManager(ITaskEvents events, IDataHelper dataHelper)
+        /// <summary>Task save data.</summary>
+        private TaskData Data
+        {
+            get
+            {
+                // Delayed deserialization to allow for file migration using localized game data.
+                if (_data == null)
+                {
+                    _data = _dataHelper.ReadGlobalData<TaskData>(DeluxeJournalMod.TASKS_DATA_KEY) ?? new TaskData(_version);
+                }
+
+                return _data;
+            }
+        }
+
+        public TaskManager(ITaskEvents events, IDataHelper dataHelper, ISemanticVersion version)
         {
             _events = events;
             _dataHelper = dataHelper;
-            _data = _dataHelper.ReadGlobalData<TaskData>(DeluxeJournalMod.TASKS_DATA_KEY) ?? new TaskData();
+            _version = version;
             _tasks = new Dictionary<long, TaskList>();
 
             _events.ModEvents.GameLoop.DayStarted += OnDayStarted;
@@ -44,9 +61,9 @@ namespace DeluxeJournal.Framework.Tasks
             ((TaskList)Tasks).Sort();
         }
 
+        /// <summary>Load the task list from save data.</summary>
         public void Load()
         {
-            string saveFolderName = Constants.SaveFolderName;
             long umid;
 
             // Each TaskList must be cleared in order to unsubscribe from task events
@@ -57,9 +74,9 @@ namespace DeluxeJournal.Framework.Tasks
 
             _tasks.Clear();
 
-            if (_data.Tasks.ContainsKey(saveFolderName))
+            if (Constants.SaveFolderName is string saveFolderName && Data.Tasks.ContainsKey(saveFolderName))
             {
-                foreach (long key in _data.Tasks[saveFolderName].Keys)
+                foreach (long key in Data.Tasks[saveFolderName].Keys)
                 {
                     // UMID is set to 0 when data is converted from legacy versions (<= 1.0.3)
                     umid = (key == 0) ? Game1.player.UniqueMultiplayerID : key;
@@ -69,7 +86,7 @@ namespace DeluxeJournal.Framework.Tasks
                         _tasks[umid] = new TaskList(_events);
                     }
 
-                    foreach (ITask task in _data.Tasks[saveFolderName][key])
+                    foreach (ITask task in Data.Tasks[saveFolderName][key])
                     {
                         task.OwnerUMID = umid;
                         _tasks[umid].Add(task.Copy());
@@ -80,13 +97,18 @@ namespace DeluxeJournal.Framework.Tasks
             }
         }
 
+        /// <summary>Save the task list.</summary>
         public void Save()
         {
-            _data.Tasks[Constants.SaveFolderName] = _tasks
-                .Where(entry => entry.Value.Count > 0)
-                .ToDictionary(entry => entry.Key, entry => (IList<ITask>)entry.Value.ToList());
+            if (Constants.SaveFolderName is string saveFolderName)
+            {
+                Data.Version = _version.ToString();
+                Data.Tasks[saveFolderName] = _tasks
+                    .Where(entry => entry.Value.Count > 0)
+                    .ToDictionary(entry => entry.Key, entry => (IList<ITask>)entry.Value.ToList());
 
-            _dataHelper.WriteGlobalData(DeluxeJournalMod.TASKS_DATA_KEY, _data);
+                _dataHelper.WriteGlobalData(DeluxeJournalMod.TASKS_DATA_KEY, Data);
+            }
         }
 
         private void OnDayStarted(object? sender, DayStartedEventArgs e)

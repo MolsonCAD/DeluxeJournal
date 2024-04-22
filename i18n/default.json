@@ -1,14 +1,16 @@
 ﻿{
 	// task names and keywords (for parsing)
+	"task.animal": "Farm Animal",
+	"task.animal.keywords": "buy,purchase,get",
 	"task.basic": "Basic",
 	"task.blacksmith": "Upgrade Tool",
-	"task.blacksmith.keywords": "upgrade",
+	"task.blacksmith.keywords": "upgrade,buy,purchase,get",
 	"task.build": "Build",
-	"task.build.keywords": "build,construct,raise,buy,purchase,get",
+	"task.build.keywords": "build,construct,upgrade,buy,purchase,get",
 	"task.buy": "Buy",
 	"task.buy.keywords": "buy,purchase,get",
 	"task.collect": "Collect",
-	"task.collect.keywords": "collect,chop,harvest,gather,forage,fish,catch,mine,find,retrieve,get",
+	"task.collect.keywords": "collect,chop,harvest,gather,forage,fish,catch,mine,dig,find,search,retrieve,get",
 	"task.craft": "Craft",
 	"task.craft.keywords": "craft,cook,create,make,get",
 	"task.gift": "Gift",
@@ -55,24 +57,27 @@
 	"ui.tasks.options.type": "Task Type",
 
 	// task parameter names
+	"ui.tasks.parameter.animal": "Animal",
 	"ui.tasks.parameter.building": "Building",
 	"ui.tasks.parameter.count": "Count",
 	"ui.tasks.parameter.item": "Item",
-	"ui.tasks.parameter.npc": "NPC",
+	"ui.tasks.parameter.npc": "Villager",
 	"ui.tasks.parameter.tool": "Tool",
 
-	// seasons
-	"seasons.spring": "Spring",
-	"seasons.summer": "Summer",
-	"seasons.fall": "Fall",
-	"seasons.winter": "Winter",
+	// +---------------------------------+
+	// | display name aliases (OPTIONAL) |
+	// +---------------------------------+
+	// NOTE: case insensitive, underscores replaced with spaces
 
-	// weekdays
-	"weekdays.monday": "Monday",
-	"weekdays.tuesday": "Tuesday",
-	"weekdays.wednesday": "Wednesday",
-	"weekdays.thursday": "Thursday",
-	"weekdays.friday": "Friday",
-	"weekdays.saturday": "Saturday",
-	"weekdays.sunday": "Sunday"
+	// animal shop display names
+	"alias.animalshop.dairy_cow": "cow,cows",
+
+	// building display names
+	"alias.buildings.farmhouse": "house,home",
+
+	// item display names
+	//"alias.items.<item>": "",
+
+	// vilager display names
+	//"alias.npcs.<villager>": ""
 }

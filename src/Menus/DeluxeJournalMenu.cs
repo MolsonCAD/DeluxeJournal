@@ -56,8 +56,7 @@ namespace DeluxeJournal.Menus
             }
         }
 
-        internal DeluxeJournalMenu(PageManager pageManager) :
-            base(0, 0, 832, 576, showUpperRightCloseButton: true)
+        internal DeluxeJournalMenu(PageManager pageManager) : base(0, 0, 832, 576, showUpperRightCloseButton: true)
         {
             if (LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.ko ||
                 LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.fr)
@@ -71,7 +70,7 @@ namespace DeluxeJournal.Menus
 
             _pages = pageManager.GetPages(new Rectangle(xPositionOnScreen, yPositionOnScreen, width, height));
             _tabs = new List<ClickableTextureComponent>();
-            _hoverText = "";
+            _hoverText = string.Empty;
 
             upperRightCloseButton.bounds = new Rectangle(xPositionOnScreen + width - 20, yPositionOnScreen - 8, 48, 48);
 
@@ -82,7 +81,7 @@ namespace DeluxeJournal.Menus
 
             ChainNeighborsUpDown(_tabs);
 
-            if (ActiveTab == 0 && Game1.player.visibleQuestCount == 0)
+            if (ActiveTab == 0 && !Game1.player.hasVisibleQuests)
             {
                 ActiveTab = 1;
             }
@@ -263,7 +262,7 @@ namespace DeluxeJournal.Menus
         public override void performHoverAction(int x, int y)
         {
             base.performHoverAction(x, y);
-            _hoverText = "";
+            _hoverText = string.Empty;
 
             GetActiveMenu().performHoverAction(x, y);
 

@@ -39,13 +39,13 @@ namespace DeluxeJournal.Menus
         private bool _moneyButtonVisible;
         private bool _dragging;
 
-        public TasksPage(Rectangle bounds, Texture2D tabTexture, ITranslationHelper translation) :
-            this("tasks", translation.Get("ui.tab.tasks"), bounds.X, bounds.Y, bounds.Width, bounds.Height, tabTexture, new Rectangle(16, 0, 16, 16), translation)
+        public TasksPage(Rectangle bounds, Texture2D tabTexture, ITranslationHelper translation)
+            : this("tasks", translation.Get("ui.tab.tasks"), bounds.X, bounds.Y, bounds.Width, bounds.Height, tabTexture, new Rectangle(16, 0, 16, 16), translation)
         {
         }
 
-        public TasksPage(string name, string title, int x, int y, int width, int height, Texture2D tabTexture, Rectangle tabSourceRect, ITranslationHelper translation) :
-            base(name, title, x, y, width, height, tabTexture, tabSourceRect)
+        public TasksPage(string name, string title, int x, int y, int width, int height, Texture2D tabTexture, Rectangle tabSourceRect, ITranslationHelper translation)
+            : base(name, title, x, y, width, height, tabTexture, tabSourceRect)
         {
             if (DeluxeJournalMod.Instance?.Config is not Config config)
             {
@@ -290,7 +290,7 @@ namespace DeluxeJournal.Menus
                             {
                                 task.Complete = !task.Complete;
                                 task.MarkAsViewed();
-                                Game1.playSoundPitched("tinyWhip", task.Complete ? 2000 : 1000);
+                                Game1.playSound("tinyWhip", task.Complete ? 2000 : 1000);
                             }
                             else
                             {
@@ -412,6 +412,16 @@ namespace DeluxeJournal.Menus
         public override void receiveScrollWheelAction(int direction)
         {
             scrollComponent.Scroll(direction);
+        }
+
+        public override void receiveKeyPress(Keys key)
+        {
+            base.receiveKeyPress(key);
+
+            if (GetChildMenu() == null && key == Keys.Space)
+            {
+                OpenAddTaskMenu();
+            }
         }
 
         public override void performHoverAction(int x, int y)

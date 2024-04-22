@@ -2,7 +2,7 @@
 
 namespace DeluxeJournal.Tasks
 {
-    /// <summary>Generic factory for ITasks without state.</summary>
+    /// <summary>Generic factory for an <see cref="ITask"/> without state.</summary>
     public class BasicFactory<T> : TaskFactory where T : ITask, new()
     {
         public override void Initialize(ITask task, ITranslationHelper translation)

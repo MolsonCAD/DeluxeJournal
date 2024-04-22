@@ -31,7 +31,7 @@ namespace DeluxeJournal.Menus
             _translation = translation;
             _entry = entry;
             _task = task;
-            _hoverText = "";
+            _hoverText = string.Empty;
 
             checkbox = _entry.checkbox;
             checkbox.myID = 100;
@@ -67,7 +67,7 @@ namespace DeluxeJournal.Menus
                 {
                     _task.Complete = !_task.Complete;
                     _task.MarkAsViewed();
-                    Game1.playSoundPitched("tinyWhip", _task.Complete ? 2000 : 1000);
+                    Game1.playSound("tinyWhip", _task.Complete ? 2000 : 1000);
                 }
                 else
                 {
@@ -112,7 +112,7 @@ namespace DeluxeJournal.Menus
 
         public override void performHoverAction(int x, int y)
         {
-            _hoverText = "";
+            _hoverText = string.Empty;
 
             if (editbox.containsPoint(x, y))
             {

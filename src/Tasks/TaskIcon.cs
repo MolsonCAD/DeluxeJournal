@@ -22,7 +22,7 @@ namespace DeluxeJournal.Tasks
         {
             if ((CustomIconTexture ?? DeluxeJournalMod.UiTexture) is Texture2D texture)
             {
-                Vector2 position = new Vector2(bounds.X + bounds.Height / 2, bounds.Y + bounds.Width / 2);
+                Vector2 position = new Vector2(bounds.X + bounds.Width / 2, bounds.Y + bounds.Height / 2);
                 Vector2 origin = new Vector2(SourceRect.Width / 2, SourceRect.Height / 2);
 
                 if (drawShadow)

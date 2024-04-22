@@ -6,8 +6,8 @@ namespace DeluxeJournal.Framework.Events
     /// <summary>ManagedNetEvent concrete class for a simple JSON serializable <see cref="TEventArgs"/>.</summary>
     internal class ManagedNetEvent<TEventArgs> : ManagedNetEvent<TEventArgs, TEventArgs> where TEventArgs : EventArgs
     {
-        public ManagedNetEvent(string name, IMultiplayerHelper multiplayer) :
-            base(name, multiplayer)
+        public ManagedNetEvent(string name, IMultiplayerHelper multiplayer)
+            : base(name, multiplayer)
         {
         }
 
@@ -22,7 +22,9 @@ namespace DeluxeJournal.Framework.Events
         }
     }
 
-    internal abstract class ManagedNetEvent<TEventArgs, TMessage> : ManagedEvent<TEventArgs>, IManagedNetEvent where TEventArgs : EventArgs
+    internal abstract class ManagedNetEvent<TEventArgs, TMessage> : ManagedEvent<TEventArgs>, IManagedNetEvent
+        where TEventArgs : EventArgs
+        where TMessage : notnull
     {
         private IMultiplayerHelper Multiplayer { get; }
 
@@ -50,12 +52,20 @@ namespace DeluxeJournal.Framework.Events
         }
 
         /// <summary>Broadcast this event to all peers via multiplayer message.</summary>
+        /// <param name="args">Event arguments for <see cref="TMessage"/>.</param>
+        /// <param name="sendToSelf">Raise event locally, since multiplayer messages are not sent back to the sender.</param>
+        /// <exception cref="InvalidOperationException">Thrown when broadcasting before mod initialization.</exception>
         public void Broadcast(TEventArgs args, bool sendToSelf = true)
         {
+            if (DeluxeJournalMod.Instance is not DeluxeJournalMod mod)
+            {
+                throw new InvalidOperationException("Attempted to broadcast event before mod entry.");
+            }
+
             Multiplayer.SendMessage(
                 EventArgsToMessage(args),
                 EventName,
-                modIDs: new[] { DeluxeJournalMod.Instance?.ModManifest.UniqueID }
+                modIDs: new[] { mod.ModManifest.UniqueID }
             );
 
             // Messages are not sent back to the mod that sent them, so raise this event locally

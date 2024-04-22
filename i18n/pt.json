@@ -1,5 +1,7 @@
 ﻿{
 	// task names and keywords (for parsing)
+	"task.animal": "Animal",
+	"task.animal.keywords": "comprar,adquirir,obter",
 	"task.basic": "Básico",
 	"task.blacksmith": "Ferramenta de atualização",
 	"task.blacksmith.keywords": "melhoria",
@@ -55,24 +57,27 @@
 	"ui.tasks.options.type": "Tipo de tarefa",
 
 	// task parameter names
+	"ui.tasks.parameter.animal": "Animal",
 	"ui.tasks.parameter.building": "Construção",
 	"ui.tasks.parameter.count": "Contar",
 	"ui.tasks.parameter.item": "Item",
 	"ui.tasks.parameter.npc": "NPC",
 	"ui.tasks.parameter.tool": "Ferramenta",
 
-	// seasons
-	"seasons.spring": "Primavera",
-	"seasons.summer": "Verão",
-	"seasons.fall": "Outono",
-	"seasons.winter": "Inverno",
+	// +---------------------------------+
+	// | display name aliases (OPTIONAL) |
+	// +---------------------------------+
+	// NOTE: case insensitive, underscores replaced with spaces
 
-	// weekdays
-	"weekdays.monday": "Segunda-feira",
-	"weekdays.tuesday": "Terça-feira",
-	"weekdays.wednesday": "Quarta-feira",
-	"weekdays.thursday": "Quinta-feira",
-	"weekdays.friday": "Sexta-feira",
-	"weekdays.saturday": "Sábado",
-	"weekdays.sunday": "Domingo"
+	// animal shop display names
+	//"alias.animalshop.dairy_cow": "cow,cows",
+
+	// building display names
+	//"alias.buildings.farmhouse": "house,home",
+
+	// item display names
+	//"alias.items.<item>": "",
+
+	// vilager display names
+	//"alias.npcs.<villager>": ""
 }

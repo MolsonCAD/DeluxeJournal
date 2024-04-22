@@ -23,12 +23,10 @@ namespace DeluxeJournal.Patching
         {
             try
             {
-                Farm farm = Game1.getFarm();
-
                 // Only handle upgrades, since ModEvents.World.BuildingListChanged is used to broadly detect additions
-                if (___upgrading && farm.getBuildingUnderConstruction() is Building building)
+                if (___upgrading && Game1.GetBuildingUnderConstruction() is Building building)
                 {
-                    Instance.EventManager.BuildingConstructed.Broadcast(new BuildingConstructedEventArgs(farm, building, true));
+                    Instance.EventManager.BuildingConstructed.Broadcast(new BuildingConstructedEventArgs(Game1.getFarm(), building, true));
                 }
             }
             catch (Exception ex)

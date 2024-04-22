@@ -27,16 +27,28 @@ namespace DeluxeJournal.Framework.Events
             remove => EventManager.ItemGifted.Remove(value);
         }
 
-        public event EventHandler<SalablePurchasedEventArgs> SalablePurchased
+        public event EventHandler<SalableEventArgs> SalablePurchased
         {
             add => EventManager.SalablePurchased.Add(value);
             remove => EventManager.SalablePurchased.Remove(value);
         }
 
-        public event EventHandler<SalableSoldEventArgs> SalableSold
+        public event EventHandler<SalableEventArgs> SalableSold
         {
             add => EventManager.SalableSold.Add(value);
             remove => EventManager.SalableSold.Remove(value);
+        }
+
+        public event EventHandler<FarmAnimalEventArgs> FarmAnimalPurchased
+        {
+            add => EventManager.FarmAnimalPurchased.Add(value);
+            remove => EventManager.FarmAnimalPurchased.Remove(value);
+        }
+
+        public event EventHandler<FarmAnimalEventArgs> FarmAnimalSold
+        {
+            add => EventManager.FarmAnimalSold.Add(value);
+            remove => EventManager.FarmAnimalSold.Remove(value);
         }
 
         public event EventHandler<BuildingConstructedEventArgs> BuildingConstructed
@@ -77,20 +89,19 @@ namespace DeluxeJournal.Framework.Events
             if (Game1.activeClickableMenu is ShopMenu shopMenu)
             {
                 ShopHelper.AttachPurchaseCallback(shopMenu, OnPurchase);
-                ShopHelper.AttachQuietSellCallback(shopMenu, OnSell);
             }
         }
 
         private bool OnPurchase(ISalable salable, Farmer player, int amount)
         {
-            EventManager.SalablePurchased.Raise(player, new SalablePurchasedEventArgs(player, salable, amount));
+            EventManager.SalablePurchased.Raise(player, new SalableEventArgs(player, salable, amount));
             return false;
         }
 
         private bool OnSell(ISalable salable)
         {
             Farmer player = Game1.player;
-            EventManager.SalableSold.Raise(player, new SalableSoldEventArgs(player, salable, salable.Stack));
+            EventManager.SalableSold.Raise(player, new SalableEventArgs(player, salable, salable.Stack));
             return false;
         }
 

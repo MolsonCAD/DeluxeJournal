@@ -2,7 +2,6 @@
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Buildings;
-using StardewValley.Locations;
 using DeluxeJournal.Events;
 
 namespace DeluxeJournal.Framework.Events
@@ -24,8 +23,8 @@ namespace DeluxeJournal.Framework.Events
             public bool IsUpgrade { get; set; }
         }
 
-        public BuildingConstructedEvent(string name, IMultiplayerHelper multiplayer) :
-            base(name, multiplayer)
+        public BuildingConstructedEvent(string name, IMultiplayerHelper multiplayer)
+            : base(name, multiplayer)
         {
         }
 
@@ -44,9 +43,9 @@ namespace DeluxeJournal.Framework.Events
         {
             Vector2 tile = new Vector2(message.TileX, message.TileY);
 
-            if (Game1.getLocationFromName(message.LocationName) is not BuildableGameLocation location)
+            if (Game1.getLocationFromName(message.LocationName) is not GameLocation location)
             {
-                throw new ArgumentException(string.Format("No BuildableGameLocation with name '{0}'.", message.LocationName));
+                throw new ArgumentException(string.Format("No GameLocation with name '{0}'.", message.LocationName));
             }
             
             if (location.getBuildingAt(tile) is not Building building)

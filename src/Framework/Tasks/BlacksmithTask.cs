@@ -1,10 +1,13 @@
-﻿using StardewModdingAPI;
+﻿using Newtonsoft.Json;
+using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
-using StardewValley.Tools;
+using StardewValley.GameData.Tools;
 using DeluxeJournal.Events;
 using DeluxeJournal.Tasks;
 using DeluxeJournal.Util;
+
+using static DeluxeJournal.Tasks.TaskParameterAttribute;
 
 namespace DeluxeJournal.Framework.Tasks
 {
@@ -12,63 +15,63 @@ namespace DeluxeJournal.Framework.Tasks
     {
         public class Factory : DeluxeJournal.Tasks.TaskFactory
         {
-            private Item? _item = null;
+            [TaskParameter(TaskParameterNames.Tool, TaskParameterTag.ItemList, Constraints = Constraint.Upgradable | Constraint.NotEmpty)]
+            public IList<string>? ItemIds { get; set; }
 
-            [TaskParameter("tool")]
-            public Item? Item
-            {
-                get
-                {
-                    return _item;
-                }
-
-                set
-                {
-                    if (value is Tool tool && (tool is Axe || tool is Hoe || tool is WateringCan || tool is Pickaxe))
-                    {
-                        int localUpgradeLevel = ToolHelper.GetToolUpgradeLevelForPlayer(tool.BaseName, Game1.player);
-                        tool.UpgradeLevel = (localUpgradeLevel < Tool.iridium) ? localUpgradeLevel + 1 : 0;
-                        _item = tool;
-                    }
-                    else
-                    {
-                        _item = null;
-                    }
-                }
-            }
-
-            public override Item? SmartIconItem()
-            {
-                return Item;
-            }
+            public override SmartIconFlags EnabledSmartIcons => SmartIconFlags.Item;
 
             public override void Initialize(ITask task, ITranslationHelper translation)
             {
-                Item = new LocalizedObjects(translation).GetItem(task.TargetDisplayName);
+                if (task is BlacksmithTask blacksmithTask)
+                {
+                    ItemIds = new[] { blacksmithTask.ItemId };
+                }
             }
 
             public override ITask? Create(string name)
             {
-                if (Item is Tool tool)
-                {
-                    return new BlacksmithTask(name, tool);
-                }
-
-                return null;
+                return ItemIds != null && ItemIds.Count > 0 ? new BlacksmithTask(name, ItemIds.First()) : null;
             }
         }
+
+        public const int StageDeliver = 0;
+
+        public const int StageWaiting = 1;
+
+        public const int StageClaimed = 2;
+
+        /// <summary>The qualified item ID of the upgraded tool (i.e. the item to be collected from the blacksmith).</summary>
+        public string ItemId { get; set; }
+
+        /// <summary>The tool type. Equivalent to the class name of the tool.</summary>
+        public string ToolType { get; set; } = "GenericTool";
+
+        /// <summary>The target upgrade level of the tool or 0 to allow all upgrades within the correct tool type.</summary>
+        public int UpgradeLevel { get; set; } = 0;
+
+        /// <summary>Whether the tool actually a trash can.</summary>
+        public bool IsTrashCan { get; set; } = false;
+
+        [JsonIgnore]
+        private int TrashCanUpgradeLevel { get; set; } = 0;
 
         /// <summary>Serialization constructor.</summary>
         public BlacksmithTask() : base(TaskTypes.Blacksmith)
         {
+            ItemId = string.Empty;
         }
 
-        public BlacksmithTask(string name, Tool tool) : base(TaskTypes.Blacksmith, name)
+        public BlacksmithTask(string name, string itemId) : base(TaskTypes.Blacksmith, name)
         {
-            TargetDisplayName = tool.DisplayName;
-            TargetName = tool.BaseName;
-            Variant = tool.UpgradeLevel;
-            MaxCount = 2;
+            ItemId = itemId;
+            MaxCount = StageClaimed;
+
+            if (ItemRegistry.GetData(itemId)?.RawData is ToolData data)
+            {
+                ToolType = data.ClassName;
+                UpgradeLevel = data.UpgradeLevel;
+                IsTrashCan = ToolHelper.IsTrashCan(data);
+            }
 
             Validate();
         }
@@ -77,8 +80,7 @@ namespace DeluxeJournal.Framework.Tasks
         {
             if (CanUpdate())
             {
-                Tool upgraded = Game1.player.toolBeingUpgraded.Value;
-                Count = (upgraded != null && upgraded.BaseName == TargetName) ? 1 : 0;
+                Count = (Game1.player.toolBeingUpgraded.Value is Tool tool && IsTargetTool(tool)) ? StageWaiting : StageDeliver;
             }
         }
 
@@ -89,7 +91,7 @@ namespace DeluxeJournal.Framework.Tasks
 
         public override string GetCustomStatusKey()
         {
-            if (Count == 0)
+            if (Count == StageDeliver)
             {
                 return "ui.tasks.status.deliver";
             }
@@ -105,46 +107,81 @@ namespace DeluxeJournal.Framework.Tasks
 
         public override int GetPrice()
         {
-            return Count > 0 ? 0 : ToolHelper.PriceForToolUpgradeLevel(Variant);
+            return (Count > StageDeliver || ItemId == ItemRegistry.type_tool + "Pan") ? 0 : ToolHelper.PriceForToolUpgradeLevel(UpgradeLevel);
         }
 
         public override void EventSubscribe(ITaskEvents events)
         {
             events.SalablePurchased += OnSalablePurchased;
-            events.ModEvents.Player.InventoryChanged += OnInventoryChanged;
+
+            if (IsTrashCan)
+            {
+                events.ModEvents.GameLoop.UpdateTicked += OnUpdateTicked;
+            }
+            else
+            {
+                events.ModEvents.Player.InventoryChanged += OnInventoryChanged;
+            }
         }
 
         public override void EventUnsubscribe(ITaskEvents events)
         {
             events.SalablePurchased -= OnSalablePurchased;
+            events.ModEvents.GameLoop.UpdateTicked -= OnUpdateTicked;
             events.ModEvents.Player.InventoryChanged -= OnInventoryChanged;
         }
 
-        private void OnSalablePurchased(object? sender, SalablePurchasedEventArgs e)
+        private void OnSalablePurchased(object? sender, SalableEventArgs e)
         {
-            if (CanUpdate() && IsTaskOwner(e.Player) && Count == 0)
+            if (CanUpdate() && IsTaskOwner(e.Player) && Count == StageDeliver)
             {
-                if (e.Salable is Tool tool && tool.BaseName == TargetName)
+                if (e.Salable is Tool tool && IsTargetTool(tool))
                 {
-                    Count = 1;
+                    Count = StageWaiting;
+                }
+            }
+        }
+
+        private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
+        {
+            if (CanUpdate())
+            {
+                int trashCanLevel = Game1.player.trashCanLevel;
+
+                if (TrashCanUpgradeLevel == 0)
+                {
+                    TrashCanUpgradeLevel = UpgradeLevel == 0 ? Math.Min(trashCanLevel + 1, Tool.iridium) : UpgradeLevel;
+                }
+
+                if (TrashCanUpgradeLevel <= trashCanLevel)
+                {
+                    Count = StageClaimed;
+                    MarkAsCompleted();
                 }
             }
         }
 
         private void OnInventoryChanged(object? sender, InventoryChangedEventArgs e)
         {
-            if (CanUpdate() && IsTaskOwner(e.Player) && e.Player.toolBeingUpgraded.Value == null && Count == 1)
+            if (CanUpdate() && IsTaskOwner(e.Player) && e.Player.toolBeingUpgraded.Value == null && Count == StageWaiting)
             {
                 foreach (Item item in e.Added)
                 {
-                    if (item is Tool tool && tool.BaseName == TargetName)
+                    if (item is Tool tool && IsTargetTool(tool))
                     {
-                        Count = MaxCount;
+                        Count = StageClaimed;
                         MarkAsCompleted();
                         break;
                     }
                 }
             }
+        }
+
+        private bool IsTargetTool(Tool tool)
+        {
+            return tool.GetToolData() is ToolData data &&
+                (UpgradeLevel == 0 || UpgradeLevel == data.UpgradeLevel) &&
+                ToolType == data.ClassName;
         }
     }
 }

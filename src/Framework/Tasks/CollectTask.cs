@@ -1,9 +1,10 @@
-﻿using StardewModdingAPI;
-using StardewValley;
-using StardewValley.Objects;
+﻿using Newtonsoft.Json;
+using StardewModdingAPI;
 using DeluxeJournal.Events;
 using DeluxeJournal.Tasks;
 using DeluxeJournal.Util;
+
+using static DeluxeJournal.Tasks.TaskParameterAttribute;
 
 namespace DeluxeJournal.Framework.Tasks
 {
@@ -11,59 +12,60 @@ namespace DeluxeJournal.Framework.Tasks
     {
         public class Factory : DeluxeJournal.Tasks.TaskFactory
         {
-            private Item? _item = null;
+            [TaskParameter(TaskParameterNames.Item, TaskParameterTag.ItemList, Constraints = Constraint.SObject | Constraint.NotEmpty)]
+            public IList<string>? ItemIds { get; set; }
 
-            [TaskParameter("item")]
-            public Item? Item
-            {
-                get
-                {
-                    return _item;
-                }
-
-                set
-                {
-                    if (value is SObject item && item is not Furniture && !item.bigCraftable.Value)
-                    {
-                        _item = item;
-                    }
-                    else
-                    {
-                        _item = null;
-                    }
-                }
-            }
-
-            [TaskParameter("count", Tag = "count", Constraints = TaskParameter.Constraint.GT0)]
+            [TaskParameter(TaskParameterNames.Count, TaskParameterTag.Count, Constraints = Constraint.GE1)]
             public int Count { get; set; } = 1;
 
-            public override Item? SmartIconItem()
-            {
-                return Item;
-            }
+            public override SmartIconFlags EnabledSmartIcons => SmartIconFlags.Item;
+
+            public override bool EnableSmartIconCount => true;
 
             public override void Initialize(ITask task, ITranslationHelper translation)
             {
-                Item = new LocalizedObjects(translation).GetItem(task.TargetDisplayName);
-                Count = task.MaxCount;
+                if (task is CollectTask collectTask)
+                {
+                    ItemIds = collectTask.ItemIds;
+                    Count = collectTask.MaxCount;
+                }
             }
 
             public override ITask? Create(string name)
             {
-                return Item != null ? new CollectTask(name, Item, Count) : null;
+                return ItemIds != null && ItemIds.Count > 0 ? new CollectTask(name, ItemIds, Count) : null;
             }
         }
+
+        /// <summary>The qualified item IDs of the items to be collected.</summary>
+        public IList<string> ItemIds { get; set; }
+
+        /// <summary>The qualified base item IDs of the items to be collected. Stripped of any encoded flavor ID information.</summary>
+        [JsonIgnore]
+        private List<string> BaseItemIds { get; set; } = new List<string>();
+
+        /// <summary>The preserve item ID parent, if applicable.</summary>
+        [JsonIgnore]
+        private string? PreserveItemId { get; set; }
 
         /// <summary>Serialization constructor.</summary>
         public CollectTask() : base(TaskTypes.Collect)
         {
+            ItemIds = Array.Empty<string>();
         }
 
-        public CollectTask(string name, Item item, int count) : base(TaskTypes.Collect, name)
+        public CollectTask(string name, IList<string> itemIds, int count) : base(TaskTypes.Collect, name)
         {
-            TargetDisplayName = item.DisplayName;
-            TargetIndex = item.ParentSheetIndex;
+            ItemIds = itemIds;
             MaxCount = count;
+            Validate();
+        }
+
+        public override void Validate()
+        {
+            PreserveItemId = FlavoredItemHelper.ConvertFlavoredList(ItemIds, out var baseItemIds, false);
+            BaseItemIds.Clear();
+            BaseItemIds.AddRange(baseItemIds);
         }
 
         public override bool ShouldShowProgress()
@@ -83,7 +85,8 @@ namespace DeluxeJournal.Framework.Tasks
 
         private void OnItemCollected(object? sender, ItemReceivedEventArgs e)
         {
-            if (CanUpdate() && IsTaskOwner(e.Player) && TargetIndex != -1 && TargetIndex == e.Item.ParentSheetIndex)
+            if (CanUpdate() && IsTaskOwner(e.Player) && BaseItemIds.Contains(e.Item.QualifiedItemId)
+                && (string.IsNullOrEmpty(PreserveItemId) || PreserveItemId == e.Item.preservedParentSheetIndex.Value))
             {
                 IncrementCount(e.Count);
             }

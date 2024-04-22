@@ -18,6 +18,21 @@ namespace DeluxeJournal.Patching
             Instance = this;
         }
 
+        private static void Prefix_OnItemReceived(Farmer __instance, Item item, int countAdded, Item mergedIntoStack, bool hideHudNotification = false)
+        {
+            try
+            {
+                if (item is SObject obj && !obj.HasBeenInInventory)
+                {
+                    Instance.EventManager.ItemCollected.Raise(__instance, new ItemReceivedEventArgs(__instance, obj, countAdded));
+                }
+            }
+            catch (Exception ex)
+            {
+                Instance.LogError(ex, nameof(Prefix_OnItemReceived));
+            }
+        }
+
         private static void Postfix_onGiftGiven(Farmer __instance, NPC npc, SObject item)
         {
             try
@@ -47,6 +62,11 @@ namespace DeluxeJournal.Patching
 
         public override void Apply(Harmony harmony)
         {
+            harmony.Patch(
+                original: AccessTools.Method(typeof(Farmer), nameof(Farmer.OnItemReceived)),
+                prefix: new HarmonyMethod(typeof(FarmerPatch), nameof(Prefix_OnItemReceived))
+            );
+
             harmony.Patch(
                 original: AccessTools.Method(typeof(Farmer), nameof(Farmer.onGiftGiven)),
                 postfix: new HarmonyMethod(typeof(FarmerPatch), nameof(Postfix_onGiftGiven))

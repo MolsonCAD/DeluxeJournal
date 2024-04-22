@@ -1,8 +1,8 @@
 ﻿using StardewModdingAPI;
-using StardewValley;
 using DeluxeJournal.Events;
 using DeluxeJournal.Tasks;
-using DeluxeJournal.Util;
+
+using static DeluxeJournal.Tasks.TaskParameterAttribute;
 
 namespace DeluxeJournal.Framework.Tasks
 {
@@ -10,43 +10,47 @@ namespace DeluxeJournal.Framework.Tasks
     {
         public class Factory : DeluxeJournal.Tasks.TaskFactory
         {
-            [TaskParameter("npc")]
-            public NPC? NPC { get; set; }
+            [TaskParameter(TaskParameterNames.Item, TaskParameterTag.ItemList, Constraints = Constraint.SObject)]
+            public IList<string>? ItemIds { get; set; }
 
-            [TaskParameter("item", Constraints = TaskParameter.Constraint.Giftable)]
-            public Item? Item { get; set; }
+            [TaskParameter(TaskParameterNames.NPC, TaskParameterTag.NpcName)]
+            public string? NpcName { get; set; }
 
-            public override Item? SmartIconItem()
-            {
-                return Item;
-            }
-
-            public override NPC? SmartIconNPC()
-            {
-                return NPC;
-            }
+            public override SmartIconFlags EnabledSmartIcons => SmartIconFlags.Item | SmartIconFlags.Npc;
 
             public override void Initialize(ITask task, ITranslationHelper translation)
             {
-                NPC = new LocalizedObjects(translation).GetNPC(task.TargetName);
-                Item = (task.TargetIndex == -1) ? null : Utility.getItemFromStandardTextDescription("O " + task.TargetIndex + " 1", null);
+                if (task is GiftTask giftTask)
+                {
+                    NpcName = giftTask.NpcName;
+                    ItemIds = giftTask.ItemIds;
+                }
             }
 
             public override ITask? Create(string name)
             {
-                return NPC != null ? new GiftTask(name, NPC.Name, Item?.ParentSheetIndex ?? -1) : null;
+                return NpcName != null && (ItemIds == null || ItemIds.Count > 0)
+                    ? new GiftTask(name, NpcName, ItemIds)
+                    : null;
             }
         }
+
+        /// <summary>The qualified item IDs of the item to be gifted.</summary>
+        public IList<string>? ItemIds { get; set; }
+
+        /// <summary>The internal name of the target NPC.</summary>
+        public string NpcName { get; set; }
 
         /// <summary>Serialization constructor.</summary>
         public GiftTask() : base(TaskTypes.Gift)
         {
+            NpcName = string.Empty;
         }
 
-        public GiftTask(string name, string npcName, int itemIndex) : base(TaskTypes.Gift, name)
+        public GiftTask(string name, string npcName, IList<string>? itemIds) : base(TaskTypes.Gift, name)
         {
-            TargetName = npcName;
-            TargetIndex = itemIndex;
+            NpcName = npcName;
+            ItemIds = itemIds;
         }
 
         public override void EventSubscribe(ITaskEvents events)
@@ -61,7 +65,7 @@ namespace DeluxeJournal.Framework.Tasks
 
         private void OnItemGifted(object? sender, GiftEventArgs e)
         {
-            if (CanUpdate() && IsTaskOwner(e.Player) && TargetName == e.NPC.Name && (TargetIndex == -1 || TargetIndex == e.Item.ParentSheetIndex))
+            if (CanUpdate() && IsTaskOwner(e.Player) && NpcName == e.NPC.Name && (ItemIds == null || ItemIds.Contains(e.Item.QualifiedItemId)))
             {
                 MarkAsCompleted();
             }

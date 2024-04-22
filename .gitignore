@@ -10,4 +10,4 @@ _releases/
 
 # other
 todo.txt
-run-smapi.ps1
+build-script.ps1

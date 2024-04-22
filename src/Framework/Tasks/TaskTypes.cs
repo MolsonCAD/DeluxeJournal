@@ -3,16 +3,17 @@ using DeluxeJournal.Tasks;
 
 namespace DeluxeJournal.Framework.Tasks
 {
-    internal class TaskTypes
+    internal static class TaskTypes
     {
         public static readonly string Basic = Register("basic", typeof(BasicTask), typeof(BasicFactory<BasicTask>), 0, 0);
         public static readonly string Collect = Register("collect", typeof(CollectTask), typeof(CollectTask.Factory), 1, 32);
         public static readonly string Craft = Register("craft", typeof(CraftTask), typeof(CraftTask.Factory), 2, 30);
-        public static readonly string Build = Register("build", typeof(BuildTask), typeof(BuildTask.Factory), 3, 33);
-        public static readonly string Blacksmith = Register("blacksmith", typeof(BlacksmithTask), typeof(BlacksmithTask.Factory), 4, 34);
-        public static readonly string Gift = Register("gift", typeof(GiftTask), typeof(GiftTask.Factory), 5, 10);
-        public static readonly string Buy = Register("buy", typeof(BuyTask), typeof(BuyTask.Factory), 6, 16);
-        public static readonly string Sell = Register("sell", typeof(SellTask), typeof(SellTask.Factory), 7, 15);
+        public static readonly string Blacksmith = Register("blacksmith", typeof(BlacksmithTask), typeof(BlacksmithTask.Factory), 3, 34);
+        public static readonly string Build = Register("build", typeof(BuildTask), typeof(BuildTask.Factory), 4, 33);
+        public static readonly string Animal = Register("animal", typeof(AnimalTask), typeof(AnimalTask.Factory), 5, 33);
+        public static readonly string Gift = Register("gift", typeof(GiftTask), typeof(GiftTask.Factory), 6, 10);
+        public static readonly string Buy = Register("buy", typeof(BuyTask), typeof(BuyTask.Factory), 7, 16);
+        public static readonly string Sell = Register("sell", typeof(SellTask), typeof(SellTask.Factory), 8, 15);
 
         private static string Register(string id, Type taskType, Type factoryType, int iconTileSheetIndex, int priority)
         {

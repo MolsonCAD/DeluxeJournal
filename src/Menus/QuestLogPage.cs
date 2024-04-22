@@ -45,13 +45,13 @@ namespace DeluxeJournal.Menus
 
         private int QuestPage => (int)(_questPageField.GetValue(QuestLog) ?? -1);
 
-        public QuestLogPage(Rectangle bounds, Texture2D tabTexture, ITranslationHelper translation) :
-            this("quests", translation.Get("ui.tab.quests"), bounds.X, bounds.Y, bounds.Width, bounds.Height, tabTexture, new Rectangle(0, 0, 16, 16))
+        public QuestLogPage(Rectangle bounds, Texture2D tabTexture, ITranslationHelper translation)
+            : this("quests", translation.Get("ui.tab.quests"), bounds.X, bounds.Y, bounds.Width, bounds.Height, tabTexture, new Rectangle(0, 0, 16, 16))
         {
         }
 
-        public QuestLogPage(string name, string title, int x, int y, int width, int height, Texture2D tabTexture, Rectangle tabSourceRect) :
-            base(name, title, x, y, width, height, tabTexture, tabSourceRect)
+        public QuestLogPage(string name, string title, int x, int y, int width, int height, Texture2D tabTexture, Rectangle tabSourceRect)
+            : base(name, title, x, y, width, height, tabTexture, tabSourceRect)
         {
             _currentPageField = ReflectionHelper.TryGetField<QuestLog>("currentPage", BindingFlags.Instance | BindingFlags.NonPublic);
             _questPageField = ReflectionHelper.TryGetField<QuestLog>("questPage", BindingFlags.Instance | BindingFlags.NonPublic);

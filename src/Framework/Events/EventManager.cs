@@ -13,9 +13,13 @@ namespace DeluxeJournal.Framework.Events
 
         public ManagedEvent<GiftEventArgs> ItemGifted { get; }
 
-        public ManagedEvent<SalablePurchasedEventArgs> SalablePurchased { get; }
+        public ManagedEvent<SalableEventArgs> SalablePurchased { get; }
 
-        public ManagedEvent<SalableSoldEventArgs> SalableSold { get; }
+        public ManagedEvent<SalableEventArgs> SalableSold { get; }
+
+        public ManagedEvent<FarmAnimalEventArgs> FarmAnimalPurchased { get; }
+
+        public ManagedEvent<FarmAnimalEventArgs> FarmAnimalSold { get; }
 
         public BuildingConstructedEvent BuildingConstructed { get; }
 
@@ -31,8 +35,10 @@ namespace DeluxeJournal.Framework.Events
             ItemCollected = new ManagedEvent<ItemReceivedEventArgs>(nameof(ItemCollected));
             ItemCrafted = new ManagedEvent<ItemReceivedEventArgs>(nameof(ItemCrafted));
             ItemGifted = new ManagedEvent<GiftEventArgs>(nameof(ItemGifted));
-            SalablePurchased = new ManagedEvent<SalablePurchasedEventArgs>(nameof(SalablePurchased));
-            SalableSold = new ManagedEvent<SalableSoldEventArgs>(nameof(SalableSold));
+            SalablePurchased = new ManagedEvent<SalableEventArgs>(nameof(SalablePurchased));
+            SalableSold = new ManagedEvent<SalableEventArgs>(nameof(SalableSold));
+            FarmAnimalPurchased = new ManagedEvent<FarmAnimalEventArgs>(nameof(FarmAnimalPurchased));
+            FarmAnimalSold = new ManagedEvent<FarmAnimalEventArgs>(nameof(FarmAnimalSold));
             BuildingConstructed = new BuildingConstructedEvent(nameof(BuildingConstructed), multiplayer);
         }
 

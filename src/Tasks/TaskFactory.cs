@@ -1,5 +1,4 @@
 ﻿using StardewModdingAPI;
-using StardewValley;
 
 namespace DeluxeJournal.Tasks
 {
@@ -8,37 +7,26 @@ namespace DeluxeJournal.Tasks
     {
         protected IReadOnlyList<TaskParameter>? _cachedParameters;
 
+        /// <summary>Flags indicating which smart icons are enabled.</summary>
+        public virtual SmartIconFlags EnabledSmartIcons => SmartIconFlags.None;
+
+        /// <summary>Allow drawing the <see cref="TaskParser.Count"/> value.</summary>
+        public virtual bool EnableSmartIconCount => false;
+
         /// <summary>Initialize the state of the factory with the values of an existing ITask instance.</summary>
         /// <param name="task">ITask instance.</param>
         /// <param name="translation">Translation helper.</param>
         public abstract void Initialize(ITask task, ITranslationHelper translation);
 
-        /// <summary>Create a new ITask instance.</summary>
+        /// <summary>Create a new <see cref="ITask"/> instance.</summary>
         /// <param name="name">The name of the new task.</param>
+        /// <returns>A new task inheriting from <see cref="ITask"/> or <c>null</c> if the parameter values are insufficient.</returns>
         public abstract ITask? Create(string name);
 
         /// <summary>Can this factory create a valid ITask in its current state?</summary>
         public virtual bool IsReady()
         {
             return GetParameters().All(parameter => parameter.IsValid());
-        }
-
-        /// <summary>The item to display in the AddTaskMenu as a "smart icon."</summary>
-        public virtual Item? SmartIconItem()
-        {
-            return null;
-        }
-
-        /// <summary>The NPC to display in the AddTaskMenu as a "smart icon."</summary>
-        public virtual NPC? SmartIconNPC()
-        {
-            return null;
-        }
-
-        /// <summary>The name to display in the AddTaskMenu as a "smart icon."</summary>
-        public virtual string? SmartIconName()
-        {
-            return null;
         }
 
         /// <summary>Get the parameters of this factory.</summary>

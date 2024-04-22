@@ -25,12 +25,12 @@ namespace DeluxeJournal.Menus
         /// <summary>Hover text to be displayed by the parent DeluxeJournalMenu.</summary>
         public virtual string HoverText { get; set; }
 
-        public IPage(string name, string title, int x, int y, int width, int height, bool showUpperRightCloseButton = false) :
-            base(x, y, width, height, showUpperRightCloseButton)
+        public IPage(string name, string title, int x, int y, int width, int height, bool showUpperRightCloseButton = false)
+            : base(x, y, width, height, showUpperRightCloseButton)
         {
             Name = name;
             Title = title;
-            HoverText = "";
+            HoverText = string.Empty;
         }
 
         /// <summary>Get the ClickableTextureComponent for the page tab.</summary>

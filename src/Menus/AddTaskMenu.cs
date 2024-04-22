@@ -1,12 +1,13 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.BellsAndWhistles;
 using StardewValley.Menus;
+
 using DeluxeJournal.Framework;
-using DeluxeJournal.Framework.Tasks;
 using DeluxeJournal.Menus.Components;
 using DeluxeJournal.Tasks;
 
@@ -23,14 +24,10 @@ namespace DeluxeJournal.Menus
         public readonly ClickableTextureComponent okButton;
         public readonly ClickableTextureComponent smartOkButton;
 
-        public readonly ClickableTextureComponent smartItemIcon;
-        public readonly ClickableTextureComponent smartNPCIcon;
-        public readonly ClickableTextureComponent smartNameIcon;
-
-        public readonly ClickableComponent smartTypeIconCC;
         public readonly ClickableComponent textBoxCC;
 
         private readonly SideScrollingTextBox _textBox;
+        private readonly SmartIconComponent _smartIcons;
 
         private readonly ITranslationHelper _translation;
         private readonly TaskParser _taskParser;
@@ -44,8 +41,8 @@ namespace DeluxeJournal.Menus
 
             _translation = translation;
             _taskParser = new TaskParser(translation);
-            _previousText = "";
-            _hoverText = "";
+            _previousText = string.Empty;
+            _hoverText = string.Empty;
 
             optionsButton = new ClickableTextureComponent(
                 new Rectangle(xPositionOnScreen - 88, yPositionOnScreen - 6, 64, 64),
@@ -106,52 +103,9 @@ namespace DeluxeJournal.Menus
                 leftNeighborID = SNAP_AUTOMATIC
             };
 
-            smartItemIcon = new ClickableTextureComponent(
-                new Rectangle(xPositionOnScreen + 60, okButton.bounds.Y, 56, 56),
-                DeluxeJournalMod.UiTexture,
-                new Rectangle(14, 110, 14, 14),
-                4f)
+            _smartIcons = new SmartIconComponent(new Rectangle(xPositionOnScreen, okButton.bounds.Y, 56, 56), _taskParser, 200, 0, -1)
             {
-                myID = 105,
-                upNeighborID = 0,
-                rightNeighborID = SNAP_AUTOMATIC,
-                leftNeighborID = SNAP_AUTOMATIC,
-                visible = false
-            };
-
-            smartNPCIcon = new ClickableTextureComponent(
-                smartItemIcon.bounds,
-                DeluxeJournalMod.UiTexture,
-                new Rectangle(0, 110, 14, 14),
-                4f)
-            {
-                myID = 106,
-                upNeighborID = 0,
-                rightNeighborID = SNAP_AUTOMATIC,
-                leftNeighborID = SNAP_AUTOMATIC,
-                visible = false
-            };
-
-            smartNameIcon = new ClickableTextureComponent(
-                smartItemIcon.bounds,
-                DeluxeJournalMod.UiTexture,
-                new Rectangle(28, 110, 14, 14),
-                4f)
-            {
-                myID = 107,
-                upNeighborID = 0,
-                rightNeighborID = SNAP_AUTOMATIC,
-                leftNeighborID = SNAP_AUTOMATIC,
-                visible = false
-            };
-
-            smartTypeIconCC = new ClickableComponent(new Rectangle(xPositionOnScreen, okButton.bounds.Y, 56, 56), "")
-            {
-                myID = 108,
-                upNeighborID = 0,
-                rightNeighborID = SNAP_AUTOMATIC,
-                leftNeighborID = SNAP_AUTOMATIC,
-                visible = false
+                Visible = false
             };
 
             _textBox = new SideScrollingTextBox(null, null, Game1.dialogueFont, Game1.textColor)
@@ -179,12 +133,18 @@ namespace DeluxeJournal.Menus
         private void OnExit()
         {
             _textBox.Selected = false;
-            _hoverText = "";
+            _hoverText = string.Empty;
 
             if (Game1.options.SnappyMenus)
             {
                 Game1.activeClickableMenu?.snapToDefaultClickableComponent();
             }
+        }
+
+        public override void populateClickableComponentList()
+        {
+            base.populateClickableComponentList();
+            allClickableComponents.AddRange(_smartIcons.GetClickableComponents());
         }
 
         public override void snapToDefaultClickableComponent()
@@ -271,7 +231,7 @@ namespace DeluxeJournal.Menus
 
         public override void performHoverAction(int x, int y)
         {
-            _hoverText = "";
+            _hoverText = string.Empty;
 
             if (optionsButton.containsPoint(x, y))
             {
@@ -287,21 +247,9 @@ namespace DeluxeJournal.Menus
                 {
                     _hoverText = _translation.Get("ui.tasks.new.smartokbutton.hover");
                 }
-                else if (smartTypeIconCC.containsPoint(x, y))
+                else if (_smartIcons.TryGetHoverText(x, y, _translation, out string hoverText))
                 {
-                    _hoverText = _translation.Get("task." + _taskParser.ID);
-                }
-                else if (smartItemIcon.containsPoint(x, y) && _taskParser.SmartIconItem is Item item)
-                {
-                    _hoverText = item.DisplayName;
-                }
-                else if (smartNPCIcon.containsPoint(x, y) && _taskParser.SmartIconNPC is NPC npc)
-                {
-                    _hoverText = npc.getName();
-                }
-                else if (smartNameIcon.containsPoint(x, y) && _taskParser.SmartIconName is string name)
-                {
-                    _hoverText = name;
+                    _hoverText = hoverText;
                 }
             }
 
@@ -352,7 +300,7 @@ namespace DeluxeJournal.Menus
             }
 
             string title = _translation.Get("ui.tasks.new");
-            int iconY = okButton.bounds.Y;
+            Vector2 iconOffset = Vector2.Zero;
 
             b.Draw(Game1.fadeToBlackRect, Game1.graphics.GraphicsDevice.Viewport.Bounds, Color.Black * 0.75f);
             SpriteText.drawStringWithScrollCenteredAt(b, title, xPositionOnScreen + width / 2, yPositionOnScreen - 96);
@@ -365,7 +313,7 @@ namespace DeluxeJournal.Menus
                 int extraLineSpacing = Math.Max(0, text.Count(c => c == '\n') - 1) * Game1.smallFont.LineSpacing;
 
                 DrawInfoBox(b, text, new Rectangle(_textBox.X - 32, _textBox.Y + 34, 544, 140 + extraLineSpacing));
-                iconY += 80 + extraLineSpacing;
+                iconOffset.Y = 80 + extraLineSpacing;
 
                 if (new Rectangle(_textBox.X, _textBox.Y + 72, 480, 76).Contains(Game1.getOldMouseX(), Game1.getOldMouseY()))
                 {
@@ -378,43 +326,7 @@ namespace DeluxeJournal.Menus
             okButton.draw(b, (_textBox.Text.Length > 0) ? Color.White : Color.Gray * 0.8f, 0.88f);
             smartOkButton.draw(b, (_textBox.Text.Length > 0 && _taskParser.MatchFound()) ? Color.White : Color.Gray * 0.8f, 0.88f);
 
-            if (smartTypeIconCC.visible = _taskParser.MatchFound())
-            {
-                Item? item = _taskParser.SmartIconItem;
-                NPC? npc = _taskParser.SmartIconNPC;
-                string? name = _taskParser.SmartIconName;
-
-                smartTypeIconCC.bounds.Y = iconY;
-                smartItemIcon.bounds.Y = iconY;
-                smartNPCIcon.bounds.Y = iconY;
-                smartNameIcon.bounds.Y = iconY;
-
-                smartItemIcon.visible = item != null;
-                smartNPCIcon.visible = npc != null;
-                smartNameIcon.visible = name != null;
-
-                TaskRegistry.GetTaskIcon(_taskParser.ID).DrawIcon(b, smartTypeIconCC.bounds, Color.White);
-                smartNameIcon.draw(b);
-
-                if (npc != null)
-                {
-                    smartNPCIcon.draw(b);
-                    CharacterIcon.DrawIcon(b, npc.Name, new Rectangle(smartNPCIcon.bounds.X + 8, smartNPCIcon.bounds.Y + 8, 40, 40));
-                }
-
-                if (item != null)
-                {
-                    smartItemIcon.bounds.X = smartNPCIcon.bounds.X + (smartNPCIcon.visible ? smartItemIcon.bounds.Width + 4 : 0);
-                    smartItemIcon.draw(b);
-
-                    item.drawInMenu(b,
-                        new Vector2(smartItemIcon.bounds.X - (item.ParentSheetIndex == SObject.wood ? 6 : 2), smartItemIcon.bounds.Y - 2),
-                        0.75f, 1.0f, 0.9f,
-                        StackDrawType.Draw,
-                        Color.White,
-                        false);
-                }
-            }
+            _smartIcons.Draw(b, iconOffset, Color.White);
 
             if (_hoverText.Length > 0)
             {

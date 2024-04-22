@@ -27,14 +27,6 @@ namespace DeluxeJournal.Tasks
 
         public WorldDate RenewDate { get; set; }
 
-        public virtual string TargetDisplayName { get; set; }
-
-        public virtual string TargetName { get; set; }
-
-        public virtual int TargetIndex { get; set; }
-
-        public virtual int Variant { get; set; }
-
         public virtual int Count { get; set; }
 
         public virtual int MaxCount { get; set; }
@@ -80,10 +72,6 @@ namespace DeluxeJournal.Tasks
             OwnerUMID = Game1.player?.UniqueMultiplayerID ?? 0;
             RenewPeriod = Period.Never;
             RenewDate = new WorldDate(1, "spring", 1);
-            TargetDisplayName = string.Empty;
-            TargetName = string.Empty;
-            TargetIndex = -1;
-            Variant = 0;
             Count = 0;
             MaxCount = 1;
             BasePrice = 0;
@@ -122,9 +110,9 @@ namespace DeluxeJournal.Tasks
             }
         }
 
-        /// <summary>Increment progress count.</summary>
-        /// <param name="amount">Amount to increment by. Effectively equivalent to: Count = Math.Min(MaxCount, Count + amount).</param>
-        /// <param name="markAsCompleted">Mark as completed if Count >= MaxCount.</param>
+        /// <summary>Increment progress count and optionally mark as completed if <c>MaxCount</c> is met.</summary>
+        /// <param name="amount">Amount to increment <c>Count</c> by.</param>
+        /// <param name="markAsCompleted">Mark as completed if <c>Count >= MaxCount</c>.</param>
         protected void IncrementCount(int amount = 1, bool markAsCompleted = true)
         {
             Count += amount;

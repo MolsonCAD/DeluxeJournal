@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using StardewModdingAPI;
 using DeluxeJournal.Framework.Data;
 using DeluxeJournal.Framework.Tasks;
 using DeluxeJournal.Tasks;
@@ -10,15 +11,37 @@ namespace DeluxeJournal.Framework.Serialization
     {
         public override bool CanWrite => false;
 
-        private static IList<ITask> DeserializeTasks(JArray taskArray)
+        private static IList<ITask> DeserializeTasks(JArray taskArray, ISemanticVersion version)
         {
             IList<ITask> tasks = new List<ITask>();
+            TaskDataMigrator? migrator = null;
+            bool version_1_0 = version.IsOlderThan(new SemanticVersion(1, 1, 0));
+
+            if (DeluxeJournalMod.Translation is ITranslationHelper translation)
+            {
+                migrator = new TaskDataMigrator(translation);
+            }
 
             foreach (JObject taskObject in taskArray)
             {
-                string id = taskObject.Value<string>("ID");
+                if (!taskObject.Remove("ID", out JToken? token) || token?.Value<string>() is not string id)
+                {
+                    throw new JsonReaderException("No 'ID' property of type string in ITask JSON object");
+                }
 
-                if (taskObject.ToObject(TaskRegistry.GetTaskTypeOrDefault(id)) is ITask task)
+                Type taskType = TaskRegistry.GetTaskTypeOrDefault(id);
+                ITask? task = null;
+
+                if (!version_1_0)
+                {
+                    task = taskObject.ToObject(taskType) as ITask;
+                }
+                else if (migrator != null)
+                {
+                    migrator.Migrate_1_0(taskObject, taskType, out task);
+                }
+
+                if (task != null || (task = taskObject.ToObject(typeof(BasicTask)) as ITask) != null)
                 {
                     tasks.Add(task);
                 }
@@ -34,40 +57,42 @@ namespace DeluxeJournal.Framework.Serialization
         public override TaskData ReadJson(JsonReader reader, Type objectType, TaskData? existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             IDictionary<string, IDictionary<long, IList<ITask>>> map = new Dictionary<string, IDictionary<long, IList<ITask>>>();
-            IDictionary<long, IList<ITask>> playerTasks;
+            IDictionary<long, IList<ITask>> deserializedTasks;
+            JObject taskDataObject = JObject.Load(reader);
+            ISemanticVersion version = new SemanticVersion(taskDataObject["Version"]?.ToObject<string>() ?? TaskData.DefaultVersion);
 
-            if (JObject.Load(reader)["Tasks"] is not JObject json)
+            if (taskDataObject["Tasks"] is not JObject json)
             {
-                throw new JsonReaderException("Object with key \"Tasks\" not found");
+                throw new JsonReaderException("Object with key 'Tasks' not found");
             }
 
             foreach (var save in json)
             {
                 // Legacy versions (<= 1.0.3) do not have a UMID mapping for each (local) player's task list
-                if (save.Value is JArray)
+                if (save.Value is JArray legacyTaskArray)
                 {
                     map.Add(save.Key, new Dictionary<long, IList<ITask>>()
                     {
-                        { 0, DeserializeTasks((JArray)save.Value) }
+                        { 0, DeserializeTasks(legacyTaskArray, version) }
                     });
                 }
                 else if (save.Value is JObject playerTasksObject)
                 {
-                    playerTasks = new Dictionary<long, IList<ITask>>();
+                    deserializedTasks = new Dictionary<long, IList<ITask>>();
 
-                    foreach (var taskArray in playerTasksObject)
+                    foreach (var playerTasks in playerTasksObject)
                     {
-                        if (taskArray.Value is JArray && long.TryParse(taskArray.Key, out long umid))
+                        if (playerTasks.Value is JArray taskArray && long.TryParse(playerTasks.Key, out long umid))
                         {
-                            playerTasks.Add(umid, DeserializeTasks((JArray)taskArray.Value));
+                            deserializedTasks.Add(umid, DeserializeTasks(taskArray, version));
                         }
                     }
 
-                    map.Add(save.Key, playerTasks);
+                    map.Add(save.Key, deserializedTasks);
                 }
             }
 
-            return new TaskData() { Tasks = map };
+            return new TaskData() { Version = version.ToString(), Tasks = map };
         }
 
         public override void WriteJson(JsonWriter writer, TaskData? value, JsonSerializer serializer)
