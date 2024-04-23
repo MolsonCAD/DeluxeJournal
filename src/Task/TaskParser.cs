@@ -33,7 +33,7 @@ namespace DeluxeJournal.Task
         private string _id;
         private string _npcName;
         private string _buildingType;
-        private int _count;
+        private int? _count;
         private IEnumerable<string>? _itemIds;
         private IEnumerable<string>? _farmAnimals;
         private TaskFactory? _factory;
@@ -47,7 +47,7 @@ namespace DeluxeJournal.Task
         public string ID => _id;
 
         /// <summary>The parsed count value.</summary>
-        public int Count => _count;
+        public int Count => _count ?? 1;
 
         /// <summary>Parsed item IDs.</summary>
         public IEnumerable<string>? ItemIds
@@ -213,7 +213,7 @@ namespace DeluxeJournal.Task
             _id = TaskTypes.Basic;
             _npcName = string.Empty;
             _buildingType = string.Empty;
-            _count = 1;
+            _count = null;
 
             PopulateKeywords(_keywords);
         }
@@ -228,7 +228,7 @@ namespace DeluxeJournal.Task
                 _factory = null;
             }
 
-            _count = 1;
+            _count = null;
             ItemIds = null;
             FarmAnimals = null;
             NpcName = string.Empty;
@@ -380,8 +380,7 @@ namespace DeluxeJournal.Task
             }
             else if (tag.Equals(TaskParameterTag.Building) && propertyType == typeof(string))
             {
-                parameter.Value = BuildingType;
-                return true;
+                return parameter.TrySetValue(BuildingType);
             }
             else if (tag.Equals(TaskParameterTag.ItemList) && propertyType == typeof(IList<string>))
             {

@@ -139,7 +139,6 @@ namespace DeluxeJournal.Task
                 }
 
                 IList<string> sanitizedItemIds = new List<string>();
-                sanitized = sanitizedItemIds;
 
                 foreach (string itemId in itemIds)
                 {
@@ -179,6 +178,20 @@ namespace DeluxeJournal.Task
                     }
 
                     sanitizedItemIds.Add(itemId);
+                }
+
+                if (value is IList<string>)
+                {
+                    sanitized = sanitizedItemIds;
+                }
+                else if (sanitizedItemIds.Count > 0)
+                {
+                    sanitized = sanitizedItemIds.First();
+                }
+                else
+                {
+                    sanitized = null;
+                    return false;
                 }
 
                 return !(constraints.HasFlag(Constraint.NotEmpty) && sanitizedItemIds.Count == 0);

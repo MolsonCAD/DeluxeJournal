@@ -798,7 +798,7 @@ namespace DeluxeJournal.Menus
 
                     if (_parameterIcons.ContainsKey(i))
                     {
-                        _parameterIcons[i].Draw(b, parameter.IsValid() ? Color.White : Color.Gray * 0.8f, true);
+                        _parameterIcons[i].Draw(b, parameter.IsValid() ? Color.White : Color.Gray * 0.8f, false, true);
                     }
                 }
             }

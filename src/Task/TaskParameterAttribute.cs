@@ -71,7 +71,7 @@
             NotEmpty = NotNull | NotEmptyString,
 
             /// <summary><see cref="int"/> greater than or equal to zero.</summary>
-            GE0 = 1 << 2,
+            GE0 = 1 << 2 | NotNull,
 
             /// <summary><see cref="int"/> greater than or equal to one.</summary>
             GE1 = 1 << 3 | GE0,

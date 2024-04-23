@@ -189,12 +189,12 @@ namespace DeluxeJournal.Menus.Components
             return false;
         }
 
-        public void Draw(SpriteBatch b, Color color, bool shadow = false)
+        public void Draw(SpriteBatch b, Color color, bool showCount = true, bool shadow = false)
         {
             if (Visible = _taskParser.MatchFound())
             {
                 SmartIconFlags flag = SmartIconFlags.All;
-                int parsedCount = _taskParser.ShouldShowCount() ? _taskParser.Count : 0;
+                int parsedCount = showCount && _taskParser.ShouldShowCount() ? _taskParser.Count : 0;
                 int targetIconIndex = 0;
 
                 if (_taskTypeIcon != null)
