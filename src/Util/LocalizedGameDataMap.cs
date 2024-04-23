@@ -27,7 +27,7 @@ namespace DeluxeJournal.Util
     }
 
     /// <summary>Stores a mapping of localized display names to their corresponding game data identifiers.</summary>
-    public abstract class LocalizedGameDataMap<T>
+    public abstract class LocalizedGameDataMap<T> where T : class
     {
         private readonly ITranslationHelper _translation;
         private readonly TaskParserSettings _settings;
@@ -79,7 +79,7 @@ namespace DeluxeJournal.Util
 #if DEBUG
                 if (Monitor is IMonitor monitor)
                 {
-                    monitor.Log($"LocalizedGameDataMap.TryGetValues: '{key}' => '{string.Join(',', matches)}'");
+                    monitor.Log($"{nameof(LocalizedGameDataMap)}.{nameof(TryGetValues)}: '{key}' => '{string.Join(',', matches)}'");
                 }
 #endif
                 values = matches;
@@ -110,22 +110,28 @@ namespace DeluxeJournal.Util
         /// <summary>Add a localized display name and game object identifier pair to the data map.</summary>
         /// <param name="key">Localized display name (the one that appears in-game).</param>
         /// <param name="value">A game object identifier.</param>
+        /// <param name="parent">A game object identifier to be added first if the alias group does not exist.</param>
         /// <returns>
         /// <c>true</c> if the <paramref name="value"/> was added for the given <paramref name="key"/>;
         /// <c>false</c> if the <paramref name="value"/> already exists.
         /// </returns>
-        protected bool Add(string key, T value)
+        protected bool Add(string key, T value, T? parent = null)
         {
             key = key.ToLower();
 
             if (!_data.ContainsKey(key))
             {
                 _data.Add(key, new HashSet<T>());
+
+                if (parent != null)
+                {
+                    _data[key].Add(parent);
+                }
             }
 #if DEBUG
             else if (Monitor is IMonitor monitor)
             {
-                monitor.LogOnce($"LocalizedGameDataMap.Add: Added duplicate key='{key}' with value='{value}'");
+                monitor.LogOnce($"{nameof(LocalizedGameDataMap)}.{nameof(Add)}: Added duplicate key='{key}' with value='{value}'");
             }
 #endif
             return _data[key].Add(value);
@@ -137,10 +143,10 @@ namespace DeluxeJournal.Util
         /// See <see cref="AddAlias(string, string)"/>.
         /// </remarks>
         /// <param name="strict">Strictly add the plural and not the singular.</param>
-        /// <inheritdoc cref="Add(string, T)"/>
-        protected bool AddPlural(string key, T value, bool strict = false)
+        /// <inheritdoc cref="Add(string, T, T)"/>
+        protected bool AddPlural(string key, T value, T? parent = null, bool strict = false)
         {
-            bool added = !strict && Add(key, value);
+            bool added = !strict && Add(key, value, parent);
 
             if (LocalizedContentManager.CurrentLanguageCode == 0)
             {
@@ -151,7 +157,7 @@ namespace DeluxeJournal.Util
                     AddAlias(key, pluralKey);
                 }
 
-                added |= Add(pluralKey, value);
+                added |= Add(pluralKey, value, parent);
             }
 
             return added;

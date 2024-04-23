@@ -70,6 +70,32 @@ namespace DeluxeJournal.Task
                 {
                     string itemId = ItemIds.First();
 
+                    if (itemId.StartsWith('-'))
+                    {
+                        if (!int.TryParse(itemId, out int category))
+                        {
+#if DEBUG
+                            if (DeluxeJournalMod.Instance is DeluxeJournalMod instance)
+                            {
+                                instance.Monitor.Log($"{nameof(TaskParser)}.{nameof(ProxyItem)}: invalid item ID for category group, id='{itemId}'", LogLevel.Debug);
+                            }
+#endif
+                            ItemIds = null;
+                            return _cachedItem = null;
+                        }
+
+                        return _cachedItem = ItemRegistry.Create(category switch
+                        {
+                            SObject.GreensCategory => "(O)20",
+                            SObject.GemCategory => "(O)80",
+                            SObject.VegetableCategory => "(O)24",
+                            SObject.FishCategory => "(O)145",
+                            SObject.EggCategory => "(O)176",
+                            SObject.MilkCategory => "(O)184",
+                            _ => null
+                        });
+                    }
+
                     if (FlavoredItemHelper.CreateFlavoredItem(itemId) is Item flavoredItem)
                     {
                         return _cachedItem = flavoredItem;
@@ -89,6 +115,34 @@ namespace DeluxeJournal.Task
                 }
 
                 return _cachedItem;
+            }
+        }
+
+        /// <summary>Localized display name for the parsed item group.</summary>
+        public string ProxyItemDisplayName
+        {
+            get
+            {
+                if (ItemIds != null && ProxyItem is Item item)
+                {
+                    if (ItemIds.First().StartsWith('-'))
+                    {
+                        return item.Category switch
+                        {
+                            SObject.GreensCategory => Game1.content.LoadString("Strings\\StringsFromCSFiles:CraftingRecipe.cs.568"),
+                            SObject.GemCategory => Game1.content.LoadString("Strings\\StringsFromCSFiles:CraftingRecipe.cs.569"),
+                            SObject.VegetableCategory => Game1.content.LoadString("Strings\\StringsFromCSFiles:CraftingRecipe.cs.570"),
+                            SObject.FishCategory => Game1.content.LoadString("Strings\\StringsFromCSFiles:CraftingRecipe.cs.571"),
+                            SObject.EggCategory => Game1.content.LoadString("Strings\\StringsFromCSFiles:CraftingRecipe.cs.572"),
+                            SObject.MilkCategory => Game1.content.LoadString("Strings\\StringsFromCSFiles:CraftingRecipe.cs.573"),
+                            _ => "???"
+                        };
+                    }
+
+                    return item.DisplayName;
+                }
+
+                return string.Empty;
             }
         }
 
@@ -263,6 +317,7 @@ namespace DeluxeJournal.Task
 
             HashSet<string> ids = new HashSet<string>();
             HashSet<int> ignored = new HashSet<int>();
+            List<string> keywords = new List<string>();
             string[] words = text.Trim().Split(' ');
 
             for (int group = Math.Min(words.Length, 3); group > 0; group--)
@@ -292,29 +347,9 @@ namespace DeluxeJournal.Task
 
                     if (mode == ParseMode.CreateFactory && _keywords.ContainsKey(word))
                     {
-                        ids.UnionWith(_keywords[word]);
+                        keywords.Add(word);
                     }
-                    else if (int.TryParse(word.Trim('x'), out int count) && count > 0)
-                    {
-                        _count = count;
-                    }
-                    else if (!_settings.IgnoreNpcs && _localizedGameData.LocalizedNpcs.TryGetValue(word, out var name))
-                    {
-                        NpcName = name;
-                    }
-                    else if (!_settings.IgnoreItems && _localizedGameData.LocalizedItems.TryGetValues(word, out var itemIds))
-                    {
-                        ItemIds = itemIds;
-                    }
-                    else if (!_settings.IgnoreBuildings && _localizedGameData.LocalizedBuildings.TryGetValue(word, out var buildingType))
-                    {
-                        BuildingType = buildingType;
-                    }
-                    else if (!_settings.IgnoreFarmAnimals && _localizedGameData.LocalizedFarmAnimals.TryGetValues(word, out var farmAnimals))
-                    {
-                        FarmAnimals = farmAnimals;
-                    }
-                    else
+                    else if (!HandleWord(word))
                     {
                         continue;
                     }
@@ -323,7 +358,6 @@ namespace DeluxeJournal.Task
                     {
                         ignored.Add(j);
                     }
-
                 skip:
                     ;
                 }
@@ -332,6 +366,16 @@ namespace DeluxeJournal.Task
             switch (mode)
             {
                 case ParseMode.CreateFactory:
+                    if (keywords.Count > 0)
+                    {
+                        ids.UnionWith(_keywords[keywords[0]]);
+
+                        for (int i = 1; i < keywords.Count; i++)
+                        {
+                            HandleWord(keywords[i]);
+                        }
+                    }
+
                     foreach (string id in TaskRegistry.PriorityOrderedKeys)
                     {
                         if (ids.Contains(id))
@@ -364,6 +408,36 @@ namespace DeluxeJournal.Task
             }
 
             return false;
+
+            bool HandleWord(string word)
+            {
+                if (int.TryParse(word.Trim('x'), out int count) && count > 0)
+                {
+                    _count = count;
+                }
+                else if (!_settings.IgnoreNpcs && _localizedGameData.LocalizedNpcs.TryGetValue(word, out var name))
+                {
+                    NpcName = name;
+                }
+                else if (!_settings.IgnoreItems && _localizedGameData.LocalizedItems.TryGetValues(word, out var itemIds))
+                {
+                    ItemIds = itemIds;
+                }
+                else if (!_settings.IgnoreBuildings && _localizedGameData.LocalizedBuildings.TryGetValue(word, out var buildingType))
+                {
+                    BuildingType = buildingType;
+                }
+                else if (!_settings.IgnoreFarmAnimals && _localizedGameData.LocalizedFarmAnimals.TryGetValues(word, out var farmAnimals))
+                {
+                    FarmAnimals = farmAnimals;
+                }
+                else
+                {
+                    return false;
+                }
+
+                return true;
+            }
         }
 
         /// <summary>Set the value of a <see cref="TaskParameter"/> based on the parser state.</summary>

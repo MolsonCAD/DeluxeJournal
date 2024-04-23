@@ -170,9 +170,9 @@ namespace DeluxeJournal.Menus.Components
                     {
                         text = _taskParser.BuildingDisplayName;
                     }
-                    else if (ComparePriority(ref flag, SmartIconFlags.Item, _mask) && _taskParser.ShouldShowSmartIcon(SmartIconFlags.Item) && _taskParser.ProxyItem is Item item)
+                    else if (ComparePriority(ref flag, SmartIconFlags.Item, _mask) && _taskParser.ShouldShowSmartIcon(SmartIconFlags.Item))
                     {
-                        text = item.DisplayName;
+                        text = _taskParser.ProxyItemDisplayName;
                     }
                     else
                     {
