@@ -21,16 +21,20 @@ namespace DeluxeJournal.Task
         }
 
         /// <summary>Uniquely identifies the class type for serialization.</summary>
+        [JsonProperty(Order = -5)]
         string ID { get; }
 
         /// <summary>The name of this task.</summary>
+        [JsonProperty(Order = -4)]
         string Name { get; set; }
 
         /// <summary>False if waiting for renewal, true otherwise.</summary>
+        [JsonProperty(Order = -3)]
         bool Active { get; set; }
 
         /// <summary>Is this task complete?</summary>
         /// <remarks>Note: Tasks marked as completed are removed at the end of the day if the period is "Never".</remarks>
+        [JsonProperty(Order = -2)]
         bool Complete { get; set; }
 
         /// <summary>UMID of the player that owns this task.</summary>

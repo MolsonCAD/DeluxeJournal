@@ -14,9 +14,9 @@ namespace DeluxeJournal.Framework.Serialization
         {
             IList<ITask> tasks = new List<ITask>();
             TaskDataMigrator? migrator = null;
-            bool version_1_0 = version.IsOlderThan(new SemanticVersion(1, 1, 0));
+            bool version_pre_1_2 = version.IsOlderThan(new SemanticVersion(1, 2, 0));
 
-            if (DeluxeJournalMod.Translation is ITranslationHelper translation)
+            if (version_pre_1_2 && DeluxeJournalMod.Translation is ITranslationHelper translation)
             {
                 migrator = new TaskDataMigrator(translation);
             }
@@ -31,7 +31,7 @@ namespace DeluxeJournal.Framework.Serialization
                 Type taskType = TaskRegistry.GetTaskTypeOrDefault(id);
                 ITask? task = null;
 
-                if (!version_1_0)
+                if (!version_pre_1_2)
                 {
                     task = taskObject.ToObject(taskType) as ITask;
                 }

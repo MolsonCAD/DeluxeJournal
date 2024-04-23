@@ -191,7 +191,7 @@ namespace DeluxeJournal.Util
             if ((aliases = aliases.UsePlaceholder(false)).HasValue())
             {
                 return aliases.ToString().Split(',')
-                    .Select(alias => AddAlias(key, alias))
+                    .Select(alias => AddAlias(key, alias.Replace('_', ' ')))
                     .Aggregate(false, (anyAdded, nextAdded) => anyAdded || nextAdded);
             }
 

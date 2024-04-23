@@ -10,7 +10,7 @@
 	"task.buy": "Buy",
 	"task.buy.keywords": "buy,purchase,get",
 	"task.collect": "Collect",
-	"task.collect.keywords": "collect,chop,harvest,gather,forage,fish,catch,mine,dig,find,search,retrieve,get",
+	"task.collect.keywords": "collect,chop,harvest,gather,forage,fish,catch,mine,dig,find,search,retrieve,get,make",
 	"task.craft": "Craft",
 	"task.craft.keywords": "craft,cook,create,make,get",
 	"task.gift": "Gift",

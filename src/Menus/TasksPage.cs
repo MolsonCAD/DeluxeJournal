@@ -302,7 +302,7 @@ namespace DeluxeJournal.Menus
                         else if (entry.removeButton.containsPoint(x, y))
                         {
                             RemoveTaskAt(i + scrollOffset);
-                            Game1.playSound("trashcan");
+                            Game1.playSound("woodyStep");
                         }
                         else
                         {

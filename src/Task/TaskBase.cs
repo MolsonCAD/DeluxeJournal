@@ -20,7 +20,6 @@ namespace DeluxeJournal.Task
 
         public string Name { get; set; }
 
-        [JsonIgnore]
         public long OwnerUMID { get; set; }
 
         public Period RenewPeriod { get; set; }
@@ -33,10 +32,8 @@ namespace DeluxeJournal.Task
 
         public virtual int BasePrice { get; set; }
 
-        [JsonProperty(Order = -3)]
         public virtual bool Active { get; set; }
 
-        [JsonProperty(Order = -2)]
         public virtual bool Complete
         {
             get
