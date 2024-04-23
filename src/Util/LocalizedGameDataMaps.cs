@@ -72,15 +72,7 @@ namespace DeluxeJournal.Util
 
                             string parsedName = TokenParser.ParseText(pair.Value.DisplayName);
 
-                            if (pair.Value.Category == SObject.artisanGoodsCategory)
-                            {
-                                Add(parsedName, ItemRegistry.type_object + pair.Key);
-                            }
-                            else
-                            {
-                                AddPlural(parsedName, ItemRegistry.type_object + pair.Key);
-                            }
-
+                            AddPlural(parsedName, ItemRegistry.type_object + pair.Key);
                             AddFlavored(parsedName, pair.Key, pair.Value, roeFishNames);
                             AddConvenienceAlternates(ItemRegistry.type_object + pair.Key, pair.Value);
                         }
