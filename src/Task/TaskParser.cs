@@ -329,6 +329,7 @@ namespace DeluxeJournal.Task
                         .Replace(")", "")
                         .Replace("'", "")
                         .Replace(".", "")
+                        .Replace(",", "")
                         .Replace("!", "")
                         .Replace("?", "");
 
