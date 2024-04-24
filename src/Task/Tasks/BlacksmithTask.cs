@@ -68,8 +68,16 @@ namespace DeluxeJournal.Task.Tasks
             if (ItemRegistry.GetData(itemId)?.RawData is ToolData data)
             {
                 ToolType = data.ClassName;
-                UpgradeLevel = data.UpgradeLevel;
                 IsTrashCan = ToolHelper.IsTrashCan(data);
+
+                if (ToolHelper.IsToolBaseUpgradeLevel(data) && ToolHelper.GetToolUpgradeForPlayer(data, Game1.player) is Tool tool)
+                {
+                    UpgradeLevel = tool.UpgradeLevel;
+                }
+                else
+                {
+                    UpgradeLevel = data.UpgradeLevel;
+                }
             }
 
             Validate();
