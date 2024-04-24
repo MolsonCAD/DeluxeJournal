@@ -419,9 +419,22 @@ namespace DeluxeJournal.Menus
         {
             base.receiveKeyPress(key);
 
-            if (GetChildMenu() == null && key == Keys.Space)
+            if (GetChildMenu() == null)
             {
-                OpenAddTaskMenu();
+                switch (key)
+                {
+                    case Keys.Space:
+                        OpenAddTaskMenu();
+                        break;
+#if DEBUG
+                    case Keys.End:
+                        if (DeluxeJournalMod.Instance?.TaskManager is TaskManager taskManager)
+                        {
+                            taskManager.Save();
+                        }
+                        break;
+#endif
+                }
             }
         }
 
