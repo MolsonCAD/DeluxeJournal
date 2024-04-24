@@ -43,7 +43,7 @@ namespace DeluxeJournal.Util
         /// <summary>Maps localized item names to qualified item ID's.</summary>
         private class LocalizedItemMap : LocalizedGameDataMap
         {
-            private static readonly HashSet<string> IgnoredItemIds = new() { "73", "858", "892", "922", "923", "924", "925", "927", "929", "930", "DriedFruit", "DriedMushrooms" };
+            private static readonly HashSet<string> IgnoredItemIds = new() { "73", "858", "892", "922", "923", "924", "925", "927", "929", "930", "DriedFruit", "DriedMushrooms", "SmokedFish" };
             private static readonly HashSet<string> IgnoredItemTypes = new() { "Litter", "Quest", "asdf", "interactive" };
 
             public LocalizedItemMap(ITranslationHelper translation, TaskParserSettings settings, IMonitor? monitor)
