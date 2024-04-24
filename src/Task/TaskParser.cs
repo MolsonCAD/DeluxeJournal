@@ -368,9 +368,9 @@ namespace DeluxeJournal.Task
                 case ParseMode.CreateFactory:
                     if (keywords.Count > 0)
                     {
-                        ids.UnionWith(_keywords[keywords[0]]);
+                        ids.UnionWith(_keywords[keywords.Last()]);
 
-                        for (int i = 1; i < keywords.Count; i++)
+                        for (int i = 0; i < keywords.Count - 1; i++)
                         {
                             HandleWord(keywords[i]);
                         }
