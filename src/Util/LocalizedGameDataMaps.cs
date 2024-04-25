@@ -181,12 +181,12 @@ namespace DeluxeJournal.Util
                                 FlavoredItemHelper.EncodeFlavoredItemId("(O)DriedFruit", unqualifiedId));
                         }
                         break;
-                    case SObject.GreensCategory when objectData.ContextTags.Contains("edible_mushroom"):
+                    case SObject.GreensCategory when objectData.ContextTags?.Contains("edible_mushroom") == true:
                         //Dried Mushrooms
                         AddPlural(Game1.content.LoadString("Strings\\1_6_Strings:DriedFruit_DisplayName", localizedName),
                             FlavoredItemHelper.EncodeFlavoredItemId("(O)DriedMushrooms", unqualifiedId));
                         break;
-                    case SObject.GreensCategory when objectData.ContextTags.Contains("preserves_pickle"):
+                    case SObject.GreensCategory when objectData.ContextTags?.Contains("preserves_pickle") == true:
                         // Special Pickles
                         Add(Game1.content.LoadString("Strings\\StringsFromCSFiles:Object.cs.12735", localizedName),
                             FlavoredItemHelper.EncodeFlavoredItemId("(O)342", unqualifiedId));
@@ -233,15 +233,20 @@ namespace DeluxeJournal.Util
             /// <param name="objectData">Object data.</param>
             private void AddConvenienceAlternates(string itemId, ObjectData objectData)
             {
+                if (objectData.ContextTags is not List<string> contextTags)
+                {
+                    return;
+                }
+
                 switch (objectData.Category)
                 {
-                    case SObject.EggCategory when objectData.ContextTags.Contains("large_egg_item"):
+                    case SObject.EggCategory when contextTags.Contains("large_egg_item"):
                         Add(TokenParser.ParseText("[LocalizedText Strings\\\\Objects:WhiteEgg_Name]"), itemId);
                         break;
-                    case SObject.MilkCategory when objectData.ContextTags.Contains("cow_milk_item") && objectData.ContextTags.Contains("large_milk_item"):
+                    case SObject.MilkCategory when contextTags.Contains("cow_milk_item") && contextTags.Contains("large_milk_item"):
                         Add(TokenParser.ParseText("[LocalizedText Strings\\\\Objects:Milk_Name]"), itemId);
                         break;
-                    case SObject.MilkCategory when objectData.ContextTags.Contains("goat_milk_item") && objectData.ContextTags.Contains("large_milk_item"):
+                    case SObject.MilkCategory when contextTags.Contains("goat_milk_item") && contextTags.Contains("large_milk_item"):
                         Add(TokenParser.ParseText("[LocalizedText Strings\\\\Objects:GoatMilk_Name]"), itemId);
                         break;
                 }
