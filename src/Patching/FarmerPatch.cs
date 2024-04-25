@@ -23,7 +23,7 @@ namespace DeluxeJournal.Patching
         {
             try
             {
-                if ((item is SObject obj && !obj.HasBeenInInventory) || item is Ring)
+                if (__instance.IsLocalPlayer && ((item is SObject obj && !obj.HasBeenInInventory) || item is Ring))
                 {
                     Instance.EventManager.ItemCollected.Raise(__instance, new ItemReceivedEventArgs(__instance, item, countAdded));
                 }
@@ -63,17 +63,17 @@ namespace DeluxeJournal.Patching
 
         public override void Apply(Harmony harmony)
         {
-            harmony.Patch(
+            Patch(harmony,
                 original: AccessTools.Method(typeof(Farmer), nameof(Farmer.OnItemReceived)),
                 prefix: new HarmonyMethod(typeof(FarmerPatch), nameof(Prefix_OnItemReceived))
             );
 
-            harmony.Patch(
+            Patch(harmony,
                 original: AccessTools.Method(typeof(Farmer), nameof(Farmer.onGiftGiven)),
                 postfix: new HarmonyMethod(typeof(FarmerPatch), nameof(Postfix_onGiftGiven))
             );
 
-            harmony.Patch(
+            Patch(harmony,
                 original: AccessTools.Method(typeof(Farmer), nameof(Farmer.checkForQuestComplete)),
                 postfix: new HarmonyMethod(typeof(FarmerPatch), nameof(Postfix_checkForQuestComplete))
             );

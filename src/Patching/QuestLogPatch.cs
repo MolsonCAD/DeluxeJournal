@@ -38,7 +38,7 @@ namespace DeluxeJournal.Patching
 
         public override void Apply(Harmony harmony)
         {
-            harmony.Patch(
+            Patch(harmony,
                 original: AccessTools.Method(typeof(QuestLog), nameof(QuestLog.draw), new[] { typeof(SpriteBatch) }),
                 prefix: new HarmonyMethod(typeof(QuestLogPatch), nameof(QuestLogPatch.Prefix_draw))
             );

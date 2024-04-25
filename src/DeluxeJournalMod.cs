@@ -95,11 +95,11 @@ namespace DeluxeJournal
             helper.Events.GameLoop.Saving += OnSaving;
 
             Patcher.Apply(new Harmony(ModManifest.UniqueID), Monitor,
+                new QuestLogPatch(Monitor),
                 new FarmerPatch(EventManager, Monitor),
                 new CarpenterMenuPatch(EventManager, Monitor),
-                new ShopMenuPatch(EventManager, Monitor),
                 new PurchaseAnimalsMenuPatch(EventManager, Monitor),
-                new QuestLogPatch(Monitor)
+                new ShopMenuPatch(EventManager, Monitor)
             );
         }
 

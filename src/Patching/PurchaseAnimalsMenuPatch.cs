@@ -36,9 +36,9 @@ namespace DeluxeJournal.Patching
 
         public override void Apply(Harmony harmony)
         {
-            harmony.Patch(
+            Patch(harmony,
                 original: AccessTools.Method(typeof(PurchaseAnimalsMenu), nameof(PurchaseAnimalsMenu.setUpForReturnAfterPurchasingAnimal)),
-                prefix: new HarmonyMethod(typeof(PurchaseAnimalsMenuPatch), nameof(Prefix_setUpForReturnAfterPurchaseAnimal))
+                postfix: new HarmonyMethod(typeof(PurchaseAnimalsMenuPatch), nameof(Prefix_setUpForReturnAfterPurchaseAnimal))
             );
         }
     }

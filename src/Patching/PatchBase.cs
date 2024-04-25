@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using System.Reflection;
+using HarmonyLib;
 using StardewModdingAPI;
 
 namespace DeluxeJournal.Patching
@@ -33,7 +34,7 @@ namespace DeluxeJournal.Patching
             }
         }
 
-        public string Name => GetType().FullName ?? GetType().Name;
+        public string Name => GetType().Name;
 
         protected IMonitor Monitor { get; }
 
@@ -44,9 +45,42 @@ namespace DeluxeJournal.Patching
 
         public abstract void Apply(Harmony harmony);
 
+        /// <remarks>This is a <see cref="Harmony.Patch"/> wrapper that includes logging.</remarks>
+        /// <param name="harmony">The Harmony instance.</param>
+        /// <inheritdoc cref="Harmony.Patch"/>
+        protected MethodInfo Patch(Harmony harmony, MethodBase original, HarmonyMethod? prefix = null, HarmonyMethod? postfix = null, HarmonyMethod? transpiler = null, HarmonyMethod? finalizer = null)
+        {
+            string format = "Applying Harmony patch '{0}': {1} on SDV method '{2}'.";
+            
+            if (prefix != null)
+            {
+                Monitor.Log(string.Format(format, Name, nameof(prefix), original.Name));
+            }
+
+            if (postfix != null)
+            {
+                Monitor.Log(string.Format(format, Name, nameof(postfix), original.Name));
+            }
+
+            if (transpiler != null)
+            {
+                Monitor.Log(string.Format(format, Name, nameof(transpiler), original.Name));
+            }
+
+            if (finalizer != null)
+            {
+                Monitor.Log(string.Format(format, Name, nameof(finalizer), original.Name));
+            }
+
+            return harmony.Patch(original, prefix, postfix, transpiler, finalizer);
+        }
+
+        /// <summary>Log an error that occurred inside a patch method.</summary>
+        /// <param name="ex">Error exception.</param>
+        /// <param name="methodName">The name of the patch method that produced the error.</param>
         protected void LogError(Exception ex, string methodName)
         {
-            Monitor.Log(string.Format("Failed in patch {0}.{1}: {2}", Name, methodName, ex), LogLevel.Error);
+            Monitor.Log($"Error occurred in Harmony patch {Name}.{methodName}: {ex}", LogLevel.Error);
         }
     }
 }

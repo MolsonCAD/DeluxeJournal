@@ -37,7 +37,7 @@ namespace DeluxeJournal.Patching
 
         public override void Apply(Harmony harmony)
         {
-            harmony.Patch(
+            Patch(harmony,
                 original: AccessTools.Method(typeof(CarpenterMenu), nameof(CarpenterMenu.returnToCarpentryMenuAfterSuccessfulBuild)),
                 postfix: new HarmonyMethod(typeof(CarpenterMenuPatch), nameof(Postfix_returnToCarpentryMenuAfterSuccessfulBuild))
             );

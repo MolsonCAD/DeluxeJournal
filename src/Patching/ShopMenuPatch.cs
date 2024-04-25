@@ -82,12 +82,12 @@ namespace DeluxeJournal.Patching
 
         public override void Apply(Harmony harmony)
         {
-            harmony.Patch(
+            Patch(harmony,
                 original: AccessTools.Method(typeof(ShopMenu), nameof(ShopMenu.receiveLeftClick)),
                 transpiler: new HarmonyMethod(typeof(ShopMenuPatch), nameof(Transpiler_receiveLeftClick))
             );
 
-            harmony.Patch(
+            Patch(harmony,
                 original: AccessTools.Method(typeof(ShopMenu), nameof(ShopMenu.receiveRightClick)),
                 transpiler: new HarmonyMethod(typeof(ShopMenuPatch), nameof(Transpiler_receiveRightClick))
             );

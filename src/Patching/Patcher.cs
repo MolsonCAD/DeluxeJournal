@@ -19,7 +19,7 @@ namespace DeluxeJournal.Patching
                 }
                 catch (Exception ex)
                 {
-                    monitor.Log(string.Format("Failed to apply harmony patch '{0}'. See log file for details.", patch.Name), LogLevel.Error);
+                    monitor.Log($"Failed to apply Harmony patch '{patch.Name}'. See log file for details.", LogLevel.Error);
                     monitor.Log(ex.ToString(), LogLevel.Trace);
                 }
             }
