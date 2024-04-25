@@ -46,7 +46,7 @@ namespace DeluxeJournal.Task.Tasks
 
         /// <summary>The preserve item ID, if applicable.</summary>
         [JsonIgnore]
-        private string? PreserveItemId { get; set; }
+        private string? IngredientItemId { get; set; }
 
         /// <summary>Serialization constructor.</summary>
         public BuyTask() : base(TaskTypes.Buy)
@@ -58,15 +58,21 @@ namespace DeluxeJournal.Task.Tasks
         {
             ItemIds = itemIds;
             MaxCount = count;
-            BasePrice = ItemRegistry.Create(itemIds.First()).salePrice();
+            BasePrice = BuyPrice(ItemRegistry.Create(itemIds.First()));
             Validate();
         }
 
         public override void Validate()
         {
-            PreserveItemId = FlavoredItemHelper.ConvertFlavoredList(ItemIds, out var baseItemIds, false);
+            IngredientItemId = FlavoredItemHelper.ConvertFlavoredList(ItemIds, out var baseItemIds, false);
             BaseItemIds.Clear();
             BaseItemIds.AddRange(baseItemIds);
+
+            if (BaseItemIds.Count > 0 && IngredientItemId != null
+                && FlavoredItemHelper.CreateFlavoredItem(BaseItemIds.First(), IngredientItemId) is Item flavoredItem)
+            {
+                BasePrice = flavoredItem.salePrice();
+            }
         }
 
         public override bool ShouldShowProgress()
@@ -87,7 +93,7 @@ namespace DeluxeJournal.Task.Tasks
         private void OnSalablePurchased(object? sender, SalableEventArgs e)
         {
             if (CanUpdate() && IsTaskOwner(e.Player) && e.Salable is Item item && BaseItemIds.Contains(item.QualifiedItemId)
-                && (string.IsNullOrEmpty(PreserveItemId) || (item is SObject obj && PreserveItemId == obj.preservedParentSheetIndex.Value)))
+                && (string.IsNullOrEmpty(IngredientItemId) || (item is SObject obj && IngredientItemId == obj.preservedParentSheetIndex.Value)))
             {
                 IncrementCount(e.Amount);
             }

@@ -40,13 +40,13 @@ namespace DeluxeJournal.Task.Tasks
         /// <summary>The qualified item IDs of the items to be sold.</summary>
         public IList<string> ItemIds { get; set; }
 
-        /// <summary>The qualified base item IDs of the items to be bought. Stripped of any encoded flavor ID information.</summary>
+        /// <summary>The qualified base item IDs of the items to be sold. Stripped of any encoded flavor ID information.</summary>
         [JsonIgnore]
         private List<string> BaseItemIds { get; set; } = new List<string>();
 
         /// <summary>The preserve item ID, if applicable.</summary>
         [JsonIgnore]
-        private string? PreserveItemId { get; set; }
+        private string? IngredientItemId { get; set; }
 
         /// <summary>Serialization constructor.</summary>
         public SellTask() : base(TaskTypes.Sell)
@@ -58,20 +58,21 @@ namespace DeluxeJournal.Task.Tasks
         {
             ItemIds = itemIds;
             MaxCount = count;
-
-            if (ItemRegistry.Create(itemIds.First()) is Item item)
-            {
-                BasePrice = item.sellToStorePrice();
-            }
-
+            BasePrice = SellPrice(ItemRegistry.Create(itemIds.First()));
             Validate();
         }
 
         public override void Validate()
         {
-            PreserveItemId = FlavoredItemHelper.ConvertFlavoredList(ItemIds, out var baseItemIds, false);
+            IngredientItemId = FlavoredItemHelper.ConvertFlavoredList(ItemIds, out var baseItemIds, false);
             BaseItemIds.Clear();
             BaseItemIds.AddRange(baseItemIds);
+
+            if (BaseItemIds.Count > 0 && IngredientItemId != null
+                && FlavoredItemHelper.CreateFlavoredItem(BaseItemIds.First(), IngredientItemId) is Item flavoredItem)
+            {
+                BasePrice = flavoredItem.sellToStorePrice();
+            }
         }
 
         public override bool ShouldShowProgress()
@@ -97,7 +98,7 @@ namespace DeluxeJournal.Task.Tasks
         private void OnSalableSold(object? sender, SalableEventArgs e)
         {
             if (CanUpdate() && IsTaskOwner(e.Player) && e.Salable is Item item && BaseItemIds.Contains(item.QualifiedItemId)
-                && (string.IsNullOrEmpty(PreserveItemId) || (item is SObject obj && PreserveItemId == obj.preservedParentSheetIndex.Value)))
+                && (string.IsNullOrEmpty(IngredientItemId) || (item is SObject obj && IngredientItemId == obj.preservedParentSheetIndex.Value)))
             {
                 IncrementCount(e.Amount);
             }

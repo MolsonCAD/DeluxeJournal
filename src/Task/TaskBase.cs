@@ -1,7 +1,9 @@
-﻿using Newtonsoft.Json;
-using StardewValley;
+﻿using StardewValley;
+using StardewValley.Tools;
+using StardewValley.GameData.Tools;
 using DeluxeJournal.Events;
 using DeluxeJournal.Framework;
+using DeluxeJournal.Util;
 
 using static DeluxeJournal.Task.ITask;
 
@@ -72,6 +74,33 @@ namespace DeluxeJournal.Task
             Count = 0;
             MaxCount = 1;
             BasePrice = 0;
+        }
+
+        /// <summary>Helper method to get the buy/sale price of an item.</summary>
+        /// <param name="item">Item to be bought.</param>
+        /// <returns>The buy/sale price or 0 if it could not be resolved.</returns>
+        protected static int BuyPrice(Item item)
+        {
+            if (item is Tool tool && tool.UpgradeLevel > 0 && tool.GetToolData() is ToolData toolData)
+            {
+                if (ToolHelper.IsToolBaseUpgradeLevel(toolData) && ToolHelper.GetToolUpgradeForPlayer(toolData, Game1.player) is Tool upgradeTool)
+                {
+                    tool = upgradeTool;
+                }
+
+                return ToolHelper.PriceForToolUpgradeLevel(tool.UpgradeLevel);
+            }
+
+            int price = ShopHelper.GetItemSalePrice(item);
+            return price < 0 ? Math.Max(item.salePrice(), 0) : price;
+        }
+
+        /// <summary>Helper method to get the sell price of an item.</summary>
+        /// <param name="item">Item to be sold.</param>
+        /// <returns>The sell price or 0 if one could not be resolved.</returns>
+        protected static int SellPrice(Item item)
+        {
+            return Math.Max(item.sellToStorePrice(), 0);
         }
 
         private static int TotalDaysInYear(WorldDate date)

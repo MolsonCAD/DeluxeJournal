@@ -50,7 +50,17 @@ namespace DeluxeJournal.Task.Tasks
             BuildingType = buildingType;
             MaxCount = count;
 
-            if (Game1.buildingData.TryGetValue(buildingType, out var data))
+            if (buildingType == "Farmhouse")
+            {
+                BasePrice = Game1.player.HouseUpgradeLevel switch
+                {
+                    0 => 10000,
+                    1 => 65000,
+                    2 => 100000,
+                    _ => 0
+                };
+            }
+            else if (Game1.buildingData.TryGetValue(buildingType, out var data))
             {
                 BasePrice = data.BuildCost;
             }

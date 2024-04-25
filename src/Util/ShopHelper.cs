@@ -1,14 +1,88 @@
-﻿using System.Reflection;
-using Microsoft.Xna.Framework;
-using HarmonyLib;
-using StardewValley;
+﻿using StardewValley;
+using StardewValley.GameData.Shops;
 using StardewValley.Menus;
 
 namespace DeluxeJournal.Util
 {
-    /// <summary>Facilitates attaching callbacks to ShopMenus.</summary>
     public static class ShopHelper
     {
+        private static readonly HashSet<string> IgnoredShops = new()
+        {
+            Game1.shop_adventurersGuildItemRecovery,
+            Game1.shop_blacksmithUpgrades,
+            Game1.shop_petAdoption,
+            Game1.shop_casino,
+            Game1.shop_bookseller_trade,
+            Game1.shop_desertTrader,
+            Game1.shop_islandTrader,
+            Game1.shop_qiGemShop,
+            Game1.shop_catalogue,
+            Game1.shop_furnitureCatalogue,
+            Game1.shop_jojaCatalogue,
+            Game1.shop_wizardCatalogue,
+            Game1.shop_junimoCatalogue,
+            Game1.shop_retroCatalogue,
+            Game1.shop_trashCatalogue,
+            "Concessions",
+            "Raccoon"
+        };
+
+        /// <summary>Get the item sale price listed by a shop.</summary>
+        /// <param name="item">The item to search for in a shop's stock.</param>
+        /// <param name="shopId">A specific shop ID to check the item price from. If <c>null</c>, then search all shops.</param>
+        /// <returns>The item price listed by a shop or <c>-1</c> if none was found.</returns>
+        public static int GetItemSalePrice(Item item, string? shopId = null)
+        {
+            foreach (KeyValuePair<string, ShopData> pair in DataLoader.Shops(Game1.content))
+            {
+                if ((shopId != null ? shopId == pair.Key : !(IgnoredShops.Contains(pair.Key) || pair.Key.StartsWith("DesertFestival")))
+                    && pair.Value.Currency == 0)
+                {
+                    foreach (ShopItemData itemData in pair.Value.Items)
+                    {
+                        if (!itemData.IsRecipe && itemData.ItemId == item.QualifiedItemId && itemData.TradeItemId == null)
+                        {
+                            switch (item.QualifiedItemId)
+                            {
+                                case "(O)378": // copper ore
+                                case "(O)380": // iron ore
+                                case "(O)382": // coal
+                                case "(O)384": // gold ore
+                                case "(O)388": // wood
+                                case "(O)390": // stone
+                                    if (itemData.Condition != null && !GameStateQuery.CheckConditions(itemData.Condition))
+                                    {
+                                        continue;
+                                    }
+                                    break;
+                            }
+
+                            float price = itemData.Price;
+
+                            if (price < 0)
+                            {
+                                price = itemData.UseObjectDataPrice && item is SObject obj ? obj.Price : item.salePrice(true);
+                            }
+
+                            if (itemData.ApplyProfitMargins ?? item.appliesProfitMargins())
+                            {
+                                price *= Game1.MasterPlayer.difficultyModifier;
+                            }
+
+                            if (!itemData.IgnoreShopPriceModifiers)
+                            {
+                                price = Utility.ApplyQuantityModifiers(price, pair.Value.PriceModifiers, pair.Value.PriceModifierMode, targetItem: item);
+                            }
+
+                            return (int)price;
+                        }
+                    }
+                }
+            }
+
+            return -1;
+        }
+
         /// <summary>Attach an onPurchase callback to a ShopMenu.</summary>
         /// <param name="shop">The ShopMenu.</param>
         /// <param name="onPurchase">The callback to be attached. A return value of true exits the menu.</param>

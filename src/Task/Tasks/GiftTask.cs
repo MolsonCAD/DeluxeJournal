@@ -45,7 +45,7 @@ namespace DeluxeJournal.Task.Tasks
 
         /// <summary>The preserve item ID parent, if applicable.</summary>
         [JsonIgnore]
-        private string? PreserveItemId { get; set; }
+        private string? IngredientItemId { get; set; }
 
         /// <summary>The internal name of the target NPC.</summary>
         public string NpcName { get; set; }
@@ -67,7 +67,7 @@ namespace DeluxeJournal.Task.Tasks
         {
             if (ItemIds != null)
             {
-                PreserveItemId = FlavoredItemHelper.ConvertFlavoredList(ItemIds, out var baseItemIds, false);
+                IngredientItemId = FlavoredItemHelper.ConvertFlavoredList(ItemIds, out var baseItemIds, false);
                 BaseItemIds.Clear();
                 BaseItemIds.AddRange(baseItemIds);
             }
@@ -89,7 +89,7 @@ namespace DeluxeJournal.Task.Tasks
             {
                 if (BaseItemIds.Count == 0
                     || (BaseItemIds.Contains(e.Item.QualifiedItemId)
-                        && (string.IsNullOrEmpty(PreserveItemId) || (e.Item is SObject obj && PreserveItemId == obj.preservedParentSheetIndex.Value))))
+                        && (string.IsNullOrEmpty(IngredientItemId) || (e.Item is SObject obj && IngredientItemId == obj.preservedParentSheetIndex.Value))))
                 {
                     MarkAsCompleted();
                 }
