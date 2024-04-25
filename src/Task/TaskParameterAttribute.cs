@@ -82,21 +82,26 @@
             ItemId = 1 << 4,
 
             /// <summary>
+            /// <see cref="IList{T}"/> of <see cref="string"/>s that contains item categories.
+            /// </summary>
+            ItemCategory = 1 << 5,
+
+            /// <summary>
             /// <see cref="IList{T}"/> of item ID <see cref="string"/>s inheriting type
             /// <see cref="StardewValley.Object"/>.
             /// </summary>
-            SObject = 1 << 5 | ItemId,
+            SObject = 1 << 6 | ItemId,
 
             /// <summary>
             /// <see cref="IList{T}"/> of item ID <see cref="string"/>s that can be crafted.
             /// </summary>
-            Craftable = 1 << 6 | ItemId,
+            Craftable = 1 << 7 | ItemId,
 
             /// <summary>
             /// <see cref="IList{T}"/> of item ID <see cref="string"/>s of type <see cref="StardewValley.Tool"/>
             /// that can be upgraded.
             /// </summary>
-            Upgradable = 1 << 7 | ItemId
+            Upgradable = 1 << 8 | ItemId
         }
 
         /// <summary>Parameter name. Also used in localization when displaying the parameter field.</summary>

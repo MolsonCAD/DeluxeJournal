@@ -142,6 +142,12 @@ namespace DeluxeJournal.Task
 
                 foreach (string itemId in itemIds)
                 {
+                    if (itemId.StartsWith('-'))
+                    {
+                        sanitizedItemIds.Add(itemId);
+                        continue;
+                    }
+
                     string baseItemId = FlavoredItemHelper.GetPreserveId(itemId);
 
                     if (!ItemRegistry.Exists(baseItemId))

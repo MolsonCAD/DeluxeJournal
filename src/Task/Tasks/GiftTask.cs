@@ -1,17 +1,15 @@
-﻿using Newtonsoft.Json;
-using StardewModdingAPI;
+﻿using StardewModdingAPI;
 using DeluxeJournal.Events;
-using DeluxeJournal.Util;
 
 using static DeluxeJournal.Task.TaskParameterAttribute;
 
 namespace DeluxeJournal.Task.Tasks
 {
-    internal class GiftTask : TaskBase
+    internal class GiftTask : ItemTaskBase
     {
         public class Factory : TaskFactory
         {
-            [TaskParameter(TaskParameterNames.Item, TaskParameterTag.ItemList, Constraints = Constraint.SObject)]
+            [TaskParameter(TaskParameterNames.Item, TaskParameterTag.ItemList, Constraints = OptionalObjectIdsConstraint)]
             public IList<string>? ItemIds { get; set; }
 
             [TaskParameter(TaskParameterNames.NPC, TaskParameterTag.NpcName)]
@@ -31,21 +29,10 @@ namespace DeluxeJournal.Task.Tasks
             public override ITask? Create(string name)
             {
                 return NpcName != null && (ItemIds == null || ItemIds.Count > 0)
-                    ? new GiftTask(name, NpcName, ItemIds)
+                    ? new GiftTask(name, NpcName, ItemIds ?? new List<string>())
                     : null;
             }
         }
-
-        /// <summary>The qualified item IDs of the item to be gifted.</summary>
-        public IList<string>? ItemIds { get; set; }
-
-        /// <summary>The qualified base item IDs of the item to be gifted. Stripped of any encoded flavor ID information.</summary>
-        [JsonIgnore]
-        private List<string> BaseItemIds { get; set; } = new List<string>();
-
-        /// <summary>The preserve item ID parent, if applicable.</summary>
-        [JsonIgnore]
-        private string? IngredientItemId { get; set; }
 
         /// <summary>The internal name of the target NPC.</summary>
         public string NpcName { get; set; }
@@ -56,21 +43,9 @@ namespace DeluxeJournal.Task.Tasks
             NpcName = string.Empty;
         }
 
-        public GiftTask(string name, string npcName, IList<string>? itemIds) : base(TaskTypes.Gift, name)
+        public GiftTask(string name, string npcName, IList<string> itemIds) : base(TaskTypes.Gift, name, itemIds, 1)
         {
             NpcName = npcName;
-            ItemIds = itemIds;
-            Validate();
-        }
-
-        public override void Validate()
-        {
-            if (ItemIds != null)
-            {
-                IngredientItemId = FlavoredItemHelper.ConvertFlavoredList(ItemIds, out var baseItemIds, false);
-                BaseItemIds.Clear();
-                BaseItemIds.AddRange(baseItemIds);
-            }
         }
 
         public override void EventSubscribe(ITaskEvents events)
@@ -85,14 +60,9 @@ namespace DeluxeJournal.Task.Tasks
 
         private void OnItemGifted(object? sender, GiftEventArgs e)
         {
-            if (CanUpdate() && IsTaskOwner(e.Player) && NpcName == e.NPC.Name)
+            if (CanUpdate() && IsTaskOwner(e.Player) && NpcName == e.NPC.Name && (BaseItemIds.Count == 0 || CheckItemMatch(e.Item)))
             {
-                if (BaseItemIds.Count == 0
-                    || (BaseItemIds.Contains(e.Item.QualifiedItemId)
-                        && (string.IsNullOrEmpty(IngredientItemId) || (e.Item is SObject obj && IngredientItemId == obj.preservedParentSheetIndex.Value))))
-                {
-                    MarkAsCompleted();
-                }
+                MarkAsCompleted();
             }
         }
     }

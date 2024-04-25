@@ -73,12 +73,13 @@ namespace DeluxeJournal.Util
                             string parsedName = TokenParser.ParseText(pair.Value.DisplayName);
                             string itemId = ItemRegistry.type_object + pair.Key;
 
-                            AddObjectCategory(itemId, pair.Value);
                             AddPlural(parsedName, itemId);
                             AddFlavored(parsedName, pair.Key, pair.Value, roeFishNames);
                             AddConvenienceAlternates(itemId, pair.Value);
                         }
                     }
+
+                    AddPlural(Game1.content.LoadString("Strings\\StringsFromCSFiles:Object.cs.12852"), SObject.FishCategory.ToString());
                 }
 
                 if (Settings.AllItemsEnabled || Settings.SetItemCategoryBigCraftable)
@@ -133,19 +134,6 @@ namespace DeluxeJournal.Util
                     {
                         Add(pair.Value.Split('/')[5], ItemRegistry.type_hat + pair.Key);
                     }
-                }
-            }
-
-            /// <summary>Populate data map with item categories.</summary>
-            /// <param name="itemId">Qualified item ID.</param>
-            /// <param name="objectData">Object data.</param>
-            private void AddObjectCategory(string itemId, ObjectData objectData)
-            {
-                switch (objectData.Category)
-                {
-                    case SObject.FishCategory:
-                        AddPlural(Game1.content.LoadString("Strings\\StringsFromCSFiles:Object.cs.12852"), itemId, SObject.FishCategory.ToString());
-                        break;
                 }
             }
 

@@ -1,18 +1,16 @@
-﻿using Newtonsoft.Json;
-using StardewModdingAPI;
+﻿using StardewModdingAPI;
 using StardewValley;
 using DeluxeJournal.Events;
-using DeluxeJournal.Util;
 
 using static DeluxeJournal.Task.TaskParameterAttribute;
 
 namespace DeluxeJournal.Task.Tasks
 {
-    internal class CollectTask : TaskBase
+    internal class CollectTask : ItemTaskBase
     {
         public class Factory : TaskFactory
         {
-            [TaskParameter(TaskParameterNames.Item, TaskParameterTag.ItemList, Constraints = Constraint.SObject | Constraint.NotEmpty)]
+            [TaskParameter(TaskParameterNames.Item, TaskParameterTag.ItemList, Constraints = ObjectIdsConstraint)]
             public IList<string>? ItemIds { get; set; }
 
             [TaskParameter(TaskParameterNames.Count, TaskParameterTag.Count, Constraints = Constraint.GE1)]
@@ -37,40 +35,17 @@ namespace DeluxeJournal.Task.Tasks
             }
         }
 
-        /// <summary>The qualified item IDs of the items to be collected.</summary>
-        public IList<string> ItemIds { get; set; }
-
-        /// <summary>The qualified base item IDs of the items to be collected. Stripped of any encoded flavor ID information.</summary>
-        [JsonIgnore]
-        private List<string> BaseItemIds { get; set; } = new List<string>();
-
-        /// <summary>The preserve item ID parent, if applicable.</summary>
-        [JsonIgnore]
-        private string? IngredientItemId { get; set; }
-
         /// <summary>Serialization constructor.</summary>
         public CollectTask() : base(TaskTypes.Collect)
         {
-            ItemIds = Array.Empty<string>();
         }
 
-        public CollectTask(string name, IList<string> itemIds, int count) : base(TaskTypes.Collect, name)
+        public CollectTask(string name, IList<string> itemIds, int count) : base(TaskTypes.Collect, name, itemIds, count)
         {
-            ItemIds = itemIds;
-
             if (itemIds.Count == 0 || ItemRegistry.GetDataOrErrorItem(itemIds.First()).Category != SObject.ringCategory)
             {
                 MaxCount = count;
             }
-
-            Validate();
-        }
-
-        public override void Validate()
-        {
-            IngredientItemId = FlavoredItemHelper.ConvertFlavoredList(ItemIds, out var baseItemIds, false);
-            BaseItemIds.Clear();
-            BaseItemIds.AddRange(baseItemIds);
         }
 
         public override bool ShouldShowProgress()
@@ -90,8 +65,7 @@ namespace DeluxeJournal.Task.Tasks
 
         private void OnItemCollected(object? sender, ItemReceivedEventArgs e)
         {
-            if (CanUpdate() && IsTaskOwner(e.Player) && BaseItemIds.Contains(e.Item.QualifiedItemId)
-                && (string.IsNullOrEmpty(IngredientItemId) || (e.Item is SObject obj && IngredientItemId == obj.preservedParentSheetIndex.Value)))
+            if (CanUpdate() && IsTaskOwner(e.Player) && CheckItemMatch(e.Item))
             {
                 IncrementCount(e.Count);
             }

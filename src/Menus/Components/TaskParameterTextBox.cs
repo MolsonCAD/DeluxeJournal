@@ -58,7 +58,7 @@ namespace DeluxeJournal.Menus.Components
 
             Text = TaskParameter.Attribute.Tag switch
             {
-                TaskParameterTag.ItemList => TaskParser.ProxyItem?.DisplayName ?? string.Empty,
+                TaskParameterTag.ItemList => TaskParser.ProxyItemDisplayName,
                 TaskParameterTag.NpcName => TaskParser.NpcDisplayName,
                 TaskParameterTag.Building => TaskParser.BuildingDisplayName,
                 TaskParameterTag.FarmAnimalList => TaskParser.FarmAnimalDisplayName,

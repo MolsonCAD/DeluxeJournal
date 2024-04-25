@@ -1,11 +1,18 @@
 ﻿using StardewModdingAPI;
 
+using static DeluxeJournal.Task.TaskParameterAttribute;
+
 namespace DeluxeJournal.Task
 {
     /// <summary>Task factory used to create ITask instances.</summary>
     public abstract class TaskFactory
     {
-        protected IReadOnlyList<TaskParameter>? _cachedParameters;
+        protected const Constraint ItemIdsConstraint = Constraint.ItemId | Constraint.ItemCategory | Constraint.NotEmpty;
+        protected const Constraint ObjectIdsConstraint = Constraint.SObject | Constraint.ItemCategory | Constraint.NotEmpty;
+        protected const Constraint OptionalItemIdsConstraint = Constraint.ItemId | Constraint.ItemCategory;
+        protected const Constraint OptionalObjectIdsConstraint = Constraint.SObject | Constraint.ItemCategory;
+
+        private IReadOnlyList<TaskParameter>? _cachedParameters;
 
         /// <summary>Flags indicating which smart icons are enabled.</summary>
         public virtual SmartIconFlags EnabledSmartIcons => SmartIconFlags.None;

@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using StardewModdingAPI;
+﻿using StardewModdingAPI;
 using StardewValley;
 using DeluxeJournal.Events;
 using DeluxeJournal.Util;
@@ -8,11 +7,11 @@ using static DeluxeJournal.Task.TaskParameterAttribute;
 
 namespace DeluxeJournal.Task.Tasks
 {
-    internal class BuyTask : TaskBase
+    internal class BuyTask : ItemTaskBase
     {
         public class Factory : TaskFactory
         {
-            [TaskParameter(TaskParameterNames.Item, TaskParameterTag.ItemList, Constraints = Constraint.ItemId | Constraint.NotEmpty)]
+            [TaskParameter(TaskParameterNames.Item, TaskParameterTag.ItemList, Constraints = ItemIdsConstraint)]
             public IList<string>? ItemIds { get; set; }
 
             [TaskParameter(TaskParameterNames.Count, TaskParameterTag.Count, Constraints = Constraint.GE1)]
@@ -37,36 +36,20 @@ namespace DeluxeJournal.Task.Tasks
             }
         }
 
-        /// <summary>The qualified item IDs of the items to be bought.</summary>
-        public IList<string> ItemIds { get; set; }
-
-        /// <summary>The qualified base item IDs of the items to be bought. Stripped of any encoded flavor ID information.</summary>
-        [JsonIgnore]
-        private List<string> BaseItemIds { get; set; } = new List<string>();
-
-        /// <summary>The preserve item ID, if applicable.</summary>
-        [JsonIgnore]
-        private string? IngredientItemId { get; set; }
-
         /// <summary>Serialization constructor.</summary>
         public BuyTask() : base(TaskTypes.Buy)
         {
-            ItemIds = Array.Empty<string>();
         }
 
-        public BuyTask(string name, IList<string> itemIds, int count) : base(TaskTypes.Buy, name)
+        public BuyTask(string name, IList<string> itemIds, int count) : base(TaskTypes.Buy, name, itemIds, count)
         {
-            ItemIds = itemIds;
-            MaxCount = count;
             BasePrice = BuyPrice(ItemRegistry.Create(itemIds.First()));
             Validate();
         }
 
         public override void Validate()
         {
-            IngredientItemId = FlavoredItemHelper.ConvertFlavoredList(ItemIds, out var baseItemIds, false);
-            BaseItemIds.Clear();
-            BaseItemIds.AddRange(baseItemIds);
+            base.Validate();
 
             if (BaseItemIds.Count > 0 && IngredientItemId != null
                 && FlavoredItemHelper.CreateFlavoredItem(BaseItemIds.First(), IngredientItemId) is Item flavoredItem)
@@ -92,8 +75,7 @@ namespace DeluxeJournal.Task.Tasks
 
         private void OnSalablePurchased(object? sender, SalableEventArgs e)
         {
-            if (CanUpdate() && IsTaskOwner(e.Player) && e.Salable is Item item && BaseItemIds.Contains(item.QualifiedItemId)
-                && (string.IsNullOrEmpty(IngredientItemId) || (item is SObject obj && IngredientItemId == obj.preservedParentSheetIndex.Value)))
+            if (CanUpdate() && IsTaskOwner(e.Player) && e.Salable is Item item && CheckItemMatch(item))
             {
                 IncrementCount(e.Amount);
             }
