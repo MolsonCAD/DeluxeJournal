@@ -2,6 +2,9 @@
 {
     internal class Config
     {
+        /// <summary>Enable to have the "Smart Add" button be the default when creating a task (if applicable).</summary>
+        public bool EnableDefaultSmartAdd { get; set; } = true;
+
         /// <summary>Enable to show an indicator on the journal button when a task is completed.</summary>
         public bool EnableVisualTaskCompleteIndicator { get; set; } = false;
 

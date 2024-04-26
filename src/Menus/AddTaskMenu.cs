@@ -30,16 +30,23 @@ namespace DeluxeJournal.Menus
         private readonly SmartIconComponent _smartIcons;
 
         private readonly ITranslationHelper _translation;
+        private readonly Config _config;
         private readonly TaskParser _taskParser;
         private string _previousText;
         private string _hoverText;
 
         public AddTaskMenu(ITranslationHelper translation) : base(0, 0, 612, 64)
         {
+            if (DeluxeJournalMod.Instance?.Config is not Config config)
+            {
+                throw new InvalidOperationException("AddTaskMenu created before mod entry.");
+            }
+
             xPositionOnScreen = (Game1.uiViewport.Width / 2) - (width / 2);
             yPositionOnScreen = (Game1.uiViewport.Height / 2) - (height / 2);
 
             _translation = translation;
+            _config = config;
             _taskParser = new TaskParser(translation);
             _previousText = string.Empty;
             _hoverText = string.Empty;
@@ -188,9 +195,9 @@ namespace DeluxeJournal.Menus
             {
                 SetChildMenu(new TaskOptionsMenu(_previousText, _taskParser, _translation));
             }
-            else if (closeTipButton.containsPoint(x, y) && DeluxeJournalMod.Instance?.Config is Config config)
+            else if (closeTipButton.containsPoint(x, y))
             {
-                config.ShowSmartAddTip = false;
+                _config.ShowSmartAddTip = false;
             }
             else if (textBoxCC.containsPoint(x, y))
             {
@@ -221,7 +228,7 @@ namespace DeluxeJournal.Menus
             switch (key)
             {
                 case Keys.Enter:
-                    AddTaskAndExit();
+                    AddTaskAndExit(_config.EnableDefaultSmartAdd);
                     break;
                 case Keys.Escape:
                     exitThisMenu();
@@ -307,7 +314,7 @@ namespace DeluxeJournal.Menus
 
             _textBox.Draw(b);
 
-            if (closeTipButton.visible = DeluxeJournalMod.Instance?.Config?.ShowSmartAddTip ?? true)
+            if (closeTipButton.visible = _config.ShowSmartAddTip)
             {
                 string text = Game1.parseText(_translation.Get("ui.tasks.new.smarttip"), Game1.smallFont, 396);
                 int extraLineSpacing = Math.Max(0, text.Count(c => c == '\n') - 1) * Game1.smallFont.LineSpacing;
