@@ -106,18 +106,7 @@ namespace DeluxeJournal.Menus.Components
             }
             else if (!TaskParser.Parse(Text, TaskParser.ParseMode.UpdateFactory))
             {
-                if (TaskParameter.Type == typeof(string))
-                {
-                    TaskParameter.Value = Text.Trim();
-                }
-                else if (TaskParameter.Type == typeof(int) && int.TryParse(Text.Trim(), out int num))
-                {
-                    TaskParameter.Value = num;
-                }
-                else
-                {
-                    TaskParameter.Value = null;
-                }
+                TaskParameter.Value = null;
             }
         }
 

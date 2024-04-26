@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.GameData.Characters;
 using StardewValley.Menus;
 using StardewValley.Objects;
 using StardewValley.Tools;
@@ -20,7 +21,6 @@ namespace DeluxeJournal.Menus.Components
         private const int BorderPixels = 2;
 
         internal static Dictionary<string, int>? AnimalIconIds;
-        internal static Dictionary<string, int>? CharacterIconIds;
         internal static Dictionary<string, BuildingIconData>? BuildingIconData;
 
         private readonly static IReadOnlyList<SmartIconFlags> OrderedIconFlags = Enum.GetValues(typeof(SmartIconFlags)).Cast<SmartIconFlags>().Reverse().ToList();
@@ -31,6 +31,9 @@ namespace DeluxeJournal.Menus.Components
         private readonly SmartIconFlags _mask;
         private Rectangle _bounds;
         private bool _visible;
+
+        private Texture2D? _npcSpriteSheet;
+        private string _loadedNpcName;
 
         public Point Location
         {
@@ -93,6 +96,7 @@ namespace DeluxeJournal.Menus.Components
             _mask = mask;
             _bounds = bounds;
             _visible = true;
+            _loadedNpcName = string.Empty;
 
             if (showType)
             {
@@ -208,14 +212,25 @@ namespace DeluxeJournal.Menus.Components
 
                     if (ComparePriority(ref flag, SmartIconFlags.Npc, _mask, true) && _taskParser.ShouldShowSmartIcon(SmartIconFlags.Npc))
                     {
-                        DrawIconWithBackground(b,
-                            DeluxeJournalMod.CharacterIconsTexture,
-                            ConvertInnerBounds(targetIcon.bounds),
-                            targetIcon.bounds,
-                            CharacterIconIds?.GetValueOrDefault(_taskParser.NpcName) ?? 0,
-                            0,
-                            color,
-                            shadow: shadow);
+                        string npcName = _taskParser.NpcName;
+
+                        DrawIconBackground(b, targetIcon.bounds, 1, color, shadow);
+
+                        if (LoadNpcSpriteSheet(npcName) is Texture2D texture && Game1.characterData.TryGetValue(_taskParser.NpcName, out var characterData))
+                        {
+                            Rectangle sourceRect = new Rectangle(2, 9, 12, 12);
+
+                            if (characterData.Age == NpcAge.Child)
+                            {
+                                sourceRect.Y = 13;
+                            }
+                            else if (characterData.Gender == Gender.Male && npcName != "George" && npcName != "Linus")
+                            {
+                                sourceRect.Y = 5;
+                            }
+
+                            b.Draw(texture, ConvertInnerBounds(targetIcon.bounds), sourceRect, color);
+                        }
                     }
                     else if (ComparePriority(ref flag, SmartIconFlags.Animal, _mask, true) && _taskParser.ShouldShowSmartIcon(SmartIconFlags.Animal))
                     {
@@ -272,6 +287,27 @@ namespace DeluxeJournal.Menus.Components
                     _taskTargetIcons[targetIconIndex].visible = false;
                 }
             }
+        }
+
+        private Texture2D? LoadNpcSpriteSheet(string npcName)
+        {
+            if (npcName != _loadedNpcName)
+            {
+                string textureName = $"Characters\\{NPC.getTextureNameForCharacter(npcName)}";
+
+                if (Game1.content.DoesAssetExist<Texture2D>(textureName))
+                {
+                    _npcSpriteSheet = Game1.content.Load<Texture2D>(textureName);
+                }
+                else
+                {
+                    _npcSpriteSheet = null;
+                }
+
+                _loadedNpcName = npcName;
+            }
+
+            return _npcSpriteSheet;
         }
 
         private static void DrawIcon(SpriteBatch b, Texture2D? texture, Rectangle bounds, int iconIndex, int iconSize, Color color, int count = -1, int tier = -1, bool shadow = false)
@@ -390,7 +426,7 @@ namespace DeluxeJournal.Menus.Components
                 log10 = 3;
             }
 
-            return Utility.getWidthOfTinyDigitString(number, 2f) - log10;
+            return Utility.getWidthOfTinyDigitString(number, scale) - log10;
         }
 
         /// <summary>

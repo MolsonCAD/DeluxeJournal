@@ -32,9 +32,6 @@ namespace DeluxeJournal
         /// <summary>Animal icon spirte sheet texture.</summary>
         public static Texture2D? AnimalIconsTexture { get; private set; }
 
-        /// <summary>Character icon spirte sheet texture.</summary>
-        public static Texture2D? CharacterIconsTexture { get; private set; }
-
         /// <summary>Building icon spirte sheet texture.</summary>
         public static Texture2D? BuildingIconsTexture { get; private set; }
 
@@ -74,10 +71,8 @@ namespace DeluxeJournal
 
             UiTexture = helper.ModContent.Load<Texture2D>("assets/ui.png");
             AnimalIconsTexture = helper.ModContent.Load<Texture2D>("assets/animal-icons.png");
-            CharacterIconsTexture = helper.ModContent.Load<Texture2D>("assets/character-icons.png");
             BuildingIconsTexture = helper.ModContent.Load<Texture2D>("assets/building-icons.png");
             SmartIconComponent.AnimalIconIds = helper.ModContent.Load<Dictionary<string, int>>("assets/data/animal-icons.json");
-            SmartIconComponent.CharacterIconIds = helper.ModContent.Load<Dictionary<string, int>>("assets/data/character-icons.json");
             SmartIconComponent.BuildingIconData = helper.ModContent.Load<Dictionary<string, BuildingIconData>>("assets/data/building-icons.json");
             Config = helper.ReadConfig<Config>();
             NotesData = helper.Data.ReadGlobalData<NotesData>(NOTES_DATA_KEY) ?? new NotesData();
