@@ -78,6 +78,6 @@
 	// item display names
 	//"alias.items.<item>": "",
 
-	// vilager display names
-	//"alias.npcs.<villager>": ""
+	// villager display names
+	"alias.npcs.abigail": "abby"
 }
