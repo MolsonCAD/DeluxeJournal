@@ -155,7 +155,7 @@ namespace DeluxeJournal.Util
                 {
                     case SObject.FruitsCategory:
                         // Jelly
-                        Add(Game1.content.LoadString("Strings\\StringsFromCSFiles:Object.cs.12739", localizedName),
+                        AddPlural(Game1.content.LoadString("Strings\\StringsFromCSFiles:Object.cs.12739", localizedName),
                             FlavoredItemHelper.EncodeFlavoredItemId("(O)344", unqualifiedId));
 
                         // Wine
@@ -176,12 +176,12 @@ namespace DeluxeJournal.Util
                         break;
                     case SObject.GreensCategory when objectData.ContextTags?.Contains("preserves_pickle") == true:
                         // Special Pickles
-                        Add(Game1.content.LoadString("Strings\\StringsFromCSFiles:Object.cs.12735", localizedName),
+                        AddPlural(Game1.content.LoadString("Strings\\StringsFromCSFiles:Object.cs.12735", localizedName),
                             FlavoredItemHelper.EncodeFlavoredItemId("(O)342", unqualifiedId));
                         break;
                     case SObject.VegetableCategory:
                         // Pickles
-                        Add(Game1.content.LoadString("Strings\\StringsFromCSFiles:Object.cs.12735", localizedName),
+                        AddPlural(Game1.content.LoadString("Strings\\StringsFromCSFiles:Object.cs.12735", localizedName),
                             FlavoredItemHelper.EncodeFlavoredItemId("(O)342", unqualifiedId));
 
                         // Juice
@@ -190,7 +190,7 @@ namespace DeluxeJournal.Util
                         break;
                     case SObject.flowersCategory:
                         // Honey
-                        Add(Game1.content.LoadString("Strings\\StringsFromCSFiles:Object.cs.12760", localizedName),
+                        AddPlural(Game1.content.LoadString("Strings\\StringsFromCSFiles:Object.cs.12760", localizedName),
                             FlavoredItemHelper.EncodeFlavoredItemId("(O)340", unqualifiedId));
                         break;
                     case SObject.FishCategory:
@@ -210,7 +210,7 @@ namespace DeluxeJournal.Util
                             FlavoredItemHelper.EncodeFlavoredItemId("(O)SpecificBait", unqualifiedId));
 
                         // Smoked Fish
-                        Add(Game1.content.LoadString("Strings\\1_6_Strings:SmokedFish_DisplayName", localizedName),
+                        AddPlural(Game1.content.LoadString("Strings\\1_6_Strings:SmokedFish_DisplayName", localizedName),
                             FlavoredItemHelper.EncodeFlavoredItemId("(O)SmokedFish", unqualifiedId));
                         break;
                 }
