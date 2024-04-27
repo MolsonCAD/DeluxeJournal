@@ -60,6 +60,8 @@ namespace DeluxeJournal.Util
                         .Select(data => data.Id)
                         .ToHashSet();
 
+                    AddPlural(Game1.content.LoadString("Strings\\StringsFromCSFiles:Object.cs.12852"), SObject.FishCategory.ToString());
+
                     foreach (KeyValuePair<string, ObjectData> pair in Game1.objectData)
                     {
                         if (!IgnoredItemIds.Contains(pair.Key) && !IgnoredItemTypes.Contains(pair.Value.Type))
@@ -78,8 +80,6 @@ namespace DeluxeJournal.Util
                             AddConvenienceAlternates(itemId, pair.Value);
                         }
                     }
-
-                    AddPlural(Game1.content.LoadString("Strings\\StringsFromCSFiles:Object.cs.12852"), SObject.FishCategory.ToString());
                 }
 
                 if (Settings.AllItemsEnabled || Settings.SetItemCategoryBigCraftable)
@@ -200,9 +200,12 @@ namespace DeluxeJournal.Util
                             Add(Game1.content.LoadString("Strings\\StringsFromCSFiles:Roe_DisplayName", localizedName),
                                 FlavoredItemHelper.EncodeFlavoredItemId("(O)812", unqualifiedId));
 
-                            // Aged Roe
-                            Add(Game1.content.LoadString("Strings\\StringsFromCSFiles:AgedRoe_DisplayName", localizedName),
-                                FlavoredItemHelper.EncodeFlavoredItemId("(O)447", unqualifiedId));
+                            // Aged Roe (not sturgeon)
+                            if (unqualifiedId != "698")
+                            {
+                                Add(Game1.content.LoadString("Strings\\StringsFromCSFiles:AgedRoe_DisplayName", localizedName),
+                                    FlavoredItemHelper.EncodeFlavoredItemId("(O)447", unqualifiedId));
+                            }
                         }
 
                         // Bait

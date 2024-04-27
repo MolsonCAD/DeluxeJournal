@@ -126,7 +126,7 @@ namespace DeluxeJournal.Task
             {
                 return false;
             }
-            else if (constraints.HasFlag(Constraint.ItemId))
+            else if (constraints.HasFlag(Constraint.ItemId) || constraints.HasFlag(Constraint.ItemCategory))
             {
                 if (value is not IList<string> itemIds)
                 {
@@ -142,9 +142,13 @@ namespace DeluxeJournal.Task
 
                 foreach (string itemId in itemIds)
                 {
-                    if (itemId.StartsWith('-'))
+                    if (constraints.HasFlag(Constraint.ItemCategory) && itemId.StartsWith('-'))
                     {
                         sanitizedItemIds.Add(itemId);
+                        continue;
+                    }
+                    else if (!constraints.HasFlag(Constraint.ItemId))
+                    {
                         continue;
                     }
 

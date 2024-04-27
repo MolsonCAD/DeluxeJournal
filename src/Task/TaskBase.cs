@@ -81,11 +81,6 @@ namespace DeluxeJournal.Task
         /// <returns>The buy/sale price or 0 if it could not be resolved.</returns>
         protected static int BuyPrice(Item item)
         {
-            if (ItemRegistry.GetData(item.QualifiedItemId).IsErrorItem)
-            {
-                return 0;
-            }
-
             if (item is Tool tool && tool.UpgradeLevel > 0 && tool.GetToolData() is ToolData toolData)
             {
                 if (ToolHelper.IsToolBaseUpgradeLevel(toolData) && ToolHelper.GetToolUpgradeForPlayer(toolData, Game1.player) is Tool upgradeTool)
@@ -105,11 +100,6 @@ namespace DeluxeJournal.Task
         /// <returns>The sell price or 0 if one could not be resolved.</returns>
         protected static int SellPrice(Item item)
         {
-            if (ItemRegistry.GetData(item.QualifiedItemId).IsErrorItem)
-            {
-                return 0;
-            }
-
             return Math.Max(item.sellToStorePrice(), 0);
         }
 
