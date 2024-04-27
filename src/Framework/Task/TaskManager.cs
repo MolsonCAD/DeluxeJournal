@@ -115,6 +115,11 @@ namespace DeluxeJournal.Framework.Task
         {
             foreach (ITask task in Tasks)
             {
+                if (task.RenewPeriod != ITask.Period.Never && !task.Active && task.DaysRemaining() == 0)
+                {
+                    task.Active = true;
+                }
+
                 task.Validate();
             }
         }
@@ -127,17 +132,9 @@ namespace DeluxeJournal.Framework.Task
             {
                 task = Tasks[i];
 
-                if (task.RenewPeriod != ITask.Period.Never)
+                if (task.RenewPeriod != ITask.Period.Never && task.Complete)
                 {
-                    if (task.Complete)
-                    {
-                        task.Complete = task.Active = false;
-                    }
-
-                    if (!task.Active && task.DaysRemaining() <= 1)
-                    {
-                        task.Active = true;
-                    }
+                    task.Complete = task.Active = false;
                 }
 
                 if (task.Complete)

@@ -60,6 +60,7 @@ namespace DeluxeJournal.Task
         int BasePrice { get; set; }
 
         /// <summary>Create a copy of this task.</summary>
+        /// <remarks>Ensure any mutable data is deep copied.</remarks>
         ITask Copy();
 
         /// <summary>Days remaining until renew.</summary>
