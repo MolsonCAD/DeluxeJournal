@@ -40,6 +40,8 @@ namespace DeluxeJournal.Framework.Events
             FarmAnimalPurchased = new ManagedEvent<FarmAnimalEventArgs>(nameof(FarmAnimalPurchased));
             FarmAnimalSold = new ManagedEvent<FarmAnimalEventArgs>(nameof(FarmAnimalSold));
             BuildingConstructed = new BuildingConstructedEvent(nameof(BuildingConstructed), multiplayer);
+
+            ModEvents.Multiplayer.ModMessageReceived += OnModMessageReceived;
         }
 
         private void OnModMessageReceived(object? sender, ModMessageReceivedEventArgs e)
