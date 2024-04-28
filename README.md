@@ -1,7 +1,7 @@
 # Deluxe Journal
 Deluxe Journal is a Stardew Valley mod that upgrades the in-game journal, adding new features for
 keeping track of the day-to-day. Create a to-do list of tasks with a variety of different
-auto-completion and renewal conditions, or just jot down what you need on the notes page.
+auto-completion and renewal conditions, or jot down what you need on the notes page.
 
 ## Install
 - Install [the latest version of SMAPI](https://smapi.io)
@@ -16,13 +16,11 @@ auto-completion and renewal conditions, or just jot down what you need on the no
 ## Features
 
 ### Tasks Page
-The tasks page provides a checklist for you to keep track of daily tasks. Tasks can be marked as
-completed by pressing the checkbox on the left-hand side, or you can choose from a variety of
-different auto-completion conditions that will automatically track your progress.
+The tasks page provides a checklist for you to keep track of daily tasks. Tasks can be marked as completed by pressing the checkbox on the left-hand side, or you can choose from various auto-completion conditions that will automatically track your progress - these are categorized into *task types*.
 
-At the end of each day, all completed tasks are removed unless they are given a renew period.
-Choose between daily, weekly, monthly, and annual renewals to automatically reactivate tasks
-after they've been completed.
+Task types can be applied automatically to "well-formed" task names that use the relevant keywords, and enough supplementary information (item/npc/building names), to create a task. Additionally, the task options menu can be used to fine-tune the task settings directly. Either click the wrench icon in the add task menu or click the name of an existing task to open the options menu.
+
+At the end of each day, all completed tasks are removed unless given a *renewal period*. Choose between daily, weekly, monthly, and annual renewals to automatically reactivate tasks after completion. This must be set via the options menu.
 
 #### Task Types
 | Name | Description | Example |
@@ -42,19 +40,22 @@ task(s) will show up in the money box at the bottom of the tasks page.*
 
 #### Tips
 - *Shortcuts*: Press the spacebar while on the tasks page to quickly open up the "Add Task" menu.
-- *Task Options*: When adding a task, the above task types can be applied automatically (simply by
-	typing a name that matches the format of the desired type) or manually by opening the options
-	menu. This can also be changed after task creation by pressing the body of the task.
-- *Task Order*: Click and drag to reorder tasks. Completed and inactive (waiting for renewal) tasks
-	will always be grouped together, however, for readability.
-- *Money Box*: Pressing the "G" symbol on the money box will toggle between "total amount to pay/gain"
-	and "net wealth."
-- *Notifications*: If the audio cue won't cut it, you can set the **EnableVisualTaskCompleteIndicator**
-	setting in the `config.json` file to "true" to enable a visual indicator.
+- *Task Order*: Click and drag to reorder tasks. Completed and inactive (waiting for renewal) tasks will always be grouped at the end of the task list for readability.
+- *Money Box*: Pressing the "G" symbol on the money box will toggle between "total amount to pay/gain" and "net wealth."
 
 ### Notes Page
-The notes page provides a section for writing down anything that's beyond the scope of a task.
-Fill it with anything you want! *The gamepad cannot be used to edit the notes currently.*
+The notes page provides a section for writing down anything beyond the scope of a task.
+*The gamepad is not currently supported for editing the notes.*
+
+## Configuration
+After this mod is run for the first time, a `config.json` file is created in the mod folder with the following configuration settings:
+| Setting | Default | Description |
+| ------- | ------- | ----------- |
+| `EnableDefaultSmartAdd` | `true` | Enable to have the "Smart Add" button be the default when creating a task (if applicable). Set to `false` to always create a "Basic" task instead. |
+| `EnableVisualTaskCompleteIndicator` | `false` | Set to `true` to enable a visual indicator, in addition to the audio cue, notifying you that a task has been completed. |
+| `ShowSmartAddTip` | `true` | Show the "Smart Add" info box in the "Add Task" menu. *This is automatically set to `false` when pressing the red "X" in-game.* |
+| `ShowAddTaskHelpMessage` | `true` | Show the help message when the task page is empty. *This is automatically set to `false` upon creating a new task.* |
+| `MoneyViewNetWealth` | `false` | Toggle between "Net Wealth" and "Total Amount to Pay/Gain" display modes. *This is automatically toggled by pressing the "G" icon on the Money Box.* |
 
 ## Mod Integration
 There is some rudimentary support for adding custom pages and there's groundwork done for custom tasks.
