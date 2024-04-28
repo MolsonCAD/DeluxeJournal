@@ -41,13 +41,13 @@ namespace DeluxeJournal.Menus.Components
             }
         }
 
-        public OptionsNumericDropDown(string label, int start, int end, int x = -1, int y = -1) :
-            this(label, start, end, WrapStyle.None, 10, x, y)
+        public OptionsNumericDropDown(string label, int start, int end, int x = -1, int y = -1)
+            : this(label, start, end, WrapStyle.None, 10, x, y)
         {
         }
 
-        public OptionsNumericDropDown(string label, int start, int end, WrapStyle wrap, int wrapLimit, int x = -1, int y = -1) :
-            base(label, 0, x, y)
+        public OptionsNumericDropDown(string label, int start, int end, WrapStyle wrap, int wrapLimit, int x = -1, int y = -1)
+            : base(label, 0, x, y)
         {
             _clickedField = ReflectionHelper.TryGetField<OptionsDropDown>("clicked", BindingFlags.Instance | BindingFlags.NonPublic);
             Wrap = wrap;

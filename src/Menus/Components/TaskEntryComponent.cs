@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
-using DeluxeJournal.Tasks;
+using DeluxeJournal.Task;
 
 namespace DeluxeJournal.Menus.Components
 {
@@ -25,8 +25,8 @@ namespace DeluxeJournal.Menus.Components
         private bool _hovering;
         private bool _nameTruncated;
 
-        public TaskEntryComponent(Rectangle bounds, string name, ITranslationHelper translation) :
-            base(bounds, name)
+        public TaskEntryComponent(Rectangle bounds, string name, ITranslationHelper translation)
+            : base(bounds, name)
         {
             if (DeluxeJournalMod.UiTexture == null)
             {
@@ -55,11 +55,7 @@ namespace DeluxeJournal.Menus.Components
                 new Rectangle(61, 16, 10, 10),
                 4f);
 
-            progressBar = new ProgressBar(
-                new Rectangle(bounds.Right - 260, _centerY - 30, 248, 56),
-                0,
-                Color.DarkOrange,
-                Color.LimeGreen)
+            progressBar = new ProgressBar(new Rectangle(bounds.Right - 260, _centerY - 30, 248, 56), 0)
             {
                 texture = DeluxeJournalMod.UiTexture,
                 barLeftSourceRect = new Rectangle(0, 64, 5, 14),
@@ -152,6 +148,40 @@ namespace DeluxeJournal.Menus.Components
                     else
                     {
                         progressBar.Draw(b, _font, Color.DarkBlue, count, maxCount);
+                    }
+                }
+                else if (task.ShouldShowCustomStatus())
+                {
+                    Translation status = _translation.Get(task.GetCustomStatusKey()).UsePlaceholder(false);
+
+                    if (status.HasValue())
+                    {
+                        string text = status.ToString();
+                        int emojiEnd = text.StartsWith('[') ? text.IndexOf(']') : -1;
+                        int textOffset = 0;
+
+                        nameWidth -= 260;
+
+                        if (emojiEnd > 0 && int.TryParse(text[1..emojiEnd], out int emojiIndex))
+                        {
+                            text = text[(emojiEnd + 1)..].TrimStart();
+                            textOffset = 48;
+
+                            Utility.drawWithShadow(b,
+                                ChatBox.emojiTexture,
+                                new Vector2(progressBar.bounds.X, _centerY - 22),
+                                new Rectangle(emojiIndex * 9 % ChatBox.emojiTexture.Width, emojiIndex * 9 / ChatBox.emojiTexture.Width * 9, 9, 9),
+                                Color.White,
+                                0f,
+                                Vector2.Zero,
+                                4f);
+                        }
+
+                        Utility.drawTextWithShadow(b,
+                            text,
+                            _font,
+                            new Vector2(progressBar.bounds.X + textOffset, _centerY - _halfLineSpacing - 6),
+                            Color.DarkBlue);
                     }
                 }
             }

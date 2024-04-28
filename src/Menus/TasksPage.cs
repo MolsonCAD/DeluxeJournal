@@ -6,9 +6,9 @@ using StardewValley;
 using StardewValley.BellsAndWhistles;
 using StardewValley.Menus;
 using DeluxeJournal.Framework;
-using DeluxeJournal.Framework.Tasks;
+using DeluxeJournal.Framework.Task;
 using DeluxeJournal.Menus.Components;
-using DeluxeJournal.Tasks;
+using DeluxeJournal.Task;
 
 using static StardewValley.Menus.ClickableComponent;
 
@@ -28,6 +28,7 @@ namespace DeluxeJournal.Menus
         public readonly MoneyDial moneyDial;
         public readonly ScrollComponent scrollComponent;
 
+        private readonly ITranslationHelper _translation;
         private readonly Config _config;
         private readonly TaskManager _taskManager;
         private readonly Rectangle _boundsWithScrollBar;
@@ -38,13 +39,13 @@ namespace DeluxeJournal.Menus
         private bool _moneyButtonVisible;
         private bool _dragging;
 
-        public TasksPage(Rectangle bounds, Texture2D tabTexture, ITranslationHelper translation) :
-            this("tasks", translation.Get("ui.tab.tasks"), bounds.X, bounds.Y, bounds.Width, bounds.Height, tabTexture, new Rectangle(16, 0, 16, 16), translation)
+        public TasksPage(Rectangle bounds, Texture2D tabTexture, ITranslationHelper translation)
+            : this("tasks", translation.Get("ui.tab.tasks"), bounds.X, bounds.Y, bounds.Width, bounds.Height, tabTexture, new Rectangle(16, 0, 16, 16), translation)
         {
         }
 
-        public TasksPage(string name, string title, int x, int y, int width, int height, Texture2D tabTexture, Rectangle tabSourceRect, ITranslationHelper translation) :
-            base(name, title, x, y, width, height, tabTexture, tabSourceRect, translation)
+        public TasksPage(string name, string title, int x, int y, int width, int height, Texture2D tabTexture, Rectangle tabSourceRect, ITranslationHelper translation)
+            : base(name, title, x, y, width, height, tabTexture, tabSourceRect)
         {
             if (DeluxeJournalMod.Instance?.Config is not Config config)
             {
@@ -56,6 +57,7 @@ namespace DeluxeJournal.Menus
                 throw new InvalidOperationException("TasksPage created before instantiation of TaskManager");
             }
 
+            _translation = translation;
             _config = config;
             _taskManager = taskManager;
             _dragScrollInterval = 0.16;
@@ -71,7 +73,7 @@ namespace DeluxeJournal.Menus
             for (int i = 0; i < maxEntries; i++)
             {
                 bounds.Y = y + 20 + i * bounds.Height;
-                taskEntries.Add(new TaskEntryComponent(bounds, i.ToString(), Translation)
+                taskEntries.Add(new TaskEntryComponent(bounds, i.ToString(), _translation)
                 {
                     myID = i,
                     upNeighborID = CUSTOM_SNAP_BEHAVIOR,
@@ -128,36 +130,37 @@ namespace DeluxeJournal.Menus
 
         public void OpenAddTaskMenu()
         {
-            SetSnappyChildMenu(new AddTaskMenu(Translation));
+            SetSnappyChildMenu(new AddTaskMenu(_translation));
         }
 
         public void OpenTaskOptionsMenu(ITask task)
         {
-            SetSnappyChildMenu(new TaskOptionsMenu(task, Translation));
+            SetSnappyChildMenu(new TaskOptionsMenu(task, _translation));
         }
 
         private void OpenTaskEntryMenu(TaskEntryComponent entry, ITask task)
         {
-            SetSnappyChildMenu(new TaskEntryMenu(entry, task, Translation));
+            SetSnappyChildMenu(new TaskEntryMenu(entry, task, _translation));
         }
 
         public void AddTask(ITask task)
         {
-            _taskManager.AddTask(task);
+            _taskManager.Tasks.Insert(0, task);
+            _config.ShowAddTaskHelpMessage = false;
             scrollComponent.ContentHeight += scrollComponent.ScrollDistance;
             scrollComponent.Refresh();
         }
 
         public void RemoveTask(ITask task)
         {
-            _taskManager.RemoveTask(task);
+            _taskManager.Tasks.Remove(task);
             scrollComponent.ContentHeight -= scrollComponent.ScrollDistance;
             scrollComponent.ScrollAmount -= scrollComponent.ScrollDistance;
         }
 
         private void RemoveTaskAt(int i)
         {
-            _taskManager.RemoveTaskAt(i);
+            _taskManager.Tasks.RemoveAt(i);
             scrollComponent.ContentHeight -= scrollComponent.ScrollDistance;
             scrollComponent.ScrollAmount -= scrollComponent.ScrollDistance;
         }
@@ -250,45 +253,12 @@ namespace DeluxeJournal.Menus
 
         public override void snapToDefaultClickableComponent()
         {
-            if (ChildHasFocus())
-            {
-                _childMenu.snapToDefaultClickableComponent();
-            }
-            else
-            {
-                currentlySnappedComponent = (_taskManager.Tasks.Count > 0) ? getComponentWithID(_currentlySnappedEntry) : addTaskButton;
-                snapCursorToCurrentSnappedComponent();
-            }
-        }
-
-        public override void snapCursorToCurrentSnappedComponent()
-        {
-            if (ChildHasFocus())
-            {
-                _childMenu.snapCursorToCurrentSnappedComponent();
-            }
-            else
-            {
-                base.snapCursorToCurrentSnappedComponent();
-            }
-        }
-
-        public override void receiveGamePadButton(Buttons b)
-        {
-            if (ChildHasFocus())
-            {
-                _childMenu.receiveGamePadButton(b);
-            }
+            currentlySnappedComponent = (_taskManager.Tasks.Count > 0) ? getComponentWithID(_currentlySnappedEntry) : addTaskButton;
+            snapCursorToCurrentSnappedComponent();
         }
 
         public override void receiveLeftClick(int x, int y, bool playSound = true)
         {
-            if (ChildHasFocus())
-            {
-                _childMenu.receiveLeftClick(x, y, playSound);
-                return;
-            }
-
             if (_dragging)
             {
                 return;
@@ -305,7 +275,7 @@ namespace DeluxeJournal.Menus
             }
             else
             {
-                IReadOnlyList<ITask> tasks = _taskManager.Tasks;
+                IList<ITask> tasks = _taskManager.Tasks;
                 int scrollOffset = scrollComponent.ScrollAmount / scrollComponent.ScrollDistance;
 
                 for (int i = 0; i < taskEntries.Count && i + scrollOffset < tasks.Count; i++)
@@ -321,7 +291,7 @@ namespace DeluxeJournal.Menus
                             {
                                 task.Complete = !task.Complete;
                                 task.MarkAsViewed();
-                                Game1.playSoundPitched("tinyWhip", task.Complete ? 2000 : 1000);
+                                Game1.playSound("tinyWhip", task.Complete ? 2000 : 1000);
                             }
                             else
                             {
@@ -332,7 +302,7 @@ namespace DeluxeJournal.Menus
                         else if (entry.removeButton.containsPoint(x, y))
                         {
                             RemoveTaskAt(i + scrollOffset);
-                            Game1.playSound("trashcan");
+                            Game1.playSound("woodyStep");
                         }
                         else
                         {
@@ -356,12 +326,6 @@ namespace DeluxeJournal.Menus
         {
             if (!GameMenu.forcePreventClose)
             {
-                if (ChildHasFocus())
-                {
-                    _childMenu.leftClickHeld(x, y);
-                    return;
-                }
-
                 if (_selectedTaskIndex != -1)
                 {
                     double currentTime = Game1.currentGameTime.TotalGameTime.TotalSeconds;
@@ -388,8 +352,8 @@ namespace DeluxeJournal.Menus
                     {
                         if (_selectedTaskIndex > scrollOffset)
                         {
-                            _taskManager.RemoveTaskAt(_selectedTaskIndex);
-                            _taskManager.InsertTask(--_selectedTaskIndex, task);
+                            _taskManager.Tasks.RemoveAt(_selectedTaskIndex);
+                            _taskManager.Tasks.Insert(--_selectedTaskIndex, task);
 
                             if (_dragging)
                             {
@@ -403,8 +367,8 @@ namespace DeluxeJournal.Menus
                     {
                         if (_selectedTaskIndex < Math.Min(_taskManager.Tasks.Count - 1, scrollOffset + taskEntries.Count - 1))
                         {
-                            _taskManager.RemoveTaskAt(_selectedTaskIndex);
-                            _taskManager.InsertTask(++_selectedTaskIndex, task);
+                            _taskManager.Tasks.RemoveAt(_selectedTaskIndex);
+                            _taskManager.Tasks.Insert(++_selectedTaskIndex, task);
 
                             if (_dragging)
                             {
@@ -424,12 +388,6 @@ namespace DeluxeJournal.Menus
         {
             if (!GameMenu.forcePreventClose)
             {
-                if (ChildHasFocus())
-                {
-                    _childMenu.releaseLeftClick(x, y);
-                    return;
-                }
-
                 if (_selectedTaskIndex != -1 && !_dragging)
                 {
                     ITask task = _taskManager.Tasks[_selectedTaskIndex];
@@ -459,20 +417,24 @@ namespace DeluxeJournal.Menus
 
         public override void receiveKeyPress(Keys key)
         {
-            if (ChildHasFocus())
-            {
-                _childMenu.receiveKeyPress(key);
-                return;
-            }
-
             base.receiveKeyPress(key);
-        }
 
-        public override void applyMovementKey(int direction)
-        {
-            if (!ChildHasFocus())
+            if (GetChildMenu() == null)
             {
-                base.applyMovementKey(direction);
+                switch (key)
+                {
+                    case Keys.Space:
+                        OpenAddTaskMenu();
+                        break;
+#if DEBUG
+                    case Keys.End:
+                        if (DeluxeJournalMod.Instance?.TaskManager is TaskManager taskManager)
+                        {
+                            taskManager.Save();
+                        }
+                        break;
+#endif
+                }
             }
         }
 
@@ -480,28 +442,22 @@ namespace DeluxeJournal.Menus
         {
             base.performHoverAction(x, y);
 
-            if (ChildHasFocus())
-            {
-                _childMenu.performHoverAction(x, y);
-                return;
-            }
-
             _moneyButtonVisible = moneyButton.containsPoint(x, y);
 
             if (_moneyButtonVisible)
             {
-                HoverText = Translation.Get("ui.tasks.moneybutton.hover");
+                HoverText = _translation.Get("ui.tasks.moneybutton.hover");
             }
             else if (moneyBox.containsPoint(x, y))
             {
-                HoverText = Translation.Get("ui.tasks.moneybox." + (_config.MoneyViewNetWealth ? "hover1" : "hover0"));
+                HoverText = _translation.Get("ui.tasks.moneybox." + (_config.MoneyViewNetWealth ? "hover1" : "hover0"));
             }
             else if (addTaskButton.containsPoint(x, y))
             {
-                HoverText = Translation.Get("ui.tasks.addbutton.hover");
+                HoverText = _translation.Get("ui.tasks.addbutton.hover");
             }
 
-            IReadOnlyList<ITask> tasks = _taskManager.Tasks;
+            IList<ITask> tasks = _taskManager.Tasks;
             int scrollOffset = scrollComponent.ScrollAmount / scrollComponent.ScrollDistance;
 
             for (int i = 0; i < taskEntries.Count; i++)
@@ -521,11 +477,11 @@ namespace DeluxeJournal.Menus
                     {
                         if (entry.checkbox.containsPoint(x, y) && !tasks[i + scrollOffset].Active)
                         {
-                            HoverText = Translation.Get("ui.tasks.renewbutton.hover");
+                            HoverText = _translation.Get("ui.tasks.renewbutton.hover");
                         }
                         else if (entry.removeButton.containsPoint(x, y))
                         {
-                            HoverText = Translation.Get("ui.tasks.removebutton.hover");
+                            HoverText = _translation.Get("ui.tasks.removebutton.hover");
                         }
                         else if (entry.IsNameTruncated() && entry.TimeHovering() > 1.0)
                         {
@@ -539,17 +495,9 @@ namespace DeluxeJournal.Menus
             addTaskButton.tryHover(x, y);
         }
 
-        public override void update(GameTime time)
-        {
-            if (ChildHasFocus())
-            {
-                _childMenu.update(time);
-            }
-        }
-
         public override void draw(SpriteBatch b)
         {
-            IReadOnlyList<ITask> tasks = _taskManager.Tasks;
+            IList<ITask> tasks = _taskManager.Tasks;
             Vector2 moneyBoxPosition = new Vector2(moneyBox.bounds.X - 36, moneyBox.bounds.Y);
 
             scrollComponent.BeginScissorTest(b);
@@ -563,9 +511,9 @@ namespace DeluxeJournal.Menus
                     taskEntries[i].Draw(b, tasks[i + scrollOffset]);
                 }
             }
-            else
+            else if (_config.ShowAddTaskHelpMessage)
             {
-                string helpText = Translation.Get("ui.tasks.help");
+                string helpText = _translation.Get("ui.tasks.help");
                 Vector2 helpTextSize = Game1.dialogueFont.MeasureString(helpText);
                 Vector2 textPosition = new Vector2(xPositionOnScreen + (width / 2) - (helpTextSize.X / 2), yPositionOnScreen + (height / 2) - helpTextSize.Y);
                 textPosition = new Vector2(textPosition.X - (textPosition.X % 4), textPosition.Y - (textPosition.Y % 4));
@@ -614,11 +562,6 @@ namespace DeluxeJournal.Menus
             else
             {
                 moneyDial.draw(b, moneyBoxPosition + new Vector2(68, 24), money);
-            }
-
-            if (ChildHasFocus())
-            {
-                _childMenu.draw(b);
             }
         }
 
