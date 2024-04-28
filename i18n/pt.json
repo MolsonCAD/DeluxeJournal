@@ -70,10 +70,10 @@
 	// NOTE: case insensitive, underscores replaced with spaces
 
 	// animal shop display names
-	//"alias.animalshop.dairy_cow": "cow,cows",
+	"alias.animalshop.dairy_cow": "vaca,vacas",
 
 	// building display names
-	//"alias.buildings.farmhouse": "house,home",
+	"alias.buildings.farmhouse": "casa,lar",
 
 	// item display names
 	//"alias.items.<item>": "",
