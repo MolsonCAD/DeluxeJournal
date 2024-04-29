@@ -16,9 +16,20 @@ namespace DeluxeJournal.Menus.Components
 {
     public class SmartIconComponent
     {
+        /// <summary>Measure of the inner icon source in pixels.</summary>
         private const int InnerIconPixels = 9;
+
+        /// <summary>Measure of the outer/background icon source in pixels.</summary>
         private const int OuterIconPixels = 14;
+
+        /// <summary>Measure of the border width on the background icon in pixels.</summary>
         private const int BorderPixels = 2;
+
+        /// <summary>Width of the strip of pixels to test for the top of an NPC's head.</summary>
+        private const int HeadDetectionSampleWidth = 2;
+
+        /// <summary>Size of the source rect to capture the NPC's head.</summary>
+        private const int HeadSize = 12;
 
         internal static Dictionary<string, int>? AnimalIconIds;
         internal static Dictionary<string, BuildingIconData>? BuildingIconData;
@@ -33,6 +44,7 @@ namespace DeluxeJournal.Menus.Components
         private bool _visible;
 
         private Texture2D? _npcSpriteSheet;
+        private Rectangle _npcSourceRect;
         private string _loadedNpcName;
 
         public Point Location
@@ -216,20 +228,9 @@ namespace DeluxeJournal.Menus.Components
 
                         DrawIconBackground(b, targetIcon.bounds, 1, color, shadow);
 
-                        if (LoadNpcSpriteSheet(npcName) is Texture2D texture && Game1.characterData.TryGetValue(_taskParser.NpcName, out var characterData))
+                        if (LoadNpcSpriteSheet(npcName) is Texture2D texture)
                         {
-                            Rectangle sourceRect = new Rectangle(2, 9, 12, 12);
-
-                            if (characterData.Age == NpcAge.Child)
-                            {
-                                sourceRect.Y = 13;
-                            }
-                            else if (characterData.Gender == Gender.Male && npcName != "George" && npcName != "Linus")
-                            {
-                                sourceRect.Y = 5;
-                            }
-
-                            b.Draw(texture, ConvertInnerBounds(targetIcon.bounds), sourceRect, color);
+                            b.Draw(texture, ConvertInnerBounds(targetIcon.bounds), _npcSourceRect, color);
                         }
                     }
                     else if (ComparePriority(ref flag, SmartIconFlags.Animal, _mask, true) && _taskParser.ShouldShowSmartIcon(SmartIconFlags.Animal))
@@ -289,15 +290,18 @@ namespace DeluxeJournal.Menus.Components
             }
         }
 
+        /// <summary>Load and cache the sprite sheet of an NPC along with the corresponding icon source rect.</summary>
+        /// <param name="npcName">Name of the NPC to load.</param>
         private Texture2D? LoadNpcSpriteSheet(string npcName)
         {
             if (npcName != _loadedNpcName)
             {
                 string textureName = $"Characters\\{NPC.getTextureNameForCharacter(npcName)}";
 
-                if (Game1.content.DoesAssetExist<Texture2D>(textureName))
+                if (Game1.content.DoesAssetExist<Texture2D>(textureName) && Game1.characterData.TryGetValue(npcName, out var data))
                 {
                     _npcSpriteSheet = Game1.content.Load<Texture2D>(textureName);
+                    _npcSourceRect = GetNpcSourceRect(_npcSpriteSheet, data.Size.X, data.Size.Y);
                 }
                 else
                 {
@@ -308,6 +312,32 @@ namespace DeluxeJournal.Menus.Components
             }
 
             return _npcSpriteSheet;
+        }
+
+        /// <summary>Get the source rect for an NPC portrait icon.</summary>
+        /// <param name="texture">The sprite sheet texture.</param>
+        /// <param name="spriteWidth">The character sprite width.</param>
+        /// <param name="spriteHeight">The character sprite height.</param>
+        private static Rectangle GetNpcSourceRect(Texture2D texture, int spriteWidth, int spriteHeight)
+        {
+            int sampleWidth = Math.Min(HeadDetectionSampleWidth, spriteWidth);
+            int size = sampleWidth * spriteHeight;
+            Rectangle region = new(Math.Max((spriteWidth - sampleWidth) / 2, 0), 0, sampleWidth, spriteHeight);
+            Color[] pixels = new Color[size];
+
+            texture.GetData(0, region, pixels, 0, size);
+
+            for (int i = 0; i < size; i++)
+            {
+                if (pixels[i].PackedValue > 0)
+                {
+                    int headY = Math.Min(i / sampleWidth, Math.Max(spriteHeight - HeadSize, 0));
+                    int hairOffset = (headY + HeadSize + 2) > spriteHeight ? 0 : 2;
+                    return new Rectangle(Math.Max(spriteWidth - HeadSize, 0) / 2, headY + hairOffset, HeadSize, HeadSize);
+                }
+            }
+
+            return new(0, 0, HeadSize, HeadSize);
         }
 
         private static void DrawIcon(SpriteBatch b, Texture2D? texture, Rectangle bounds, int iconIndex, int iconSize, Color color, int count = -1, int tier = -1, bool shadow = false)
