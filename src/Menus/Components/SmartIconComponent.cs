@@ -259,6 +259,10 @@ namespace DeluxeJournal.Menus.Components
                                 buildingIconData.Tier,
                                 shadow);
                         }
+                        else
+                        {
+                            DrawIconBackground(b, targetIcon.bounds, 2, color, shadow);
+                        }
                     }
                     else if (ComparePriority(ref flag, SmartIconFlags.Item, _mask, true) && _taskParser.ShouldShowSmartIcon(SmartIconFlags.Item) && _taskParser.ProxyItem is Item item)
                     {
