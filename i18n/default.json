@@ -62,6 +62,7 @@
 	"ui.tasks.parameter.count": "Count",
 	"ui.tasks.parameter.item": "Item",
 	"ui.tasks.parameter.npc": "Villager",
+	"ui.tasks.parameter.quality": "Quality (Minimum)",
 	"ui.tasks.parameter.tool": "Tool",
 
 	// +---------------------------------+

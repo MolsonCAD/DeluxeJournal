@@ -205,7 +205,7 @@ namespace DeluxeJournal.Menus.Components
             return false;
         }
 
-        public void Draw(SpriteBatch b, Color color, bool showCount = true, bool shadow = false)
+        public void Draw(SpriteBatch b, Color color, int quality = 0, bool showCount = true, bool shadow = false)
         {
             if (Visible = _taskParser.MatchFound())
             {
@@ -269,6 +269,8 @@ namespace DeluxeJournal.Menus.Components
                             StackDrawType.Hide,
                             color,
                             false);
+
+                        DrawQuality(b, quality, targetIcon.bounds, color);
 
                         if (item is not Ring || _taskParser.ID == TaskTypes.Buy || _taskParser.ID == TaskTypes.Sell)
                         {
@@ -399,6 +401,17 @@ namespace DeluxeJournal.Menus.Components
                 b.Draw(DeluxeJournalMod.UiTexture,
                     new Rectangle(bounds.X + bounds.Width - 22, bounds.Y + 6, 16, 20),
                     new Rectangle(64 + (tier - 1) * 8, 80, 8, 10),
+                    color);
+            }
+        }
+
+        private static void DrawQuality(SpriteBatch b, int quality, Rectangle bounds, Color color)
+        {
+            if (quality > 0)
+            {
+                b.Draw(DeluxeJournalMod.UiTexture,
+                    new Rectangle(bounds.X + 2, bounds.Y + bounds.Height - 20, 16, 16),
+                    quality <= 2 ? new Rectangle(96 + (quality - 1) * 8, 88, 8, 8) : new Rectangle(104, 80, 8, 8),
                     color);
             }
         }

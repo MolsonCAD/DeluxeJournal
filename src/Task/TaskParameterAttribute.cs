@@ -27,6 +27,9 @@
 
             /// <summary>Specifies a counting type parameter.</summary>
             public const string Count = "count";
+
+            /// <summary>Specifies a quality type parameter.</summary>
+            public const string Quality = "quality";
         }
 
         /// <summary>Parser tags for populating parameter values.</summary>
@@ -51,7 +54,10 @@
             Building,
 
             /// <summary>An item count of type <see cref="int"/>.</summary>
-            Count
+            Count,
+
+            /// <summary>An item quality of type <see cref="int"/>.</summary>
+            Quality
         }
 
         /// <summary>Constraints on the parameter in the IsValid check.</summary>
@@ -107,15 +113,18 @@
         /// <summary>Parameter name. Also used in localization when displaying the parameter field.</summary>
         public string Name { get; set; }
 
+        /// <summary>Name of the parent parameter that this parameter modifies.</summary>
+        public string? Parent { get; set; } = null;
+
         /// <summary>Parser tag for populating parameter values.</summary>
         public TaskParameterTag Tag { get; set; }
 
         /// <summary>Is this task required?</summary>
         /// <remarks>If set to <c>false</c>, IsValid is always true.</remarks>
-        public bool Required { get; set; }
+        public bool Required { get; set; } = true;
 
         /// <summary>If set to <c>true</c>, this parameter is not exposed to the user in the task options menu.</summary>
-        public bool Hidden { get; set; }
+        public bool Hidden { get; set; } = false;
 
         /// <summary>Constraints on the parameter in the IsValid check.</summary>
         /// <remarks>
@@ -124,15 +133,12 @@
         /// filter the input parsed by the <see cref="TaskParser"/>. Parameter values may
         /// still need to be verified within the task/factory logic.
         /// </remarks>
-        public Constraint Constraints { get; set; }
+        public Constraint Constraints { get; set; } = Constraint.NotEmpty;
 
         public TaskParameterAttribute(string name, TaskParameterTag tag)
         {
             Name = name;
             Tag = tag;
-            Required = true;
-            Hidden = false;
-            Constraints = Constraint.NotEmpty;
         }
 
         /// <summary>

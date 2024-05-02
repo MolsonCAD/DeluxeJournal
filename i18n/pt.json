@@ -61,7 +61,8 @@
 	"ui.tasks.parameter.building": "Construção",
 	"ui.tasks.parameter.count": "Contar",
 	"ui.tasks.parameter.item": "Item",
-	"ui.tasks.parameter.npc": "NPC",
+	"ui.tasks.parameter.npc": "Aldeão",
+	"ui.tasks.parameter.quality": "Qualidade (Mínima)",
 	"ui.tasks.parameter.tool": "Ferramenta",
 
 	// +---------------------------------+

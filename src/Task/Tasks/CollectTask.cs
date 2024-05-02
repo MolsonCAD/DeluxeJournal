@@ -16,6 +16,9 @@ namespace DeluxeJournal.Task.Tasks
             [TaskParameter(TaskParameterNames.Count, TaskParameterTag.Count, Constraints = Constraint.GE1)]
             public int Count { get; set; } = 1;
 
+            [TaskParameter(TaskParameterNames.Quality, TaskParameterTag.Quality, Parent = TaskParameterNames.Item, Constraints = Constraint.GE0)]
+            public int Quality { get; set; } = 0;
+
             public override SmartIconFlags EnabledSmartIcons => SmartIconFlags.Item;
 
             public override bool EnableSmartIconCount => true;
@@ -26,12 +29,13 @@ namespace DeluxeJournal.Task.Tasks
                 {
                     ItemIds = collectTask.ItemIds;
                     Count = collectTask.MaxCount;
+                    Quality = collectTask.Quality;
                 }
             }
 
             public override ITask? Create(string name)
             {
-                return ItemIds != null && ItemIds.Count > 0 ? new CollectTask(name, ItemIds, Count) : null;
+                return ItemIds != null && ItemIds.Count > 0 ? new CollectTask(name, ItemIds, Count, Quality) : null;
             }
         }
 
@@ -40,7 +44,8 @@ namespace DeluxeJournal.Task.Tasks
         {
         }
 
-        public CollectTask(string name, IList<string> itemIds, int count) : base(TaskTypes.Collect, name, itemIds, count)
+        public CollectTask(string name, IList<string> itemIds, int count, int quality)
+            : base(TaskTypes.Collect, name, itemIds, count, quality)
         {
             if (itemIds.Count == 0 || ItemRegistry.GetDataOrErrorItem(itemIds.First()).Category != SObject.ringCategory)
             {

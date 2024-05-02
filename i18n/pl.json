@@ -62,6 +62,7 @@
 	"ui.tasks.parameter.count": "Ilość",
 	"ui.tasks.parameter.item": "Przedmiot",
 	"ui.tasks.parameter.npc": "Mieszkaniec",
+	"ui.tasks.parameter.quality": "Jakość (Minimalna)",
 	"ui.tasks.parameter.tool": "Narzędzie",
 
 	// +---------------------------------+

@@ -9,6 +9,9 @@ namespace DeluxeJournal.Task.Tasks
         /// <summary>The qualified item IDs, or item categories, of the items to be checked.</summary>
         public IList<string> ItemIds { get; set; }
 
+        /// <summary>Minimum required item quality.</summary>
+        public int Quality { get; set; } = 0;
+
         /// <summary>
         /// The qualified base item IDs, or item categories, of the items to be checked.
         /// Stripped of any encoded flavor ID information.
@@ -26,10 +29,11 @@ namespace DeluxeJournal.Task.Tasks
             ItemIds = Array.Empty<string>();
         }
 
-        public ItemTaskBase(string id, string name, IList<string> itemIds, int count) : base(id, name)
+        public ItemTaskBase(string id, string name, IList<string> itemIds, int count, int quality = 0) : base(id, name)
         {
             ItemIds = itemIds;
             MaxCount = count;
+            Quality = quality;
             Validate();
         }
 
@@ -45,7 +49,11 @@ namespace DeluxeJournal.Task.Tasks
         /// <returns>Whether the item matches the item QID or category (if the <see cref="ItemIds"/> entry is a category)</returns>
         protected bool CheckItemMatch(Item item)
         {
-            if (BaseItemIds.Contains(item.QualifiedItemId))
+            if (item.Quality < Quality)
+            {
+                return false;
+            }
+            else if (BaseItemIds.Contains(item.QualifiedItemId))
             {
                 return string.IsNullOrEmpty(IngredientItemId) || (item is SObject obj && IngredientItemId == obj.preservedParentSheetIndex.Value);
             }

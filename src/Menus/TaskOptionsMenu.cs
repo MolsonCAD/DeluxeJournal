@@ -25,6 +25,7 @@ namespace DeluxeJournal.Menus
         private const int BottomGap = 32;
 
         private const int ParameterTextBoxId = 1000;
+        private const int ParameterDropDownId = 1100;
         private const int ParameterIconId = 900;
 
         public readonly ClickableTextureComponent backButton;
@@ -32,19 +33,16 @@ namespace DeluxeJournal.Menus
         public readonly ClickableTextureComponent okButton;
 
         public readonly ClickableComponent nameTextBoxCC;
-        public readonly ClickableComponent renewPeriodDropDownCC;
-        public readonly ClickableComponent weekdaysDropDownCC;
-        public readonly ClickableComponent daysDropDownCC;
-        public readonly ClickableComponent seasonsDropDownCC;
+        public readonly DropDownComponent renewPeriodDropDown;
+        public readonly DropDownComponent weekdaysDropDown;
+        public readonly DropDownComponent seasonsDropDown;
+        public readonly DropDownComponent daysDropDown;
         public readonly List<ClickableComponent> parameterTextBoxCCs;
         public readonly List<ClickableComponent> typeIcons;
 
         private readonly SideScrollingTextBox _nameTextBox;
-        private readonly OptionsDropDown _renewPeriodDropDown;
-        private readonly OptionsDropDown _weekdaysDropDown;
-        private readonly OptionsDropDown _daysDropDown;
-        private readonly OptionsDropDown _seasonsDropDown;
         private readonly IList<TaskParameterTextBox> _parameterTextBoxes;
+        private readonly IDictionary<int, TaskParameterDropDown> _parameterDropDowns;
         private readonly IDictionary<int, SmartIconComponent> _parameterIcons;
 
         private readonly ITranslationHelper _translation;
@@ -53,7 +51,7 @@ namespace DeluxeJournal.Menus
         private readonly ITask? _task;
 
         private Task.TaskFactory? _taskFactory;
-        private OptionsElement? _optionHeld;
+        private DropDownComponent? _activeDropDown;
         private string _selectedTaskID;
         private string _hoverText;
 
@@ -65,16 +63,16 @@ namespace DeluxeJournal.Menus
             _taskFactory.Initialize(task, translation);
 
             _nameTextBox.Text = task.Name;
-            _renewPeriodDropDown.selectedOption = (int)_task.RenewPeriod;
+            renewPeriodDropDown.SelectedOption = (int)_task.RenewPeriod;
             
             if (_task.RenewPeriod != Period.Never)
             {
-                _weekdaysDropDown.selectedOption = (_task.RenewDate.DayOfMonth % 7) - 1;
+                weekdaysDropDown.SelectedOption = (_task.RenewDate.DayOfMonth % 7) - 1;
 
                 if (_task.RenewPeriod != Period.Weekly)
                 {
-                    _daysDropDown.selectedOption = _task.RenewDate.DayOfMonth - 1;
-                    _seasonsDropDown.selectedOption = _task.RenewDate.SeasonIndex;
+                    daysDropDown.SelectedOption = _task.RenewDate.DayOfMonth - 1;
+                    seasonsDropDown.SelectedOption = _task.RenewDate.SeasonIndex;
                 }
             }
 
@@ -98,7 +96,7 @@ namespace DeluxeJournal.Menus
 
             _translation = translation;
             _textBoxTexture = Game1.content.Load<Texture2D>("LooseSprites\\textBox");
-            _optionHeld = null;
+            _activeDropDown = null;
             _taskFactory = null;
             _task = null;
             _selectedTaskID = TaskTypes.Basic;
@@ -110,6 +108,7 @@ namespace DeluxeJournal.Menus
             _fixedContentBounds.Width = width - (_fixedContentBounds.X - xPositionOnScreen) * 2;
 
             _parameterIcons = new Dictionary<int, SmartIconComponent>();
+            _parameterDropDowns = new Dictionary<int, TaskParameterDropDown>();
             _parameterTextBoxes = new List<TaskParameterTextBox>();
             parameterTextBoxCCs = new List<ClickableComponent>();
             typeIcons = new List<ClickableComponent>();
@@ -121,29 +120,7 @@ namespace DeluxeJournal.Menus
                 Width = _fixedContentBounds.Width - LabelWidth
             };
 
-            _renewPeriodDropDown = CreateTranslatedDropDown("ui.tasks.options.renew", 0, VerticalSpacing);
-            _daysDropDown = new OptionsNumericDropDown(string.Empty, 1, 28, OptionsNumericDropDown.WrapStyle.Horizontal, 7, _renewPeriodDropDown.bounds.Right + 8, _renewPeriodDropDown.bounds.Y);
-
-            _weekdaysDropDown = CreateTranslatedDropDown(string.Empty, _renewPeriodDropDown.bounds.Width + 8, VerticalSpacing, new Dictionary<string, string>()
-            {
-                { "mon", Game1.content.LoadString("Strings\\StringsFromCSFiles:Game1.cs.3043") },
-                { "tue", Game1.content.LoadString("Strings\\StringsFromCSFiles:Game1.cs.3044") },
-                { "wed", Game1.content.LoadString("Strings\\StringsFromCSFiles:Game1.cs.3045") },
-                { "thu", Game1.content.LoadString("Strings\\StringsFromCSFiles:Game1.cs.3046") },
-                { "fri", Game1.content.LoadString("Strings\\StringsFromCSFiles:Game1.cs.3047") },
-                { "sat", Game1.content.LoadString("Strings\\StringsFromCSFiles:Game1.cs.3048") },
-                { "sun", Game1.content.LoadString("Strings\\StringsFromCSFiles:Game1.cs.3042") }
-            });
-
-            _seasonsDropDown = CreateTranslatedDropDown(string.Empty, _renewPeriodDropDown.bounds.Width + 8, VerticalSpacing, new Dictionary<string, string>()
-            {
-                { "spring", Game1.content.LoadString("Strings\\StringsFromCSFiles:Utility.cs.5680") },
-                { "summer", Game1.content.LoadString("Strings\\StringsFromCSFiles:Utility.cs.5681") },
-                { "fall", Game1.content.LoadString("Strings\\StringsFromCSFiles:Utility.cs.5682") },
-                { "winter", Game1.content.LoadString("Strings\\StringsFromCSFiles:Utility.cs.5683") }
-            });
-
-            nameTextBoxCC = new ClickableComponent(new Rectangle(_nameTextBox.X, _nameTextBox.Y, _nameTextBox.Width, _nameTextBox.Height), "")
+            nameTextBoxCC = new ClickableComponent(new Rectangle(_nameTextBox.X, _nameTextBox.Y, _nameTextBox.Width, _nameTextBox.Height), string.Empty)
             {
                 myID = 100,
                 downNeighborID = 101,
@@ -151,8 +128,41 @@ namespace DeluxeJournal.Menus
                 leftNeighborID = SNAP_AUTOMATIC,
                 fullyImmutable = true
             };
-            
-            renewPeriodDropDownCC = new ClickableComponent(_renewPeriodDropDown.bounds, "")
+
+            string[] weekdayNames = new[]
+            {
+                Game1.content.LoadString("Strings\\StringsFromCSFiles:Game1.cs.3043"),
+                Game1.content.LoadString("Strings\\StringsFromCSFiles:Game1.cs.3044"),
+                Game1.content.LoadString("Strings\\StringsFromCSFiles:Game1.cs.3045"),
+                Game1.content.LoadString("Strings\\StringsFromCSFiles:Game1.cs.3046"),
+                Game1.content.LoadString("Strings\\StringsFromCSFiles:Game1.cs.3047"),
+                Game1.content.LoadString("Strings\\StringsFromCSFiles:Game1.cs.3048"),
+                Game1.content.LoadString("Strings\\StringsFromCSFiles:Game1.cs.3042")
+            };
+
+            string[] seasonNames = new[]
+            {
+                Game1.content.LoadString("Strings\\StringsFromCSFiles:Utility.cs.5680"),
+                Game1.content.LoadString("Strings\\StringsFromCSFiles:Utility.cs.5681"),
+                Game1.content.LoadString("Strings\\StringsFromCSFiles:Utility.cs.5682"),
+                Game1.content.LoadString("Strings\\StringsFromCSFiles:Utility.cs.5683")
+            };
+
+            string[] seasonKeys = new[]
+            {
+                nameof(Season.Spring),
+                nameof(Season.Summer),
+                nameof(Season.Fall),
+                nameof(Season.Winter)
+            };
+
+            IEnumerable<string> renewOptions = translation.GetTranslations()
+                .Where(option => option.Key.StartsWith("ui.tasks.options.renew."))
+                .Select(option => option.ToString());
+
+            renewPeriodDropDown = new DropDownComponent(renewOptions,
+                new(_nameTextBox.X + 8, _nameTextBox.Y + VerticalSpacing, 0, 44),
+                string.Empty)
             {
                 myID = 101,
                 upNeighborID = SNAP_AUTOMATIC,
@@ -160,8 +170,10 @@ namespace DeluxeJournal.Menus
                 rightNeighborID = SNAP_AUTOMATIC,
                 leftNeighborID = SNAP_AUTOMATIC
             };
-            
-            weekdaysDropDownCC = new ClickableComponent(_weekdaysDropDown.bounds, "")
+
+            weekdaysDropDown = new DropDownComponent(weekdayNames,
+                new(renewPeriodDropDown.bounds.Right + 8, renewPeriodDropDown.bounds.Y, 0, renewPeriodDropDown.bounds.Height),
+                string.Empty)
             {
                 myID = 102,
                 upNeighborID = SNAP_AUTOMATIC,
@@ -170,7 +182,9 @@ namespace DeluxeJournal.Menus
                 leftNeighborID = SNAP_AUTOMATIC
             };
             
-            daysDropDownCC = new ClickableComponent(_daysDropDown.bounds, "")
+            seasonsDropDown = new DropDownComponent(seasonKeys, seasonNames,
+                new(renewPeriodDropDown.bounds.Right + 8, renewPeriodDropDown.bounds.Y, 0, renewPeriodDropDown.bounds.Height),
+                string.Empty)
             {
                 myID = 103,
                 upNeighborID = SNAP_AUTOMATIC,
@@ -179,7 +193,12 @@ namespace DeluxeJournal.Menus
                 leftNeighborID = SNAP_AUTOMATIC
             };
             
-            seasonsDropDownCC = new ClickableComponent(_seasonsDropDown.bounds, "")
+            daysDropDown = new DropDownComponent(Enumerable.Range(1, 28).Select(i => i.ToString()),
+                new(seasonsDropDown.bounds.Right + 8, seasonsDropDown.bounds.Y, 112, seasonsDropDown.bounds.Height),
+                string.Empty,
+                DropDownComponent.WrapStyle.Horizontal,
+                wrapLimit: 7,
+                fixedWidth: true)
             {
                 myID = 104,
                 upNeighborID = SNAP_AUTOMATIC,
@@ -263,7 +282,7 @@ namespace DeluxeJournal.Menus
             {
                 foreach (TaskParameter parameter in _taskFactory.GetParameters())
                 {
-                    if (!parameter.Attribute.Hidden)
+                    if (!parameter.Attribute.Hidden && string.IsNullOrEmpty(parameter.Attribute.Parent))
                     {
                         height += VerticalSpacing;
                     }
@@ -281,11 +300,11 @@ namespace DeluxeJournal.Menus
         private void ApplyChanges()
         {
             string name = _nameTextBox.Text.Trim();
-            string season = _seasonsDropDown.dropDownOptions[_seasonsDropDown.selectedOption];
+            string season = seasonsDropDown.Options[seasonsDropDown.SelectedOption];
             ITask task = _taskFactory?.Create(name) ?? new BasicTask(name);
 
-            task.RenewPeriod = (Period)_renewPeriodDropDown.selectedOption;
-            task.RenewDate = new WorldDate(1, season, (task.RenewPeriod == Period.Weekly ? _weekdaysDropDown.selectedOption : _daysDropDown.selectedOption) + 1);
+            task.RenewPeriod = (Period)renewPeriodDropDown.SelectedOption;
+            task.RenewDate = new WorldDate(1, season, (task.RenewPeriod == Period.Weekly ? weekdaysDropDown.SelectedOption : daysDropDown.SelectedOption) + 1);
 
             if (_task != null)
             {
@@ -335,13 +354,14 @@ namespace DeluxeJournal.Menus
         {
             _parameterIcons.Clear();
             _parameterTextBoxes.Clear();
+            _parameterDropDowns.Clear();
             parameterTextBoxCCs.Clear();
 
             if (_taskFactory != null)
             {
                 IReadOnlyList<TaskParameter> parameters = _taskFactory.GetParameters();
 
-                for (int i = 0; i < parameters.Count; i++)
+                for (int i = 0, j = 0; i < parameters.Count; i++)
                 {
                     TaskParameter parameter = parameters[i];
 
@@ -349,10 +369,52 @@ namespace DeluxeJournal.Menus
                     {
                         continue;
                     }
+                    else if (parameter.Attribute.Parent is string parentName)
+                    {
+                        for (int k = 0; k < i; k++)
+                        {
+                            TaskParameter parentParameter = parameters[k];
+
+                            if (parentParameter.Attribute.Name == parentName)
+                            {
+                                TaskParameterTextBox parentTextBox = _parameterTextBoxes[k];
+                                ClickableComponent parentTextBoxCC = parameterTextBoxCCs[k];
+                                Rectangle dropDownBounds = new Rectangle(parentTextBox.X + parentTextBox.Width - 120, parentTextBox.Y, 120, 44);
+
+                                parentTextBox.Width = _fixedContentBounds.Width - LabelWidth - dropDownBounds.Width + 4;
+                                parentTextBoxCC.bounds.Width = parentTextBox.Width;
+
+                                if (parameter.Attribute.Tag == TaskParameterTag.Quality && DeluxeJournalMod.UiTexture is Texture2D texture)
+                                {
+                                    Rectangle[] textureSources = new[]
+                                    {
+                                        new Rectangle(96, 80, 8, 8),
+                                        new Rectangle(96, 88, 8, 8),
+                                        new Rectangle(104, 88, 8, 8),
+                                        new Rectangle(104, 80, 8, 8)
+                                    };
+
+                                    _parameterDropDowns.Add(k, new TaskParameterDropDown(parameter, texture, textureSources, dropDownBounds)
+                                    {
+                                        myID = ParameterDropDownId + k,
+                                        upNeighborID = parentTextBoxCC.upNeighborID,
+                                        downNeighborID = parentTextBoxCC.downNeighborID,
+                                        rightNeighborID = parentTextBoxCC.rightNeighborID,
+                                        leftNeighborID = parentTextBoxCC.myID,
+                                        fullyImmutable = true
+                                    });
+
+                                    parentTextBoxCC.rightNeighborID = ParameterDropDownId + k;
+                                }
+                                break;
+                            }
+                        }
+                        continue;
+                    }
 
                     Rectangle textBoxBounds = new Rectangle(
                         _fixedContentBounds.X + LabelWidth,
-                        _fixedContentBounds.Bottom + VerticalSpacing * i,
+                        _fixedContentBounds.Bottom + VerticalSpacing * j,
                         _fixedContentBounds.Width - LabelWidth,
                         _textBoxTexture.Height);
                     Rectangle iconBounds = new Rectangle(textBoxBounds.X - 60, textBoxBounds.Y - 4, 56, 56);
@@ -369,9 +431,9 @@ namespace DeluxeJournal.Menus
                     _parameterTextBoxes.Add(textBox);
                     parameterTextBoxCCs.Add(new ClickableComponent(textBoxBounds, "")
                     {
-                        myID = ParameterTextBoxId + i,
-                        upNeighborID = i == 0 ? CUSTOM_SNAP_BEHAVIOR : ParameterTextBoxId + i - 1,
-                        downNeighborID = i == parameters.Count - 1 ? okButton.myID : ParameterTextBoxId + i + 1,
+                        myID = ParameterTextBoxId + j,
+                        upNeighborID = j == 0 ? CUSTOM_SNAP_BEHAVIOR : ParameterTextBoxId + j - 1,
+                        downNeighborID = ParameterTextBoxId + j + 1,
                         rightNeighborID = cancelButton.myID,
                         leftNeighborID = CUSTOM_SNAP_BEHAVIOR,
                         fullyImmutable = true
@@ -388,46 +450,20 @@ namespace DeluxeJournal.Menus
 
                     if (mask != SmartIconFlags.None)
                     {
-                        _parameterIcons.Add(i, new SmartIconComponent(iconBounds, textBox.TaskParser, ParameterIconId + i, mask, 1, false));
+                        _parameterIcons.Add(j, new SmartIconComponent(iconBounds, textBox.TaskParser, ParameterIconId + j, mask, 1, false));
                     }
+
+                    j++;
+                }
+
+                if (parameterTextBoxCCs.LastOrDefault() is ClickableComponent parameterTextBoxCC)
+                {
+                    parameterTextBoxCC.downNeighborID = okButton.myID;
                 }
             }
 
             RecalculateBounds();
             populateClickableComponentList();
-        }
-
-        private OptionsDropDown CreateTranslatedDropDown(string keyPrefix, int xOffset, int yOffset)
-        {
-            IDictionary<string, string> options = new Dictionary<string, string>();
-            string label = _translation.Get(keyPrefix);
-
-            foreach (Translation translation in _translation.GetTranslations())
-            {
-                if (translation.Key.StartsWith(keyPrefix + '.'))
-                {
-                    options.Add(translation.Key[(keyPrefix.Length + 1)..], translation);
-                }
-            }
-
-            return CreateTranslatedDropDown(label, xOffset, yOffset, options);
-        }
-
-        private OptionsDropDown CreateTranslatedDropDown(string label, int xOffset, int yOffset, IDictionary<string, string> options)
-        {
-            OptionsDropDown dropDown = new OptionsDropDown(label, 0, _fixedContentBounds.X + LabelWidth + xOffset, _fixedContentBounds.Y + yOffset);
-
-            foreach (KeyValuePair<string, string> option in options)
-            {
-                dropDown.dropDownOptions.Add(option.Key);
-                dropDown.dropDownDisplayOptions.Add(option.Value);
-            }
-
-            dropDown.bounds.Width = 0;
-            dropDown.RecalculateBounds();
-            dropDown.labelOffset.X = -(dropDown.bounds.Width + LabelWidth + 8);
-
-            return dropDown;
         }
 
         private void OnExit()
@@ -503,6 +539,11 @@ namespace DeluxeJournal.Menus
             {
                 allClickableComponents.AddRange(icon.GetClickableComponents());
             }
+
+            foreach (var dropDown in _parameterDropDowns.Values)
+            {
+                allClickableComponents.Add(dropDown);
+            }
         }
 
         public override void snapCursorToCurrentSnappedComponent()
@@ -563,25 +604,25 @@ namespace DeluxeJournal.Menus
                 _nameTextBox.SelectMe();
                 _nameTextBox.Update();
             }
-            else if (renewPeriodDropDownCC.containsPoint(x, y))
+            else if (renewPeriodDropDown.containsPoint(x, y))
             {
-                _renewPeriodDropDown.receiveLeftClick(x, y);
-                _optionHeld = _renewPeriodDropDown;
+                renewPeriodDropDown.ReceiveLeftClick(x, y);
+                _activeDropDown = renewPeriodDropDown;
             }
-            else if (weekdaysDropDownCC.containsPoint(x, y))
+            else if (weekdaysDropDown.containsPoint(x, y))
             {
-                _weekdaysDropDown.receiveLeftClick(x, y);
-                _optionHeld = _weekdaysDropDown;
+                weekdaysDropDown.ReceiveLeftClick(x, y);
+                _activeDropDown = weekdaysDropDown;
             }
-            else if (seasonsDropDownCC.containsPoint(x, y))
+            else if (seasonsDropDown.containsPoint(x, y))
             {
-                _seasonsDropDown.receiveLeftClick(x, y);
-                _optionHeld = _seasonsDropDown;
+                seasonsDropDown.ReceiveLeftClick(x, y);
+                _activeDropDown = seasonsDropDown;
             }
-            else if (daysDropDownCC.containsPoint(x, y))
+            else if (daysDropDown.containsPoint(x, y))
             {
-                _daysDropDown.receiveLeftClick(x, y);
-                _optionHeld = _daysDropDown;
+                daysDropDown.ReceiveLeftClick(x, y);
+                _activeDropDown = daysDropDown;
             }
             else
             {
@@ -594,8 +635,10 @@ namespace DeluxeJournal.Menus
                     }
                 }
 
-                foreach (TaskParameterTextBox textBox in _parameterTextBoxes)
+                for (int i = 0; i < _parameterTextBoxes.Count; i++)
                 {
+                    TaskParameterTextBox textBox = _parameterTextBoxes[i];
+
                     if (textBox.ContainsPoint(x, y))
                     {
                         textBox.SelectMe();
@@ -611,26 +654,31 @@ namespace DeluxeJournal.Menus
 
                         return;
                     }
+                    else if (_parameterDropDowns.TryGetValue(i, out var dropDown) && dropDown.containsPoint(x, y))
+                    {
+                        dropDown.ReceiveLeftClick(x, y);
+                        _activeDropDown = dropDown;
+                        return;
+                    }
                 }
             }
         }
 
         public override void leftClickHeld(int x, int y)
         {
-            if (_optionHeld != null)
+            if (_activeDropDown != null)
             {
-                _optionHeld.leftClickHeld(x, y);
+                _activeDropDown.LeftClickHeld(x, y);
             }
         }
 
         public override void releaseLeftClick(int x, int y)
         {
-            if (_optionHeld != null)
+            if (_activeDropDown != null)
             {
-                _optionHeld.leftClickReleased(x, y);
+                _activeDropDown.LeftClickReleased(x, y);
+                _activeDropDown = null;
             }
-
-            _optionHeld = null;
         }
 
         public override void receiveKeyPress(Keys key)
@@ -644,9 +692,9 @@ namespace DeluxeJournal.Menus
                 base.receiveKeyPress(key);
             }
 
-            if (_optionHeld != null)
+            if (_activeDropDown != null)
             {
-                _optionHeld.receiveKeyPress(key);
+                _activeDropDown.ReceiveKeyPress(key);
             }
 
             switch (key)
@@ -671,7 +719,7 @@ namespace DeluxeJournal.Menus
         /// <returns><c>true</c> if the next text box was selected and <c>false</c> otherwise.</returns>
         private bool CycleTextBoxes(bool completeParameterText = true)
         {
-            if (_optionHeld != null || Game1.options.SnappyMenus)
+            if (_activeDropDown != null || Game1.options.SnappyMenus)
             {
                 return false;
             }
@@ -715,7 +763,7 @@ namespace DeluxeJournal.Menus
 
         public override void applyMovementKey(int direction)
         {
-            if (_optionHeld == null)
+            if (_activeDropDown == null)
             {
                 base.applyMovementKey(direction);
             }
@@ -742,13 +790,16 @@ namespace DeluxeJournal.Menus
 
                 if (_taskFactory != null && string.IsNullOrEmpty(_hoverText))
                 {
-                    IReadOnlyList<TaskParameter> parameters = _taskFactory.GetParameters();
-
-                    for (int i = 0; i < parameters.Count; i++)
+                    for (int i = 0; i < _parameterTextBoxes.Count; i++)
                     {
                         if (_parameterIcons.TryGetValue(i, out var icon) && icon.TryGetHoverText(x, y, _translation, out string hoverText))
                         {
                             _hoverText = hoverText;
+                            break;
+                        }
+                        else if (_parameterDropDowns.TryGetValue(i, out var dropDown) && dropDown.containsPoint(x, y))
+                        {
+                            _hoverText = _translation.Get("ui.tasks.parameter." + dropDown.TaskParameter.Attribute.Name);
                             break;
                         }
                     }
@@ -762,17 +813,13 @@ namespace DeluxeJournal.Menus
 
         public override void draw(SpriteBatch b)
         {
-            string title = _translation.Get("ui.tasks.options");
-            Period renewPeriod = (Period)_renewPeriodDropDown.selectedOption;
-            int typeSectionY = _fixedContentBounds.Y + (VerticalSpacing * 2) + 24;
-
             b.Draw(Game1.fadeToBlackRect, Game1.graphics.GraphicsDevice.Viewport.Bounds, Color.Black * 0.75f);
-            SpriteText.drawStringWithScrollCenteredAt(b, title, xPositionOnScreen + width / 2, yPositionOnScreen + 16);
+            SpriteText.drawStringWithScrollCenteredAt(b, _translation.Get("ui.tasks.options"), xPositionOnScreen + width / 2, yPositionOnScreen + 16);
 
             Game1.drawDialogueBox(xPositionOnScreen, yPositionOnScreen, width, height, false, true);
             drawHorizontalPartition(b, yPositionOnScreen + 212);
 
-            DrawLabel(b, _translation.Get("ui.tasks.options.type"), typeSectionY, Game1.textColor);
+            DrawLabel(b, _translation.Get("ui.tasks.options.type"), _fixedContentBounds.Y + (VerticalSpacing * 2) + 24, Game1.textColor);
 
             for (int i = 0; i < typeIcons.Count; i++)
             {
@@ -782,55 +829,54 @@ namespace DeluxeJournal.Menus
                     drawShadow: true);
             }
 
+            backButton.draw(b);
+            cancelButton.draw(b);
+            okButton.draw(b, CanApplyChanges() ? Color.White : Color.Gray * 0.8f, 0.88f);
+
             if (_taskFactory != null)
             {
-                IReadOnlyList<TaskParameter> parameters = _taskFactory.GetParameters();
-                TaskParameter parameter;
-                TaskParameterTextBox parameterTextBox;
-
-                for (int i = 0; i < parameters.Count; i++)
+                for (int i = _parameterTextBoxes.Count - 1; i >= 0; i--)
                 {
-                    parameter = parameters[i];
-                    parameterTextBox = _parameterTextBoxes[i];
+                    TaskParameterTextBox parameterTextBox = _parameterTextBoxes[i];
+                    TaskParameter parameter = parameterTextBox.TaskParameter;
+                    int quality = 0;
 
                     DrawLabel(b, parameterTextBox.Label, parameterTextBox.Y, parameter.IsValid() ? Game1.textColor : Color.DarkRed);
-                    parameterTextBox.Draw(b);
 
-                    if (_parameterIcons.ContainsKey(i))
+                    if (_parameterDropDowns.TryGetValue(i, out var dropDown))
                     {
-                        _parameterIcons[i].Draw(b, parameter.IsValid() ? Color.White : Color.Gray * 0.8f, false, true);
+                        dropDown.Draw(b);
+
+                        if (dropDown.TaskParameter.Value is int value)
+                        {
+                            quality = value;
+                        }
                     }
+
+                    if (_parameterIcons.TryGetValue(i, out var icon))
+                    {
+                        icon.Draw(b, parameter.IsValid() ? Color.White : Color.Gray * 0.8f, quality, false, true);
+                    }
+
+                    parameterTextBox.Draw(b);
                 }
             }
 
             DrawLabel(b, _translation.Get("ui.tasks.options.name"), _nameTextBox.Y, _nameTextBox.Text.Trim().Length > 0 ? Game1.textColor : Color.DarkRed);
             _nameTextBox.Draw(b);
 
-            backButton.draw(b);
-            cancelButton.draw(b);
-            okButton.draw(b, CanApplyChanges() ? Color.White : Color.Gray * 0.8f, 0.88f);
+            Period renewPeriod = (Period)renewPeriodDropDown.SelectedOption;
+            weekdaysDropDown.visible = renewPeriod == Period.Weekly;
+            seasonsDropDown.visible = renewPeriod == Period.Annually;
+            daysDropDown.visible = renewPeriod == Period.Monthly || renewPeriod == Period.Annually;
+            daysDropDown.bounds.X = (renewPeriod == Period.Annually ? seasonsDropDown.bounds.Right : renewPeriodDropDown.bounds.Right) + 8;
+            daysDropDown.RecalculateBounds();
 
-            weekdaysDropDownCC.visible = renewPeriod == Period.Weekly;
-            seasonsDropDownCC.visible = renewPeriod == Period.Annually;
-            daysDropDownCC.visible = renewPeriod == Period.Monthly || renewPeriod == Period.Annually;
-            daysDropDownCC.bounds.X = (renewPeriod == Period.Annually ? _seasonsDropDown.bounds.Right : _renewPeriodDropDown.bounds.Right) + 8;
-            _daysDropDown.bounds.X = daysDropDownCC.bounds.X;
-            _daysDropDown.dropDownBounds.X = daysDropDownCC.bounds.X;
-
-            _renewPeriodDropDown.draw(b, 0, 0);
-
-            if (weekdaysDropDownCC.visible)
-            {
-                _weekdaysDropDown.draw(b, 0, 0);
-            }
-            if (seasonsDropDownCC.visible)
-            {
-                _seasonsDropDown.draw(b, 0, 0);
-            }
-            if (daysDropDownCC.visible)
-            {
-                _daysDropDown.draw(b, 0, 0);
-            }
+            DrawLabel(b, _translation.Get("ui.tasks.options.renew"), renewPeriodDropDown.bounds.Y, Game1.textColor);
+            renewPeriodDropDown.Draw(b);
+            weekdaysDropDown.Draw(b);
+            seasonsDropDown.Draw(b);
+            daysDropDown.Draw(b);
 
             if (_hoverText.Length > 0)
             {
