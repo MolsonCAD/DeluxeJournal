@@ -156,9 +156,8 @@ namespace DeluxeJournal.Menus
                 nameof(Season.Winter)
             };
 
-            IEnumerable<string> renewOptions = translation.GetTranslations()
-                .Where(option => option.Key.StartsWith("ui.tasks.options.renew."))
-                .Select(option => option.ToString());
+            IEnumerable<string> renewOptions = Enum.GetNames<Period>()
+                .Select(period => translation.Get("ui.tasks.options.renew." + period.ToLower()).ToString());
 
             renewPeriodDropDown = new DropDownComponent(renewOptions,
                 new(_nameTextBox.X + 8, _nameTextBox.Y + VerticalSpacing, 0, 44),
