@@ -1,5 +1,4 @@
 ﻿using StardewValley;
-using StardewValley.Tools;
 using StardewValley.GameData.Tools;
 using DeluxeJournal.Events;
 using DeluxeJournal.Framework;
@@ -14,8 +13,8 @@ namespace DeluxeJournal.Task
     {
         private readonly string _id;
 
-        protected bool _complete;
-        protected bool _viewed;
+        private bool _complete;
+        private bool _viewed;
         private int _index;
 
         public string ID => _id;
@@ -235,7 +234,7 @@ namespace DeluxeJournal.Task
             }
             else if (Active && other.Active)
             {
-                return (Complete == other.Complete) ? _index - other.GetSortingIndex() : Complete.CompareTo(other.Complete);
+                return (Complete == other.Complete) ? GetSortingIndex() - other.GetSortingIndex() : Complete.CompareTo(other.Complete);
             }
             else if (!Active && !other.Active)
             {
