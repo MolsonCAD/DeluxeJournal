@@ -37,6 +37,8 @@
 	"ui.tasks.moneybox.hover0": "Total Amount to Pay/Gain",
 	"ui.tasks.moneybox.hover1": "Net Wealth",
 	"ui.tasks.moneybutton.hover": "Change View",
+	"ui.tasks.filter": "Filter: {{category}}",
+	"ui.tasks.filter.all": "All",
 
 	// add new task menu
 	"ui.tasks.new": "Add New Task",

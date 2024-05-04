@@ -37,6 +37,8 @@
 	"ui.tasks.moneybox.hover0": "净收入/支出或利润",
 	"ui.tasks.moneybox.hover1": "目前资金",
 	"ui.tasks.moneybutton.hover": "切换金额",
+	"ui.tasks.filter": "筛选: {{category}}",
+	"ui.tasks.filter.all": "所有",
 
 	// add new task menu
 	"ui.tasks.new": "新建任务",

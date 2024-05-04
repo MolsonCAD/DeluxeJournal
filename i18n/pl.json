@@ -37,6 +37,8 @@
 	"ui.tasks.moneybox.hover0": "Całkowita kwota do zapłaty/zysku",
 	"ui.tasks.moneybox.hover1": "Netto majątek",
 	"ui.tasks.moneybutton.hover": "Zmień widok",
+	"ui.tasks.filter": "Filtr: {{category}}",
+	"ui.tasks.filter.all": "Wszystko",
 
 	// add new task menu
 	"ui.tasks.new": "Dodaj nowe zadanie",

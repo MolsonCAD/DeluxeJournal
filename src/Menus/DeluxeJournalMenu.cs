@@ -15,7 +15,7 @@ namespace DeluxeJournal.Menus
     /// <remarks>Custom pages should be registered using the DeluxeJournal API.</remarks>
     public class DeluxeJournalMenu : IClickableMenu
     {
-        private const int ActiveTabOffset = 8;
+        public const int ActiveTabOffset = 8;
 
         private static readonly PerScreen<int> ActiveTabPerScreen = new PerScreen<int>();
 

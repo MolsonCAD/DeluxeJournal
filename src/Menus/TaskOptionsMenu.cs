@@ -157,7 +157,7 @@ namespace DeluxeJournal.Menus
             };
 
             IEnumerable<string> renewOptions = Enum.GetNames<Period>()
-                .Select(period => translation.Get("ui.tasks.options.renew." + period.ToLower()).ToString());
+                .Select(period => translation.Get("ui.tasks.options.renew." + period).ToString());
 
             renewPeriodDropDown = new DropDownComponent(renewOptions,
                 new(_nameTextBox.X + 8, _nameTextBox.Y + VerticalSpacing, 0, 44),
@@ -301,9 +301,19 @@ namespace DeluxeJournal.Menus
             string name = _nameTextBox.Text.Trim();
             string season = seasonsDropDown.Options[seasonsDropDown.SelectedOption];
             ITask task = _taskFactory?.Create(name) ?? new BasicTask(name);
+            TasksPage? tasksPage = null;
 
             task.RenewPeriod = (Period)renewPeriodDropDown.SelectedOption;
             task.RenewDate = new WorldDate(1, season, (task.RenewPeriod == Period.Weekly ? weekdaysDropDown.SelectedOption : daysDropDown.SelectedOption) + 1);
+
+            for (IClickableMenu parent = GetParentMenu(); parent != null; parent = parent.GetParentMenu())
+            {
+                if (parent is TasksPage)
+                {
+                    tasksPage = parent as TasksPage;
+                    break;
+                }
+            }
 
             if (_task != null)
             {
@@ -326,18 +336,12 @@ namespace DeluxeJournal.Menus
                     task.Validate();
                     tasks.RemoveAt(index);
                     tasks.Insert(index, task);
+                    tasksPage?.OnTasksUpdated();
                 }
             }
             else
             {
-                for (IClickableMenu parent = GetParentMenu(); parent != null; parent = parent.GetParentMenu())
-                {
-                    if (parent is TasksPage tasksPage)
-                    {
-                        tasksPage.AddTask(task);
-                        break;
-                    }
-                }
+                tasksPage?.AddTask(task);
             }
         }
 
