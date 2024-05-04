@@ -78,7 +78,7 @@ namespace DeluxeJournal
             NotesData = helper.Data.ReadGlobalData<NotesData>(NOTES_DATA_KEY) ?? new NotesData();
 
             EventManager = new EventManager(helper.Events, helper.Multiplayer, Monitor);
-            TaskManager = new TaskManager(new TaskEvents(EventManager), helper.Data, ModManifest.Version);
+            TaskManager = new TaskManager(new TaskEvents(EventManager), helper.Data, Config, ModManifest.Version);
             PageManager = new PageManager();
 
             PageManager.RegisterPage("quests", (bounds) => new QuestLogPage(bounds, UiTexture, helper.Translation), 102);

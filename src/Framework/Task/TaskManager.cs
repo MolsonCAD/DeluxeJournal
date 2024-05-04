@@ -11,6 +11,7 @@ namespace DeluxeJournal.Framework.Task
     {
         private readonly ITaskEvents _events;
         private readonly IDataHelper _dataHelper;
+        private readonly Config _config;
         private readonly ISemanticVersion _version;
         private readonly IDictionary<long, TaskList> _tasks;
         private TaskData? _data;
@@ -44,10 +45,11 @@ namespace DeluxeJournal.Framework.Task
             }
         }
 
-        public TaskManager(ITaskEvents events, IDataHelper dataHelper, ISemanticVersion version)
+        public TaskManager(ITaskEvents events, IDataHelper dataHelper, Config config, ISemanticVersion version)
         {
             _events = events;
             _dataHelper = dataHelper;
+            _config = config;
             _version = version;
             _tasks = new Dictionary<long, TaskList>();
 
@@ -113,11 +115,20 @@ namespace DeluxeJournal.Framework.Task
 
         private void OnDayStarted(object? sender, DayStartedEventArgs e)
         {
-            foreach (ITask task in Tasks)
+            for (int i = Tasks.Count - 1, pushed = 0; i >= pushed; i--)
             {
+                ITask task = Tasks[i];
+
                 if (task.RenewPeriod != ITask.Period.Never && !task.Active && task.DaysRemaining() == 0)
                 {
                     task.Active = true;
+
+                    if (_config.PushRenewedTasksToTheTop)
+                    {
+                        Tasks.RemoveAt(i++);
+                        Tasks.Insert(0, task);
+                        pushed++;
+                    }
                 }
 
                 task.Validate();
@@ -126,11 +137,9 @@ namespace DeluxeJournal.Framework.Task
 
         private void OnDayEnding(object? sender, DayEndingEventArgs e)
         {
-            ITask task;
-
             for (int i = Tasks.Count - 1; i >= 0; i--)
             {
-                task = Tasks[i];
+                ITask task = Tasks[i];
 
                 if (task.RenewPeriod != ITask.Period.Never && task.Complete)
                 {
