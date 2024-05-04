@@ -21,8 +21,6 @@ namespace DeluxeJournal.Menus
         private const int MaxEntries = 8;
 
         private const int FilterTabId = 300;
-        private const string FilterTabEnabled = "enabled";
-        private const string FilterTabDisabled = "disabled";
 
         public static readonly Color EmptyListTextColor = new Color(86, 22, 12);
 
@@ -114,7 +112,6 @@ namespace DeluxeJournal.Menus
                     myID = FilterTabId + period,
                     upNeighborID = CUSTOM_SNAP_BEHAVIOR,
                     fullyImmutable = true,
-                    name = FilterTabEnabled,
                     hoverText = translation.Get("ui.tasks.filter", new
                     {
                         category = translation.Get(period == 0
@@ -123,9 +120,6 @@ namespace DeluxeJournal.Menus
                     })
                 });
             }
-
-            ChainNeighborsLeftRight(filterTabs);
-            filterTabs.Last().rightNeighborID = 1000;
 
             addTaskButton = new ClickableTextureComponent(
                 new(x + width - 336, y + height, 60, 60),
@@ -137,7 +131,7 @@ namespace DeluxeJournal.Menus
                 upNeighborID = CUSTOM_SNAP_BEHAVIOR,
                 leftNeighborID = CUSTOM_SNAP_BEHAVIOR,
                 rightNeighborID = 1001,
-                rightNeighborImmutable = true
+                fullyImmutable = true
             };
 
             moneyButton = new ClickableTextureComponent(
@@ -305,6 +299,19 @@ namespace DeluxeJournal.Menus
                     currentlySnappedComponent = addTaskButton;
                     break;
                 case Game1.left:
+                    if (oldID == addTaskButton.myID && _filterTabsVisible)
+                    {
+                        for (int i = filterTabs.Count - 1; i >= 0; i--)
+                        {
+                            if (filterTabs[i].visible)
+                            {
+                                currentlySnappedComponent = filterTabs[i];
+                                snapCursorToCurrentSnappedComponent();
+                                return;
+                            }
+                        }
+                    }
+
                     SnapToActiveTabComponent();
                     return;
             }
@@ -506,6 +513,12 @@ namespace DeluxeJournal.Menus
 
             if (GetChildMenu() == null)
             {
+                if (Game1.options.SnappyMenus && Game1.options.doesInputListContain(Game1.options.useToolButton, key))
+                {
+                    currentlySnappedComponent = addTaskButton;
+                    snapCursorToCurrentSnappedComponent();
+                }
+
                 switch (key)
                 {
                     case Keys.Space:
@@ -749,7 +762,13 @@ namespace DeluxeJournal.Menus
                 }
             }
 
-            filterTabs[0].visible = _filterTabsVisible;
+            if (filterTabs[0].visible = _filterTabsVisible)
+            {
+                var visibleTabs = filterTabs.Where(tab => tab.visible).ToList();
+                ChainNeighborsLeftRight(visibleTabs);
+                visibleTabs.First().leftNeighborID = CUSTOM_SNAP_BEHAVIOR;
+                visibleTabs.Last().rightNeighborID = addTaskButton.myID;
+            }
 
             for (int i = 1, j = 1; i < filterTabs.Count; i++)
             {
