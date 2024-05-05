@@ -20,7 +20,7 @@ The tasks page provides a checklist for you to keep track of daily tasks. Tasks 
 
 Task types can be applied automatically to "well-formed" task names that use the relevant keywords, and enough supplementary information (item/npc/building names), to create a task. Additionally, the task options menu can be used to fine-tune the task settings directly. Either click the wrench icon in the add task menu or click the name of an existing task to open the options menu.
 
-At the end of each day, all completed tasks are removed unless given a *renewal period*. Choose between daily, weekly, monthly, and annual renewals to automatically reactivate tasks after completion. This must be set via the options menu.
+At the end of each day, all completed tasks are removed unless given a *renewal period*. Choose between daily, weekly, monthly, annual, and *custom* renewals to automatically reactivate tasks after completion. A custom renewal period allows you to set the number of days to wait **after task completion**. Renewal periods must be set via the options menu.
 
 #### Task Types
 | Name | Description | Example |
