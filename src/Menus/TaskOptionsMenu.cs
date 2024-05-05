@@ -67,7 +67,7 @@ namespace DeluxeJournal.Menus
             
             if (_task.RenewPeriod != Period.Never)
             {
-                weekdaysDropDown.SelectedOption = (_task.RenewDate.DayOfMonth % 7) - 1;
+                weekdaysDropDown.SelectedOption = (_task.RenewDate.DayOfMonth - 1) % 7;
 
                 if (_task.RenewPeriod != Period.Weekly)
                 {
