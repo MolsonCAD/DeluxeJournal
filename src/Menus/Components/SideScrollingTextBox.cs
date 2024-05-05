@@ -8,15 +8,36 @@ namespace DeluxeJournal.Menus.Components
     /// <summary>A TextBox that does not limit character width and scrolls horizontally.</summary>
     public class SideScrollingTextBox : TextBox
     {
+        /// <summary>Get the bounds packed in a <see cref="Rectangle"/>.</summary>
+        public Rectangle Bounds => new Rectangle(X, Y, Width, Height);
+
         public SideScrollingTextBox(Texture2D? textBoxTexture, Texture2D? caretTexture, SpriteFont font, Color textColor)
             : base(textBoxTexture, caretTexture, font, textColor)
         {
             limitWidth = false;
         }
 
+        /// <summary><see cref="TextBox.Update"/> wrapper that opens the text entry window with looser restrictions.</summary>
+        /// <remarks>
+        /// HACK: <see cref="Game1.lastCursorMotionWasMouse"/> gets set to <c>true</c> after closing the on-screen keyboard, for
+        /// whatever reason, preventing the user from opening another without first snapping to another component.
+        /// </remarks>
+        public virtual void ForceUpdate()
+        {
+            Update();
+
+            // HACK: Game1.lastCursorMotionWasMouse gets set to true after closing the
+            // on-screen keyboard, for whatever reason, preventing the user from opening
+            // another without first snapping to another component.
+            if (Game1.options.SnappyMenus && Game1.textEntry == null)
+            {
+                Game1.showTextEntry(this);
+            }
+        }
+
         public bool ContainsPoint(int x, int y)
         {
-            return new Rectangle(X, Y, Width, Height).Contains(x, y);
+            return Bounds.Contains(x, y);
         }
 
         public override void Draw(SpriteBatch b, bool drawShadow = true)

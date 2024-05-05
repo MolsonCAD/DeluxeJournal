@@ -56,6 +56,7 @@
 	"ui.tasks.options.renew.Weekly": "每周刷新",
 	"ui.tasks.options.renew.Monthly": "每月刷新",
 	"ui.tasks.options.renew.Annually": "每年刷新",
+	"ui.tasks.options.renew.Custom": "定制",
 	"ui.tasks.options.type": "任务类型",
 
 	// task parameter names

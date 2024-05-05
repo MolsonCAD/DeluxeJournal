@@ -56,6 +56,7 @@
 	"ui.tasks.options.renew.Weekly": "Tygodniowo",
 	"ui.tasks.options.renew.Monthly": "Miesięcznie",
 	"ui.tasks.options.renew.Annually": "Rocznie",
+	"ui.tasks.options.renew.Custom": "Dostosować",
 	"ui.tasks.options.type": "Typ zadania",
 
 	// task parameter names

@@ -17,7 +17,8 @@ namespace DeluxeJournal.Task
             Daily,
             Weekly,
             Monthly,
-            Annually
+            Annually,
+            Custom
         }
 
         /// <summary>Uniquely identifies the class type for serialization.</summary>
@@ -28,7 +29,7 @@ namespace DeluxeJournal.Task
         [JsonProperty(Order = -4)]
         string Name { get; set; }
 
-        /// <summary>False if waiting for renewal, true otherwise.</summary>
+        /// <summary><c>false</c> if waiting for renewal, <c>true</c> otherwise.</summary>
         [JsonProperty(Order = -3)]
         bool Active { get; set; }
 
@@ -42,13 +43,16 @@ namespace DeluxeJournal.Task
         long OwnerUMID { get; set; }
 
         /// <summary>Renew period. Tasks will be renewed at the end of the period.</summary>
-        /// <remarks>Note: Tasks marked as completed are removed at the end of the day if the period is "Never".</remarks>
+        /// <remarks>Note: Tasks marked as completed are removed at the end of the day if set to <see cref="Period.Never"/>.</remarks>
         [JsonConverter(typeof(StringEnumConverter))]
         Period RenewPeriod { get; set; }
 
-        /// <summary>The reference date for the renew period.</summary>
+        /// <summary>The reference date for the renewal period.</summary>
         [JsonConverter(typeof(WorldDateConverter))]
         WorldDate RenewDate { get; set; }
+
+        /// <summary>The renew interval (in days) for a <see cref="Period.Custom"/> renewal period.</summary>
+        int RenewCustomInterval { get; set; }
 
         /// <summary>Current count. Used for tracking progress.</summary>
         int Count { get; set; }

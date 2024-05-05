@@ -13,6 +13,7 @@ namespace DeluxeJournal.Task
     {
         private readonly string _id;
 
+        private bool _active;
         private bool _complete;
         private bool _viewed;
         private int _index;
@@ -27,20 +28,34 @@ namespace DeluxeJournal.Task
 
         public WorldDate RenewDate { get; set; }
 
+        public int RenewCustomInterval { get; set; }
+
         public virtual int Count { get; set; }
 
         public virtual int MaxCount { get; set; }
 
         public virtual int BasePrice { get; set; }
 
-        public virtual bool Active { get; set; }
+        public virtual bool Active
+        {
+            get => _active;
+
+            set
+            {
+                _active = value;
+
+                if (!value && RenewPeriod == Period.Custom)
+                {
+                    WorldDate renewDate = WorldDate.Now();
+                    renewDate.TotalDays += RenewCustomInterval;
+                    RenewDate = renewDate;
+                }
+            }
+        }
 
         public virtual bool Complete
         {
-            get
-            {
-                return _complete;
-            }
+            get => _complete;
 
             set
             {
@@ -61,15 +76,16 @@ namespace DeluxeJournal.Task
         protected TaskBase(string id, string name)
         {
             _id = id;
+            _active = true;
             _complete = false;
             _viewed = true;
             _index = 0;
 
             Name = name;
-            Active = true;
             OwnerUMID = Game1.player?.UniqueMultiplayerID ?? 0;
             RenewPeriod = Period.Never;
-            RenewDate = new WorldDate(1, "spring", 1);
+            RenewDate = new WorldDate(1, Season.Spring, 1);
+            RenewCustomInterval = 1;
             Count = 0;
             MaxCount = 1;
             BasePrice = 0;
@@ -160,6 +176,7 @@ namespace DeluxeJournal.Task
                 Period.Weekly => (((RenewDate.DayOfMonth - Game1.dayOfMonth) % 7) + 7) % 7,
                 Period.Monthly => (((RenewDate.DayOfMonth - Game1.dayOfMonth) % 28) + 28) % 28,
                 Period.Annually => (((TotalDaysInYear(RenewDate) - TotalDaysInYear(Game1.Date)) % 112) + 112) % 112,
+                Period.Custom => RenewDate.TotalDays - Game1.Date.TotalDays,
                 _ => 0,
             };
         }

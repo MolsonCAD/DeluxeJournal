@@ -33,6 +33,7 @@ namespace DeluxeJournal.Menus
         public readonly ClickableTextureComponent okButton;
 
         public readonly ClickableComponent nameTextBoxCC;
+        public readonly ClickableComponent customRenewTextBoxCC;
         public readonly DropDownComponent renewPeriodDropDown;
         public readonly DropDownComponent weekdaysDropDown;
         public readonly DropDownComponent seasonsDropDown;
@@ -41,6 +42,7 @@ namespace DeluxeJournal.Menus
         public readonly List<ClickableComponent> typeIcons;
 
         private readonly SideScrollingTextBox _nameTextBox;
+        private readonly SideScrollingTextBox _customRenewTextBox;
         private readonly IList<TaskParameterTextBox> _parameterTextBoxes;
         private readonly IDictionary<int, TaskParameterDropDown> _parameterDropDowns;
         private readonly IDictionary<int, SmartIconComponent> _parameterIcons;
@@ -65,7 +67,11 @@ namespace DeluxeJournal.Menus
             _nameTextBox.Text = task.Name;
             renewPeriodDropDown.SelectedOption = (int)_task.RenewPeriod;
             
-            if (_task.RenewPeriod != Period.Never)
+            if (_task.RenewPeriod == Period.Custom)
+            {
+                _customRenewTextBox.Text = _task.RenewCustomInterval.ToString();
+            }
+            else if (_task.RenewPeriod != Period.Never)
             {
                 weekdaysDropDown.SelectedOption = (_task.RenewDate.DayOfMonth - 1) % 7;
 
@@ -120,7 +126,7 @@ namespace DeluxeJournal.Menus
                 Width = _fixedContentBounds.Width - LabelWidth
             };
 
-            nameTextBoxCC = new ClickableComponent(new Rectangle(_nameTextBox.X, _nameTextBox.Y, _nameTextBox.Width, _nameTextBox.Height), string.Empty)
+            nameTextBoxCC = new ClickableComponent(_nameTextBox.Bounds, string.Empty)
             {
                 myID = 100,
                 downNeighborID = 101,
@@ -200,6 +206,23 @@ namespace DeluxeJournal.Menus
                 fixedWidth: true)
             {
                 myID = 104,
+                upNeighborID = SNAP_AUTOMATIC,
+                downNeighborID = CUSTOM_SNAP_BEHAVIOR,
+                rightNeighborID = SNAP_AUTOMATIC,
+                leftNeighborID = SNAP_AUTOMATIC
+            };
+
+            _customRenewTextBox = new SideScrollingTextBox(_textBoxTexture, null, Game1.smallFont, Game1.textColor)
+            {
+                X = weekdaysDropDown.bounds.X,
+                Y = weekdaysDropDown.bounds.Y,
+                Width = _fixedContentBounds.Width + _fixedContentBounds.X - weekdaysDropDown.bounds.X,
+                numbersOnly = true
+            };
+
+            customRenewTextBoxCC = new ClickableComponent(_customRenewTextBox.Bounds, string.Empty)
+            {
+                myID = 105,
                 upNeighborID = SNAP_AUTOMATIC,
                 downNeighborID = CUSTOM_SNAP_BEHAVIOR,
                 rightNeighborID = SNAP_AUTOMATIC,
@@ -304,7 +327,13 @@ namespace DeluxeJournal.Menus
             TasksPage? tasksPage = null;
 
             task.RenewPeriod = (Period)renewPeriodDropDown.SelectedOption;
-            task.RenewDate = new WorldDate(1, season, (task.RenewPeriod == Period.Weekly ? weekdaysDropDown.SelectedOption : daysDropDown.SelectedOption) + 1);
+            task.RenewCustomInterval = task.RenewPeriod == Period.Custom && int.TryParse(_customRenewTextBox.Text, out int days) ? days : 1;
+            task.RenewDate = new WorldDate(1, season, task.RenewPeriod switch
+            {
+                Period.Custom => 1,
+                Period.Weekly => weekdaysDropDown.SelectedOption + 1,
+                _ => daysDropDown.SelectedOption + 1
+            });
 
             for (IClickableMenu parent = GetParentMenu(); parent != null; parent = parent.GetParentMenu())
             {
@@ -605,7 +634,7 @@ namespace DeluxeJournal.Menus
             else if (nameTextBoxCC.containsPoint(x, y))
             {
                 _nameTextBox.SelectMe();
-                _nameTextBox.Update();
+                _nameTextBox.ForceUpdate();
             }
             else if (renewPeriodDropDown.containsPoint(x, y))
             {
@@ -627,6 +656,11 @@ namespace DeluxeJournal.Menus
                 daysDropDown.ReceiveLeftClick(x, y);
                 _activeDropDown = daysDropDown;
             }
+            else if (customRenewTextBoxCC.containsPoint(x, y))
+            {
+                _customRenewTextBox.SelectMe();
+                _customRenewTextBox.ForceUpdate();
+            }
             else
             {
                 for (int i = 0; i < typeIcons.Count; i++)
@@ -645,16 +679,7 @@ namespace DeluxeJournal.Menus
                     if (textBox.ContainsPoint(x, y))
                     {
                         textBox.SelectMe();
-                        textBox.Update();
-
-                        // HACK: Game1.lastCursorMotionWasMouse gets set to true after closing the
-                        // on-screen keyboard, for whatever reason, preventing the user from opening
-                        // another without first snapping to another component.
-                        if (Game1.options.SnappyMenus && Game1.textEntry == null)
-                        {
-                            Game1.showTextEntry(textBox);
-                        }
-
+                        textBox.ForceUpdate();
                         return;
                     }
                     else if (_parameterDropDowns.TryGetValue(i, out var dropDown) && dropDown.containsPoint(x, y))
@@ -731,10 +756,18 @@ namespace DeluxeJournal.Menus
 
             if (_nameTextBox.Selected)
             {
-                if (_parameterTextBoxes.Count > 0)
+                if (customRenewTextBoxCC.visible)
+                {
+                    selectTextBox = _customRenewTextBox;
+                }
+                else if (_parameterTextBoxes.Count > 0)
                 {
                     selectTextBox = _parameterTextBoxes.First();
                 }
+            }
+            else if (_customRenewTextBox.Selected)
+            {
+                selectTextBox = _parameterTextBoxes.Count > 0 ? _parameterTextBoxes.First() : _nameTextBox;
             }
             else if (_parameterTextBoxes.Count > 0)
             {
@@ -872,14 +905,33 @@ namespace DeluxeJournal.Menus
             weekdaysDropDown.visible = renewPeriod == Period.Weekly;
             seasonsDropDown.visible = renewPeriod == Period.Annually;
             daysDropDown.visible = renewPeriod == Period.Monthly || renewPeriod == Period.Annually;
-            daysDropDown.bounds.X = (renewPeriod == Period.Annually ? seasonsDropDown.bounds.Right : renewPeriodDropDown.bounds.Right) + 8;
-            daysDropDown.RecalculateBounds();
+            customRenewTextBoxCC.visible = renewPeriod == Period.Custom;
+
+            if (daysDropDown.visible)
+            {
+                daysDropDown.bounds.X = (renewPeriod == Period.Annually ? seasonsDropDown.bounds.Right : renewPeriodDropDown.bounds.Right) + 8;
+                daysDropDown.RecalculateBounds();
+            }
 
             DrawLabel(b, _translation.Get("ui.tasks.options.renew"), renewPeriodDropDown.bounds.Y, Game1.textColor);
             renewPeriodDropDown.Draw(b);
             weekdaysDropDown.Draw(b);
             seasonsDropDown.Draw(b);
             daysDropDown.Draw(b);
+
+            if (customRenewTextBoxCC.visible)
+            {
+                _customRenewTextBox.Draw(b);
+
+                if (string.IsNullOrEmpty(_customRenewTextBox.Text))
+                {
+                    Utility.drawTextWithShadow(b,
+                        _translation.Get("ui.tasks.renew.days", new { count = "#" }),
+                        Game1.smallFont,
+                        new(_customRenewTextBox.X + 28, _customRenewTextBox.Y + 12),
+                        Game1.unselectedOptionColor);
+                }
+            }
 
             if (_hoverText.Length > 0)
             {
