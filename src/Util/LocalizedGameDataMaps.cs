@@ -258,7 +258,7 @@ namespace DeluxeJournal.Util
                 {
                     if (pair.Value.CanReceiveGifts && Game1.NPCGiftTastes.ContainsKey(pair.Key))
                     {
-                        Add(TokenParser.ParseText(pair.Value.DisplayName), pair.Key);
+                        Add(TokenParser.ParseText(pair.Value.DisplayName) ?? pair.Key, pair.Key);
                     }
                 }
             }
@@ -280,9 +280,7 @@ namespace DeluxeJournal.Util
                 {
                     if (!IgnoredBuildingNames.Contains(pair.Key))
                     {
-                        string localizedKey = TokenParser.ParseText(pair.Value.Name);
-
-                        AddPlural(localizedKey, pair.Key);
+                        AddPlural(TokenParser.ParseText(pair.Value.Name) ?? pair.Key, pair.Key);
                     }
                 }
             }
@@ -302,7 +300,7 @@ namespace DeluxeJournal.Util
                 {
                     if (pair.Value.ShopDisplayName is string shopDisplayName)
                     {
-                        string localizedKey = TokenParser.ParseText(shopDisplayName).ToLower();
+                        string localizedKey = TokenParser.ParseText(shopDisplayName) ?? pair.Key;
 
                         AddPlural(localizedKey, pair.Key);
 

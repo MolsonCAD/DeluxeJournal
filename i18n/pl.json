@@ -37,6 +37,8 @@
 	"ui.tasks.moneybox.hover0": "Całkowita kwota do zapłaty/zysku",
 	"ui.tasks.moneybox.hover1": "Netto majątek",
 	"ui.tasks.moneybutton.hover": "Zmień widok",
+	"ui.tasks.filter": "Filtr: {{category}}",
+	"ui.tasks.filter.all": "Wszystko",
 
 	// add new task menu
 	"ui.tasks.new": "Dodaj nowe zadanie",
@@ -62,6 +64,7 @@
 	"ui.tasks.parameter.count": "Ilość",
 	"ui.tasks.parameter.item": "Przedmiot",
 	"ui.tasks.parameter.npc": "Mieszkaniec",
+	"ui.tasks.parameter.quality": "Jakość (Minimalna)",
 	"ui.tasks.parameter.tool": "Narzędzie",
 
 	// +---------------------------------+

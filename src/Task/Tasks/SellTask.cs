@@ -17,6 +17,9 @@ namespace DeluxeJournal.Task.Tasks
             [TaskParameter(TaskParameterNames.Count, TaskParameterTag.Count, Constraints = Constraint.GE1)]
             public int Count { get; set; } = 1;
 
+            [TaskParameter(TaskParameterNames.Quality, TaskParameterTag.Quality, Parent = TaskParameterNames.Item, Constraints = Constraint.GE0)]
+            public int Quality { get; set; } = 0;
+
             public override SmartIconFlags EnabledSmartIcons => SmartIconFlags.Item;
 
             public override bool EnableSmartIconCount => true;
@@ -27,12 +30,13 @@ namespace DeluxeJournal.Task.Tasks
                 {
                     ItemIds = sellTask.ItemIds;
                     Count = sellTask.MaxCount;
+                    Quality = sellTask.Quality;
                 }
             }
 
             public override ITask? Create(string name)
             {
-                return ItemIds != null && ItemIds.Count > 0 ? new SellTask(name, ItemIds, Count) : null;
+                return ItemIds != null && ItemIds.Count > 0 ? new SellTask(name, ItemIds, Count, Quality) : null;
             }
         }
 
@@ -41,7 +45,8 @@ namespace DeluxeJournal.Task.Tasks
         {
         }
 
-        public SellTask(string name, IList<string> itemIds, int count) : base(TaskTypes.Sell, name, itemIds, count)
+        public SellTask(string name, IList<string> itemIds, int count, int quality)
+            : base(TaskTypes.Sell, name, itemIds, count, quality)
         {
             BasePrice = SellPrice(ItemRegistry.Create(itemIds.First()));
             Validate();

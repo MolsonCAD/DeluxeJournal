@@ -85,7 +85,7 @@ namespace DeluxeJournal.Menus
                 else if (removeButton.containsPoint(x, y))
                 {
                     tasksPage?.RemoveTask(_task);
-                    Game1.playSound("trashcan");
+                    Game1.playSound("woodyStep");
                 }
 
                 exitThisMenuNoSound();

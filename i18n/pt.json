@@ -37,6 +37,8 @@
 	"ui.tasks.moneybox.hover0": "Valor total a pagar/ganhar",
 	"ui.tasks.moneybox.hover1": "Patrimônio líquido",
 	"ui.tasks.moneybutton.hover": "Alterar visualização",
+	"ui.tasks.filter": "Filtro: {{category}}",
+	"ui.tasks.filter.all": "Todas",
 
 	// add new task menu
 	"ui.tasks.new": "Adicionar nova tarefa",
@@ -61,7 +63,8 @@
 	"ui.tasks.parameter.building": "Construção",
 	"ui.tasks.parameter.count": "Contar",
 	"ui.tasks.parameter.item": "Item",
-	"ui.tasks.parameter.npc": "NPC",
+	"ui.tasks.parameter.npc": "Aldeão",
+	"ui.tasks.parameter.quality": "Qualidade (Mínima)",
 	"ui.tasks.parameter.tool": "Ferramenta",
 
 	// +---------------------------------+

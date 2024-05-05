@@ -15,6 +15,9 @@ namespace DeluxeJournal.Task.Tasks
             [TaskParameter(TaskParameterNames.NPC, TaskParameterTag.NpcName)]
             public string? NpcName { get; set; }
 
+            [TaskParameter(TaskParameterNames.Quality, TaskParameterTag.Quality, Parent = TaskParameterNames.Item, Constraints = Constraint.GE0)]
+            public int Quality { get; set; } = 0;
+
             public override SmartIconFlags EnabledSmartIcons => SmartIconFlags.Item | SmartIconFlags.Npc;
 
             public override void Initialize(ITask task, ITranslationHelper translation)
@@ -23,13 +26,14 @@ namespace DeluxeJournal.Task.Tasks
                 {
                     NpcName = giftTask.NpcName;
                     ItemIds = giftTask.ItemIds;
+                    Quality = giftTask.Quality;
                 }
             }
 
             public override ITask? Create(string name)
             {
                 return NpcName != null && (ItemIds == null || ItemIds.Count > 0)
-                    ? new GiftTask(name, NpcName, ItemIds ?? new List<string>())
+                    ? new GiftTask(name, NpcName, ItemIds ?? new List<string>(), Quality)
                     : null;
             }
         }
@@ -43,7 +47,8 @@ namespace DeluxeJournal.Task.Tasks
             NpcName = string.Empty;
         }
 
-        public GiftTask(string name, string npcName, IList<string> itemIds) : base(TaskTypes.Gift, name, itemIds, 1)
+        public GiftTask(string name, string npcName, IList<string> itemIds, int quality)
+            : base(TaskTypes.Gift, name, itemIds, 1, quality)
         {
             NpcName = npcName;
         }
