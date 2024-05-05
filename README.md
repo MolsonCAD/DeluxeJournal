@@ -28,7 +28,7 @@ At the end of each day, all completed tasks are removed unless given a *renewal 
 **Basic** | With no fancy bells and whistles, this task type requires manual completion. A basic task is always created when pressing "OK" instead of the "Smart Add" button when adding a new task.
 **Collect** | Collect an item, with an optional count. This broadly covers any item pickups you'd like to track. | "Collect 300 wood"
 **Craft** | Craft an item, with an optional count. This task focuses on items created via the crafting menu. | "Make a solar panel"
-**Upgrade Tool**\*\* | Upgrade a tool at Clint's blacksmith shop. | "Upgrade my axe"
+**Upgrade Tool**\*\* | Upgrade a tool at Clint's blacksmith shop. Completes upon picking up the upgraded tool. | "Upgrade my axe"
 **Build**\*\* | Construct a farm building, or multiple farm buildings. | "Build a barn"
 **Farm Animal**\*\* | Purchase farm animals from Marnie's Ranch. | "Buy 4 chickens"
 **Gift** | Give a villager a gift, and optionally specify an item. | "Give a poppy to Penny"
@@ -51,6 +51,7 @@ The notes page provides a section for writing down anything beyond the scope of 
 After this mod is run for the first time, a `config.json` file is created in the mod folder with the following configuration settings:
 | Setting | Default | Description |
 | ------- | ------- | ----------- |
+| `PushRenewedTasksToTheTop` | `false` | Set to `true` to push renewed tasks to the top of the tasks list instead of keeping them at the bottom. |
 | `EnableDefaultSmartAdd` | `true` | Enable to have the "Smart Add" button be the default when creating a task (if applicable). Set to `false` to always create a "Basic" task instead. |
 | `EnableVisualTaskCompleteIndicator` | `false` | Set to `true` to enable a visual indicator, in addition to the audio cue, notifying you that a task has been completed. |
 | `ShowSmartAddTip` | `true` | Show the "Smart Add" info box in the "Add Task" menu. *This is automatically set to `false` when pressing the red "X" in-game.* |
