@@ -10,22 +10,15 @@ namespace DeluxeJournal.Menus.Components
     public class TaskParameterDropDown : DropDownComponent
     {
         private readonly Texture2D? _backgroundTexture;
-        private readonly Texture2D _texture;
-        private readonly IList<Rectangle> _optionSources;
+        private readonly IList<KeyValuePair<Texture2D, Rectangle>> _options;
 
         /// <summary>Get the selected option as an item quality.</summary>
-        public int Quality
-        {
-            get
-            {
-                return SelectedOption == 3 ? 4 : SelectedOption;
-            }
-        }
+        public int Quality => SelectedOption == 3 ? 4 : SelectedOption;
 
         public TaskParameter TaskParameter { get; set; }
 
-        public TaskParameterDropDown(TaskParameter parameter, Texture2D texture, IList<Rectangle> optionSources, Rectangle bounds)
-            : base(Enumerable.Repeat(string.Empty, optionSources.Count), bounds, parameter.Attribute.Name, true)
+        public TaskParameterDropDown(TaskParameter parameter, IList<KeyValuePair<Texture2D, Rectangle>> options, Rectangle bounds)
+            : base(Enumerable.Repeat(string.Empty, options.Count), bounds, parameter.Attribute.Name, true)
         {
             if (parameter.Value is not int value)
             {
@@ -37,8 +30,7 @@ namespace DeluxeJournal.Menus.Components
             }
 
             _backgroundTexture = Game1.content.Load<Texture2D>("LooseSprites\\textBox");
-            _texture = texture;
-            _optionSources = optionSources.ToList();
+            _options = options.ToList();
             TaskParameter = parameter;
         }
 
@@ -131,10 +123,11 @@ namespace DeluxeJournal.Menus.Components
 
         protected override void DrawOption(SpriteBatch b, Rectangle optionBounds, int whichOption, float layerDepth)
         {
-            Rectangle optionSource = _optionSources[whichOption];
+            Texture2D texture = _options[whichOption].Key;
+            Rectangle optionSource = _options[whichOption].Value;
             float scale = 3f;
 
-            b.Draw(_texture,
+            b.Draw(texture,
                 new(optionBounds.X + (optionBounds.Width - optionSource.Width * scale) / 2,
                     optionBounds.Y + (optionBounds.Height - optionSource.Height * scale) / 2),
                 optionSource,

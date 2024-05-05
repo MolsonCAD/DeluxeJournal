@@ -387,17 +387,17 @@ namespace DeluxeJournal.Menus
                                 parentTextBox.Width = _fixedContentBounds.Width - LabelWidth - dropDownBounds.Width + 4;
                                 parentTextBoxCC.bounds.Width = parentTextBox.Width;
 
-                                if (parameter.Attribute.Tag == TaskParameterTag.Quality && DeluxeJournalMod.UiTexture is Texture2D texture)
+                                if (parameter.Attribute.Tag == TaskParameterTag.Quality && DeluxeJournalMod.UiTexture is Texture2D uiTexture)
                                 {
-                                    Rectangle[] textureSources = new[]
+                                    KeyValuePair<Texture2D, Rectangle>[] options = new KeyValuePair<Texture2D, Rectangle>[]
                                     {
-                                        new Rectangle(96, 80, 8, 8),
-                                        new Rectangle(96, 88, 8, 8),
-                                        new Rectangle(104, 88, 8, 8),
-                                        new Rectangle(104, 80, 8, 8)
+                                        new(uiTexture, new Rectangle(96, 80, 8, 8)),
+                                        new(Game1.mouseCursors, new Rectangle(338, 400, 8, 8)),
+                                        new(Game1.mouseCursors, new Rectangle(346, 400, 8, 8)),
+                                        new(Game1.mouseCursors, new Rectangle(346, 392, 8, 8))
                                     };
 
-                                    _parameterDropDowns.Add(k, new TaskParameterDropDown(parameter, texture, textureSources, dropDownBounds)
+                                    _parameterDropDowns.Add(k, new TaskParameterDropDown(parameter, options, dropDownBounds)
                                     {
                                         myID = ParameterDropDownId + k,
                                         upNeighborID = parentTextBoxCC.upNeighborID,

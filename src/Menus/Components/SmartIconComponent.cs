@@ -413,9 +413,9 @@ namespace DeluxeJournal.Menus.Components
         {
             if (quality > 0)
             {
-                b.Draw(DeluxeJournalMod.UiTexture,
+                b.Draw(Game1.mouseCursors,
                     new Rectangle(bounds.X + 2, bounds.Y + bounds.Height - 20, 16, 16),
-                    quality <= 2 ? new Rectangle(96 + (quality - 1) * 8, 88, 8, 8) : new Rectangle(104, 80, 8, 8),
+                    quality <= 2 ? new Rectangle(338 + (quality - 1) * 8, 400, 8, 8) : new Rectangle(346, 392, 8, 8),
                     color);
             }
         }
