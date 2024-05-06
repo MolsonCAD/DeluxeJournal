@@ -113,10 +113,15 @@ namespace DeluxeJournal.Util
         /// <param name="parent">A game object identifier to be added first if the alias group does not exist.</param>
         /// <returns>
         /// <c>true</c> if the <paramref name="value"/> was added for the given <paramref name="key"/>;
-        /// <c>false</c> if the <paramref name="value"/> already exists.
+        /// <c>false</c> if the <paramref name="value"/> already exists, or <paramref name="key"/> is <c>null</c> or empty.
         /// </returns>
         protected bool Add(string key, T value, T? parent = null)
         {
+            if (string.IsNullOrEmpty(key))
+            {
+                return false;
+            }
+
             key = key.ToLower();
 
             if (!_data.ContainsKey(key))
@@ -146,6 +151,11 @@ namespace DeluxeJournal.Util
         /// <inheritdoc cref="Add(string, T, T)"/>
         protected bool AddPlural(string key, T value, T? parent = null, bool strict = false)
         {
+            if (string.IsNullOrEmpty(key))
+            {
+                return false;
+            }
+
             bool added = !strict && Add(key, value, parent);
 
             if (LocalizedContentManager.CurrentLanguageCode == 0)

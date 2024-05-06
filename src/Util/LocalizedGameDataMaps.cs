@@ -100,7 +100,7 @@ namespace DeluxeJournal.Util
                         if (itemData.RawData is ToolData toolData
                             && toolData.ApplyUpgradeLevelToDisplayName
                             && toolData.UpgradeLevel > 0
-                            && ItemRegistry.Create(toolId) is Tool tool)
+                            && ItemRegistry.Create(toolQid) is Tool tool)
                         {
                             Add(tool.DisplayName.ToLower(), toolQid);
                         }
@@ -110,29 +110,26 @@ namespace DeluxeJournal.Util
                         }
                     }
 
-                    Add(TokenParser.ParseText("[LocalizedText Strings\\1_6_Strings:PanToolBaseName]"), ItemRegistry.type_tool + "Pan");
-                    Add(TokenParser.ParseText("[LocalizedText Strings\\\\StringsFromCSFiles:TrashCan]"), ItemRegistry.type_tool + "CopperTrashCan");
+                    Add(TokenParser.ParseText("[LocalizedText Strings\\1_6_Strings:PanToolBaseName]"), "(T)Pan");
+                    Add(TokenParser.ParseText("[LocalizedText Strings\\\\StringsFromCSFiles:TrashCan]"), "(T)CopperTrashCan");
                 }
 
                 if (Settings.AllItemsEnabled)
                 {
-                    IDictionary<string, string> bootsData = DataLoader.Boots(Game1.content);
-                    IDictionary<string, string> hatsData = DataLoader.Hats(Game1.content);
-
                     foreach (KeyValuePair<string, WeaponData> pair in Game1.weaponData)
                     {
                         Add(TokenParser.ParseText(pair.Value.DisplayName), ItemRegistry.type_weapon + pair.Key);
                     }
 
-                    foreach (KeyValuePair<string, string> pair in bootsData)
+                    foreach (KeyValuePair<string, string> pair in DataLoader.Boots(Game1.content))
                     {
                         string[] fields = pair.Value.Split('/');
-                        Add(fields[fields.Length < 7 ? 0 : 6], ItemRegistry.type_boots + pair.Key);
+                        Add(ArgUtility.Get(fields, fields.Length < 7 ? 0 : 6), ItemRegistry.type_boots + pair.Key);
                     }
 
-                    foreach (KeyValuePair<string, string> pair in hatsData)
+                    foreach (KeyValuePair<string, string> pair in DataLoader.Hats(Game1.content))
                     {
-                        Add(pair.Value.Split('/')[5], ItemRegistry.type_hat + pair.Key);
+                        Add(ArgUtility.Get(pair.Value.Split('/'), 5), ItemRegistry.type_hat + pair.Key);
                     }
                 }
             }
