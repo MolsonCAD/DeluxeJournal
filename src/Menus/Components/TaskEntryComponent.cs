@@ -4,6 +4,7 @@ using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
 using DeluxeJournal.Task;
+using DeluxeJournal.Task.Tasks;
 
 namespace DeluxeJournal.Menus.Components
 {
@@ -58,10 +59,10 @@ namespace DeluxeJournal.Menus.Components
             progressBar = new ProgressBar(new Rectangle(bounds.Right - 260, _centerY - 30, 248, 56), 0)
             {
                 texture = DeluxeJournalMod.UiTexture,
-                barLeftSourceRect = new Rectangle(0, 64, 5, 14),
-                barMiddleSourceRect = new Rectangle(5, 64, 37, 14),
-                barRightSourceRect = new Rectangle(42, 64, 5, 14),
-                notchSourceRect = new Rectangle(47, 64, 1, 14),
+                barLeftSourceRect = new Rectangle(0, 64, 6, 14),
+                barMiddleSourceRect = new Rectangle(6, 64, 34, 14),
+                barRightSourceRect = new Rectangle(40, 64, 6, 14),
+                notchSourceRect = new Rectangle(46, 67, 1, 8),
                 AlignText = ProgressBar.TextAlignment.Center,
                 TextMargin = new Vector2(80, 28 - _halfLineSpacing)
             };
@@ -91,136 +92,190 @@ namespace DeluxeJournal.Menus.Components
             return _nameTruncated;
         }
 
-        public void Draw(SpriteBatch b, ITask task, bool popOut = false)
+        public void Draw(SpriteBatch b, ITask task, ColorSchema colorSchema, bool popOut = false)
         {
             string name = task.Name;
             bool complete = task.Complete;
             bool pulse = !task.HasBeenViewed();
+            bool header = task.ID == TaskTypes.Header;
             int nameWidth = bounds.Width - 76;
-            Rectangle scaledBounds = bounds;
-            Color textColor;
+            Rectangle borderBounds = new(bounds.X, bounds.Y - 4, bounds.Width, bounds.Height + 4);
+            Rectangle contentBounds = new(bounds.X + 4, bounds.Y, bounds.Width - 8, bounds.Height - 4);
+            Color shadowColor = colorSchema.Shadow;
+            Color textColor = Game1.textColor;
+            Color fillColor = header ? colorSchema.Header : (_hovering ? colorSchema.Hover : colorSchema.Main);
+            Color borderColor = DeluxeJournalMod.TaskBorderColor;
 
             if (popOut)
             {
-                scaledBounds.Inflate(2, 2);
+                borderBounds.Inflate(2, 2);
+                contentBounds.Inflate(2, 2);
             }
 
+            DrawCornerlessBox(b, borderBounds, borderColor);
+            b.Draw(Game1.staminaRect, contentBounds, colorSchema.Corner);
+            DrawCornerlessBox(b, contentBounds, colorSchema.Padding);
+            b.Draw(Game1.staminaRect, new Rectangle(contentBounds.X + 4, contentBounds.Y + 4, contentBounds.Width - 8, contentBounds.Height - 8), fillColor);
+
             IClickableMenu.drawTextureBox(b,
-                Game1.mouseCursors,
-                new Rectangle(384, 396, 15, 15),
-                scaledBounds.X,
-                scaledBounds.Y - 4,
-                scaledBounds.Width,
-                scaledBounds.Height + 4,
-                _hovering ? Color.Wheat : Color.White,
+                DeluxeJournalMod.ColoredTaskMask,
+                new Rectangle(0, 0, 15, 15),
+                borderBounds.X,
+                borderBounds.Y,
+                borderBounds.Width,
+                borderBounds.Height,
+                colorSchema.Accent,
                 4f,
-                drawShadow: popOut);
+                popOut);
 
-            if (task.Active)
+            IClickableMenu.drawTextureBox(b,
+                DeluxeJournalMod.ColoredTaskMask,
+                new Rectangle(16, 0, 15, 15),
+                borderBounds.X,
+                borderBounds.Y,
+                borderBounds.Width,
+                borderBounds.Height,
+                colorSchema.Shadow,
+                4f,
+                popOut);
+
+            if (!header)
             {
-                textColor = Game1.textColor;
-                checkbox.sourceRect.X = (complete && !pulse) ? 25 : 16;
-                checkbox.draw(b);
-
-                if (complete && pulse)
+                if (task.Active)
                 {
-                    Utility.drawWithShadow(b,
-                        DeluxeJournalMod.UiTexture,
-                        new Vector2(checkbox.bounds.X + 20, checkbox.bounds.Y + 20),
-                        new Rectangle(26, 25, 7, 7),
-                        Color.White,
-                        0,
-                        new Vector2(4f),
-                        checkbox.baseScale + Game1.dialogueButtonScale * 0.1f);
-                }
+                    checkbox.sourceRect.X = (complete && !pulse) ? 25 : 16;
+                    checkbox.draw(b);
 
-                if (task.ShouldShowProgress())
-                {
-                    int count = task.Count;
-                    int maxCount = task.MaxCount;
-
-                    nameWidth -= 260;
-
-                    if (complete && count < maxCount)
+                    if (complete && pulse)
                     {
-                        progressBar.Draw(b, _font, Color.DarkBlue, Color.Gray * 0.6f, count, maxCount);
+                        Utility.drawWithShadow(b,
+                            DeluxeJournalMod.UiTexture,
+                            new Vector2(checkbox.bounds.X + 20, checkbox.bounds.Y + 20),
+                            new Rectangle(26, 25, 7, 7),
+                            Color.White,
+                            0,
+                            new Vector2(4f),
+                            checkbox.baseScale + Game1.dialogueButtonScale * 0.1f);
                     }
-                    else
-                    {
-                        progressBar.Draw(b, _font, Color.DarkBlue, count, maxCount);
-                    }
-                }
-                else if (task.ShouldShowCustomStatus())
-                {
-                    Translation status = _translation.Get(task.GetCustomStatusKey()).UsePlaceholder(false);
 
-                    if (status.HasValue())
+                    if (task.ShouldShowProgress())
                     {
-                        string text = status.ToString();
-                        int emojiEnd = text.StartsWith('[') ? text.IndexOf(']') : -1;
-                        int textOffset = 0;
+                        int count = task.Count;
+                        int maxCount = task.MaxCount;
 
                         nameWidth -= 260;
 
-                        if (emojiEnd > 0 && int.TryParse(text[1..emojiEnd], out int emojiIndex))
+                        if (complete && count < maxCount)
                         {
-                            text = text[(emojiEnd + 1)..].TrimStart();
-                            textOffset = 48;
-
-                            Utility.drawWithShadow(b,
-                                ChatBox.emojiTexture,
-                                new Vector2(progressBar.bounds.X, _centerY - 22),
-                                new Rectangle(emojiIndex * 9 % ChatBox.emojiTexture.Width, emojiIndex * 9 / ChatBox.emojiTexture.Width * 9, 9, 9),
-                                Color.White,
-                                0f,
-                                Vector2.Zero,
-                                4f);
+                            progressBar.Draw(b, _font, Color.DarkBlue, Color.Gray * 0.6f, colorSchema, count, maxCount);
                         }
+                        else
+                        {
+                            progressBar.Draw(b, _font, Color.DarkBlue, colorSchema, count, maxCount);
+                        }
+                    }
+                    else if (task.ShouldShowCustomStatus())
+                    {
+                        Translation status = _translation.Get(task.GetCustomStatusKey()).UsePlaceholder(false);
 
-                        Utility.drawTextWithShadow(b,
-                            text,
-                            _font,
-                            new Vector2(progressBar.bounds.X + textOffset, _centerY - _halfLineSpacing - 6),
-                            Color.DarkBlue);
+                        if (status.HasValue())
+                        {
+                            string text = status.ToString();
+                            int emojiEnd = text.StartsWith('[') ? text.IndexOf(']') : -1;
+                            int textOffset = 0;
+
+                            nameWidth -= 260;
+
+                            if (emojiEnd > 0 && int.TryParse(text[1..emojiEnd], out int emojiIndex))
+                            {
+                                text = text[(emojiEnd + 1)..].TrimStart();
+                                textOffset = 48;
+
+                                Utility.drawWithShadow(b,
+                                    ChatBox.emojiTexture,
+                                    new Vector2(progressBar.bounds.X, _centerY - 22),
+                                    new Rectangle(emojiIndex * 9 % ChatBox.emojiTexture.Width, emojiIndex * 9 / ChatBox.emojiTexture.Width * 9, 9, 9),
+                                    Color.White,
+                                    0f,
+                                    Vector2.Zero,
+                                    4f);
+                            }
+
+                            Utility.drawTextWithColoredShadow(b,
+                                text,
+                                _font,
+                                new Vector2(progressBar.bounds.X + textOffset, _centerY - _halfLineSpacing - 6),
+                                Color.DarkBlue,
+                                shadowColor);
+                        }
                     }
                 }
+                else
+                {
+                    int daysRemaining = task.DaysRemaining();
+                    string daysRemainingKey = (daysRemaining == 1) ? "ui.tasks.renew.day" : "ui.tasks.renew.days";
+
+                    nameWidth -= 260;
+                    textColor = Game1.unselectedOptionColor * 0.9f;
+                    shadowColor *= 0.9f;
+                    checkbox.sourceRect.X = checkbox.containsPoint(Game1.getOldMouseX(), Game1.getOldMouseY()) ? 43 : 34;
+                    checkbox.draw(b);
+
+                    Utility.drawWithShadow(b,
+                        DeluxeJournalMod.UiTexture,
+                        new Vector2(progressBar.bounds.X, _centerY - 22),
+                        new Rectangle(52, 16, 9, 9),
+                        Color.White,
+                        0,
+                        Vector2.Zero,
+                        4f);
+
+                    Utility.drawTextWithColoredShadow(b,
+                        _translation.Get(daysRemainingKey, new { count = daysRemaining }),
+                        _font,
+                        new Vector2(progressBar.bounds.X + 48, _centerY - _halfLineSpacing - 6),
+                        Color.DarkBlue,
+                        shadowColor);
+                }
+
+                Utility.drawTextWithColoredShadow(b,
+                    TruncateString(name, nameWidth),
+                    _font,
+                    new Vector2(bounds.X + 68, _centerY - _halfLineSpacing - 6),
+                    textColor,
+                    shadowColor);
             }
             else
             {
-                int daysRemaining = task.DaysRemaining();
-                string daysRemainingKey = (daysRemaining == 1) ? "ui.tasks.renew.day" : "ui.tasks.renew.days";
+                string text = TruncateString(name, nameWidth);
+                int textWidth = (int)_font.MeasureString(text).X;
+                Vector2 textPosition = new Vector2(bounds.X + (bounds.Width - textWidth - 8) / 2, _centerY - _halfLineSpacing - 6);
 
-                nameWidth -= 260;
-                textColor = Game1.unselectedOptionColor;
-                checkbox.sourceRect.X = checkbox.containsPoint(Game1.getOldMouseX(), Game1.getOldMouseY()) ? 43 : 34;
-                checkbox.draw(b);
+                IClickableMenu.drawTextureBox(b,
+                    DeluxeJournalMod.ColoredTaskMask,
+                    new Rectangle(32, 0, 15, 15),
+                    (int)textPosition.X - 20,
+                    contentBounds.Y + 8,
+                    textWidth + 36,
+                    contentBounds.Height - 16,
+                    colorSchema.Main,
+                    4f,
+                    popOut);
 
-                Utility.drawWithShadow(b,
-                    DeluxeJournalMod.UiTexture,
-                    new Vector2(progressBar.bounds.X, _centerY - 22),
-                    new Rectangle(52, 16, 9, 9),
-                    Color.White,
-                    0,
-                    Vector2.Zero,
-                    4f);
-
-                Utility.drawTextWithShadow(b,
-                    _translation.Get(daysRemainingKey, new { count = daysRemaining }),
-                    _font,
-                    new Vector2(progressBar.bounds.X + 48, _centerY - _halfLineSpacing - 6),
-                    Color.DarkBlue);
+                Utility.drawTextWithColoredShadow(b, text, _font, textPosition, textColor, shadowColor);
             }
-
-            Utility.drawTextWithShadow(b,
-                TruncateString(name, nameWidth),
-                _font,
-                new Vector2(bounds.X + 68, _centerY - _halfLineSpacing - 6),
-                textColor);
 
             if (_hovering && (!Game1.options.SnappyMenus || popOut))
             {
                 removeButton.draw(b);
             }
+        }
+
+        private static void DrawCornerlessBox(SpriteBatch b, Rectangle bounds, Color color, int cornerSize = 4)
+        {
+            b.Draw(Game1.staminaRect, new Rectangle(bounds.X, bounds.Y + cornerSize, bounds.Width, bounds.Height - cornerSize * 2), color);
+            b.Draw(Game1.staminaRect, new Rectangle(bounds.X + cornerSize, bounds.Y, bounds.Width - cornerSize * 2, cornerSize), color);
+            b.Draw(Game1.staminaRect, new Rectangle(bounds.X + cornerSize, bounds.Bottom - cornerSize, bounds.Width - cornerSize * 2, cornerSize), color);
         }
 
         private string TruncateString(string text, float width)

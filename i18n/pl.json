@@ -15,6 +15,7 @@
 	"task.craft.keywords": "rzemieślnik,kucharz,stwórz,zrób,weź,produkuj,kowal",
 	"task.gift": "Prezent",
 	"task.gift.keywords": "prezent,dajofertuj,przyjemność,podaruj,donuj,dostarczaj,udzielaj",
+	"task.header": "Nagłówek",
 	"task.sell": "Sprzedaj",
 	"task.sell.keywords": "sprzedaj,wysyłaj,rynek,handluj,pozbywaj się,detal,transakcja,wymiana,odsprzedaj,sprzedaż",
 
@@ -62,6 +63,7 @@
 	// task parameter names
 	"ui.tasks.parameter.animal": "Zwierzę",
 	"ui.tasks.parameter.building": "Budynek",
+	"ui.tasks.parameter.color": "Kolor",
 	"ui.tasks.parameter.count": "Ilość",
 	"ui.tasks.parameter.item": "Przedmiot",
 	"ui.tasks.parameter.npc": "Mieszkaniec",

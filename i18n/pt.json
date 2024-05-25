@@ -15,6 +15,7 @@
 	"task.craft.keywords": "criar,cozinhar,criar,fazer,obter",
 	"task.gift": "Presente",
 	"task.gift.keywords": "presentear,dar",
+	"task.header": "Cabeçalho",
 	"task.sell": "Vender",
 	"task.sell.keywords": "vender,enviar",
 
@@ -62,6 +63,7 @@
 	// task parameter names
 	"ui.tasks.parameter.animal": "Animal",
 	"ui.tasks.parameter.building": "Construção",
+	"ui.tasks.parameter.color": "Cor",
 	"ui.tasks.parameter.count": "Contar",
 	"ui.tasks.parameter.item": "Item",
 	"ui.tasks.parameter.npc": "Aldeão",

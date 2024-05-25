@@ -15,6 +15,7 @@
 	"task.craft.keywords": "craft,cook,create,make,get",
 	"task.gift": "Gift",
 	"task.gift.keywords": "gift,give",
+	"task.header": "Header",
 	"task.sell": "Sell",
 	"task.sell.keywords": "sell,ship",
 
@@ -62,6 +63,7 @@
 	// task parameter names
 	"ui.tasks.parameter.animal": "Animal",
 	"ui.tasks.parameter.building": "Building",
+	"ui.tasks.parameter.color": "Color",
 	"ui.tasks.parameter.count": "Count",
 	"ui.tasks.parameter.item": "Item",
 	"ui.tasks.parameter.npc": "Villager",

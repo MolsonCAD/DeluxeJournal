@@ -13,8 +13,16 @@ namespace DeluxeJournal.Framework.Task
         private readonly IDataHelper _dataHelper;
         private readonly Config _config;
         private readonly ISemanticVersion _version;
-        private readonly IDictionary<long, TaskList> _tasks;
+        private readonly IDictionary<long, EventManagedTaskList> _tasks;
         private TaskData? _data;
+        private bool _loaded;
+
+        /// <summary><c>true</c> if the tasks have been loaded for the first time. Tasks are loaded on save started.</summary>
+        public bool Loaded
+        {
+            get => _loaded;
+            private set => _loaded = value;
+        }
 
         /// <summary>A list of tasks for the active player.</summary>
         public IList<ITask> Tasks
@@ -23,7 +31,7 @@ namespace DeluxeJournal.Framework.Task
             {
                 if (!_tasks.ContainsKey(Game1.player.UniqueMultiplayerID))
                 {
-                    _tasks[Game1.player.UniqueMultiplayerID] = new TaskList(_events);
+                    _tasks[Game1.player.UniqueMultiplayerID] = new EventManagedTaskList(_events);
                 }
 
                 return _tasks[Game1.player.UniqueMultiplayerID];
@@ -38,7 +46,8 @@ namespace DeluxeJournal.Framework.Task
                 // Delayed deserialization to allow for file migration using localized game data.
                 if (_data == null)
                 {
-                    _data = _dataHelper.ReadGlobalData<TaskData>(DeluxeJournalMod.TASKS_DATA_KEY) ?? new TaskData(_version);
+                    _data = _dataHelper.ReadGlobalData<TaskData>(DeluxeJournalMod.TasksDataKey) ?? new TaskData(_version);
+                    Loaded = true;
                 }
 
                 return _data;
@@ -51,7 +60,7 @@ namespace DeluxeJournal.Framework.Task
             _dataHelper = dataHelper;
             _config = config;
             _version = version;
-            _tasks = new Dictionary<long, TaskList>();
+            _tasks = new Dictionary<long, EventManagedTaskList>();
 
             _events.ModEvents.GameLoop.DayStarted += OnDayStarted;
             _events.ModEvents.GameLoop.DayEnding += OnDayEnding;
@@ -60,7 +69,7 @@ namespace DeluxeJournal.Framework.Task
         /// <summary>Sort local player tasks.</summary>
         public void SortTasks()
         {
-            ((TaskList)Tasks).Sort();
+            ((EventManagedTaskList)Tasks).Sort();
         }
 
         /// <summary>Load the task list from save data.</summary>
@@ -69,7 +78,7 @@ namespace DeluxeJournal.Framework.Task
             long umid;
 
             // Each TaskList must be cleared in order to unsubscribe from task events
-            foreach (TaskList tasks in _tasks.Values)
+            foreach (EventManagedTaskList tasks in _tasks.Values)
             {
                 tasks.Clear();
             }
@@ -85,7 +94,7 @@ namespace DeluxeJournal.Framework.Task
 
                     if (!_tasks.ContainsKey(umid))
                     {
-                        _tasks[umid] = new TaskList(_events);
+                        _tasks[umid] = new EventManagedTaskList(_events);
                     }
 
                     foreach (ITask task in Data.Tasks[saveFolderName][key])
@@ -102,14 +111,14 @@ namespace DeluxeJournal.Framework.Task
         /// <summary>Save the task list.</summary>
         public void Save()
         {
-            if (Constants.SaveFolderName is string saveFolderName)
+            if (Loaded && Constants.SaveFolderName is string saveFolderName)
             {
                 Data.Version = _version.ToString();
                 Data.Tasks[saveFolderName] = _tasks
                     .Where(entry => entry.Value.Count > 0)
                     .ToDictionary(entry => entry.Key, entry => (IList<ITask>)entry.Value.ToList());
 
-                _dataHelper.WriteGlobalData(DeluxeJournalMod.TASKS_DATA_KEY, Data);
+                _dataHelper.WriteGlobalData(DeluxeJournalMod.TasksDataKey, Data);
             }
         }
 

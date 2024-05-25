@@ -36,6 +36,10 @@ namespace DeluxeJournal.Task
 
         public virtual int BasePrice { get; set; }
 
+        public virtual int ColorIndex { get; set; }
+
+        public virtual int GroupColorIndex { get; set; }
+
         public virtual bool Active
         {
             get => _active;
@@ -86,9 +90,8 @@ namespace DeluxeJournal.Task
             RenewPeriod = Period.Never;
             RenewDate = new WorldDate(1, Season.Spring, 1);
             RenewCustomInterval = 1;
-            Count = 0;
             MaxCount = 1;
-            BasePrice = 0;
+            GroupColorIndex = -1;
         }
 
         /// <summary>Helper method to get the buy/sale price of an item.</summary>

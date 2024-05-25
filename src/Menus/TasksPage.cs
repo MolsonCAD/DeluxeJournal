@@ -9,6 +9,7 @@ using DeluxeJournal.Framework;
 using DeluxeJournal.Framework.Task;
 using DeluxeJournal.Menus.Components;
 using DeluxeJournal.Task;
+using DeluxeJournal.Task.Tasks;
 
 using static StardewValley.Menus.ClickableComponent;
 
@@ -51,10 +52,10 @@ namespace DeluxeJournal.Menus
         public static int SelectedFilterTab { get; private set; } = 0;
 
         /// <summary>A list of tasks filtered by the selected filter tab rules.</summary>
-        public IReadOnlyList<ITask> FilteredTasks { get; private set; }
+        public IList<ITask> FilteredTasks { get; private set; }
 
-        public TasksPage(Rectangle bounds, Texture2D tabTexture, ITranslationHelper translation)
-            : this("tasks", translation.Get("ui.tab.tasks"), bounds.X, bounds.Y, bounds.Width, bounds.Height, tabTexture, new Rectangle(16, 0, 16, 16), translation)
+        public TasksPage(string name, Rectangle bounds, Texture2D tabTexture, ITranslationHelper translation)
+            : this(name, translation.Get("ui.tab.tasks"), bounds.X, bounds.Y, bounds.Width, bounds.Height, tabTexture, new Rectangle(16, 0, 16, 16), translation)
         {
         }
 
@@ -70,7 +71,7 @@ namespace DeluxeJournal.Menus
             {
                 throw new InvalidOperationException("TasksPage created before instantiation of TaskManager");
             }
-
+            
             _translation = translation;
             _config = config;
             _taskManager = taskManager;
@@ -212,10 +213,12 @@ namespace DeluxeJournal.Menus
 
         public void ReloadFilteredTasks(bool resetScroll = false)
         {
-            FilteredTasks = SelectedFilterTab == 0
-                    ? (IReadOnlyList<ITask>)_taskManager.Tasks
-                    : _taskManager.Tasks.Where(task => (int)task.RenewPeriod == SelectedFilterTab).ToList();
+            bool skipHeader = true;
 
+            FilteredTasks = SelectedFilterTab == 0
+                ? _taskManager.Tasks
+                : _taskManager.Tasks.Reverse().Where(reverseFilterPredicate).Reverse().ToList();
+            
             scrollComponent.ContentHeight = FilteredTasks.Count * scrollComponent.ScrollDistance;
 
             if (resetScroll)
@@ -225,6 +228,42 @@ namespace DeluxeJournal.Menus
             else
             {
                 scrollComponent.Refresh();
+            }
+
+            RefreshColors();
+
+            bool reverseFilterPredicate(ITask task)
+            {
+                if (task.ID == TaskTypes.Header)
+                {
+                    if (!skipHeader)
+                    {
+                        skipHeader = true;
+                        return true;
+                    }
+                }
+                else if ((int)task.RenewPeriod == SelectedFilterTab)
+                {
+                    skipHeader = false;
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
+        public void RefreshColors()
+        {
+            int headerColorIndex = -1;
+
+            foreach (ITask task in FilteredTasks)
+            {
+                if (task.ID == TaskTypes.Header)
+                {
+                    headerColorIndex = task.ColorIndex;
+                }
+
+                task.GroupColorIndex = headerColorIndex;
             }
         }
 
@@ -412,7 +451,7 @@ namespace DeluxeJournal.Menus
         {
             if (!GameMenu.forcePreventClose)
             {
-                if (_selectedTaskIndex != -1)
+                if (_selectedTaskIndex >= 0 && _selectedTaskIndex < FilteredTasks.Count)
                 {
                     double currentTime = Game1.currentGameTime.TotalGameTime.TotalSeconds;
 
@@ -443,7 +482,14 @@ namespace DeluxeJournal.Menus
                             nextTaskIndex = tasks.IndexOf(FilteredTasks[--_selectedTaskIndex]);
                             tasks.Remove(task);
                             tasks.Insert(nextTaskIndex, task);
-                            ReloadFilteredTasks();
+
+                            if (SelectedFilterTab > 0)
+                            {
+                                FilteredTasks.RemoveAt(_selectedTaskIndex + 1);
+                                FilteredTasks.Insert(_selectedTaskIndex, task);
+                            }
+
+                            RefreshColors();
 
                             if (_dragging)
                             {
@@ -460,7 +506,14 @@ namespace DeluxeJournal.Menus
                             nextTaskIndex = tasks.IndexOf(FilteredTasks[++_selectedTaskIndex]);
                             tasks.Remove(task);
                             tasks.Insert(nextTaskIndex, task);
-                            ReloadFilteredTasks();
+
+                            if (SelectedFilterTab > 0)
+                            {
+                                FilteredTasks.RemoveAt(_selectedTaskIndex - 1);
+                                FilteredTasks.Insert(_selectedTaskIndex, task);
+                            }
+
+                            RefreshColors();
 
                             if (_dragging)
                             {
@@ -480,7 +533,7 @@ namespace DeluxeJournal.Menus
         {
             if (!GameMenu.forcePreventClose)
             {
-                if (_selectedTaskIndex != -1 && !_dragging)
+                if (_selectedTaskIndex >= 0 && _selectedTaskIndex < FilteredTasks.Count && !_dragging)
                 {
                     ITask task = FilteredTasks[_selectedTaskIndex];
                     int entryIndex = _selectedTaskIndex - scrollComponent.GetScrollOffset();
@@ -617,7 +670,10 @@ namespace DeluxeJournal.Menus
 
                 for (int i = 0; i < MaxEntries && i + scrollOffset < FilteredTasks.Count; i++)
                 {
-                    taskEntries[i].Draw(b, FilteredTasks[i + scrollOffset]);
+                    ITask task = FilteredTasks[i + scrollOffset];
+                    int colorIndex = task.ColorIndex > 0 || task.GroupColorIndex < 0 ? task.ColorIndex : task.GroupColorIndex;
+
+                    taskEntries[i].Draw(b, task, DeluxeJournalMod.ColorSchemas[colorIndex < DeluxeJournalMod.ColorSchemas.Count ? colorIndex : 0]);
                 }
             }
             else if (_config.ShowAddTaskHelpMessage)

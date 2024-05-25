@@ -1,4 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using HarmonyLib;
 using StardewModdingAPI;
@@ -13,6 +15,7 @@ using DeluxeJournal.Framework.Task;
 using DeluxeJournal.Menus;
 using DeluxeJournal.Menus.Components;
 using DeluxeJournal.Patching;
+using DeluxeJournal.Task;
 using DeluxeJournal.Task.Tasks;
 
 namespace DeluxeJournal
@@ -21,10 +24,16 @@ namespace DeluxeJournal
     internal class DeluxeJournalMod : Mod
     {
         /// <summary>Data key for the notes save data.</summary>
-        public const string NOTES_DATA_KEY = "notes-data";
+        public const string NotesDataKey = "notes-data";
 
         /// <summary>Data key for the tasks save data.</summary>
-        public const string TASKS_DATA_KEY = "tasks-data";
+        public const string TasksDataKey = "tasks-data";
+
+        /// <summary>Data assets file path.</summary>
+        public const string DataPath = "assets/data";
+
+        /// <summary>Default color data file path.</summary>
+        public const string ColorDataPath = "assets/data/colors-default.json";
 
         /// <summary>UI spirte sheet texture.</summary>
         public static Texture2D? UiTexture { get; private set; }
@@ -34,6 +43,15 @@ namespace DeluxeJournal
 
         /// <summary>Building icon spirte sheet texture.</summary>
         public static Texture2D? BuildingIconsTexture { get; private set; }
+
+        /// <summary>Transparency mask for a colored task entry.</summary>
+        public static Texture2D? ColoredTaskMask { get; private set; }
+
+        /// <summary>Loaded color schema data.</summary>
+        public static IList<ColorSchema> ColorSchemas { get; private set; } = Array.Empty<ColorSchema>();
+
+        /// <summary>The color of the task entry border.</summary>
+        public static Color TaskBorderColor { get; private set; } = new(68, 18, 28);
 
         /// <summary>
         /// Check if this is the main screen. Returns <c>false</c> if this is a co-op player
@@ -72,20 +90,23 @@ namespace DeluxeJournal
             UiTexture = helper.ModContent.Load<Texture2D>("assets/ui.png");
             AnimalIconsTexture = helper.ModContent.Load<Texture2D>("assets/animal-icons.png");
             BuildingIconsTexture = helper.ModContent.Load<Texture2D>("assets/building-icons.png");
+            ColoredTaskMask = helper.ModContent.Load<Texture2D>("assets/colored-task-mask.png");
             SmartIconComponent.AnimalIconIds = helper.ModContent.Load<Dictionary<string, int>>("assets/data/animal-icons.json");
             SmartIconComponent.BuildingIconData = helper.ModContent.Load<Dictionary<string, BuildingIconData>>("assets/data/building-icons.json");
             Config = helper.ReadConfig<Config>();
-            NotesData = helper.Data.ReadGlobalData<NotesData>(NOTES_DATA_KEY) ?? new NotesData();
+            NotesData = helper.Data.ReadGlobalData<NotesData>(NotesDataKey) ?? new NotesData();
 
             EventManager = new EventManager(helper.Events, helper.Multiplayer, Monitor);
             TaskManager = new TaskManager(new TaskEvents(EventManager), helper.Data, Config, ModManifest.Version);
             PageManager = new PageManager();
 
-            PageManager.RegisterPage("quests", (bounds) => new QuestLogPage(bounds, UiTexture, helper.Translation), 102);
-            PageManager.RegisterPage("tasks", (bounds) => new TasksPage(bounds, UiTexture, helper.Translation), 101);
-            PageManager.RegisterPage("notes", (bounds) => new NotesPage(bounds, UiTexture, helper.Translation), 100);
+            PageManager.RegisterPage("quests", (bounds) => new QuestLogPage("quests", bounds, UiTexture, helper.Translation), 999);
+            PageManager.RegisterPage("tasks", (bounds) => new TasksPage("tasks", bounds, UiTexture, helper.Translation), 998);
+            PageManager.RegisterPage("notes", (bounds) => new NotesPage("notes", bounds, UiTexture, helper.Translation), 997);
+            PageManager.RegisterPage("overlays", (bounds) => new OverlaysPage("overlays", bounds, UiTexture, helper.Translation), 996);
 
             helper.Events.Display.MenuChanged += OnMenuChanged;
+            helper.Events.GameLoop.GameLaunched += OnGameLaunched;
             helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
             helper.Events.GameLoop.Saving += OnSaving;
 
@@ -96,6 +117,8 @@ namespace DeluxeJournal
                 new PurchaseAnimalsMenuPatch(EventManager, Monitor),
                 new ShopMenuPatch(EventManager, Monitor)
             );
+
+            ConsoleCommands.AddCommands(helper.ConsoleCommands);
         }
 
         public override object GetApi()
@@ -120,8 +143,63 @@ namespace DeluxeJournal
             if (NotesData != null && Constants.SaveFolderName != null)
             {
                 NotesData.Text[Constants.SaveFolderName] = text;
-                Helper.Data.WriteGlobalData(NOTES_DATA_KEY, NotesData);
+                Helper.Data.WriteGlobalData(NotesDataKey, NotesData);
             }
+        }
+
+        /// <summary>Load the color schemas.</summary>
+        /// <param name="relativePath">Optional file path relative to the mod folder. If <c>null</c>, attempts to load a custom file first, then falls back on the default.</param>
+        public void LoadColorSchemas(string? relativePath = null)
+        {
+            if (relativePath == null)
+            {
+                IEnumerable<string> paths = Directory.GetFiles(Helper.DirectoryPath + "/" + DataPath, "colors-*")
+                    .Select(f => $"{DataPath}/{Path.GetFileName(f)}")
+                    .Where(f => f != ColorDataPath);
+
+                foreach (string path in paths)
+                {
+                    if (Helper.Data.ReadJsonFile<ColorData>(path)?.Colors is IList<ColorSchema> customColors)
+                    {
+                        ColorSchemas = customColors;
+                        goto ExtractDefault;
+                    }
+                    else
+                    {
+                        Monitor.Log($"Unable to load color data from '{path}' ... skipping", LogLevel.Warn);
+                    }
+                }
+
+                relativePath = ColorDataPath;
+            }
+
+            if (Helper.Data.ReadJsonFile<ColorData>(relativePath)?.Colors is IList<ColorSchema> loadedColors)
+            {
+                ColorSchemas = loadedColors;
+            }
+            else
+            {
+                throw new ContentLoadException($"Could not load color data from file: {relativePath}");
+            }
+
+        ExtractDefault:
+            if (Game1.mouseCursors != null)
+            {
+                ColorSchemas.Insert(0, ColorSchema.ExtractFromTextureBox(Game1.mouseCursors, new(384, 396, 15, 15), out Color border));
+                TaskBorderColor = border;
+            }
+            else
+            {
+                ColorSchemas.Insert(0, new ColorSchema(Color.White, Color.LightGray, Color.DarkGray, Color.Black, Color.DarkGray));
+                Monitor.Log("Color schemas loaded before game textures. Unable to extract default color schema.\n\tTry running the following command: dj_colors_load", LogLevel.Error);
+            }
+        }
+
+        /// <summary>Save the color schemas.</summary>
+        /// <param name="relativePath">Optional file path relative to the mod folder. Overwrites default file if <c>null</c>.</param>
+        public void SaveColorSchemas(string? relativePath = null)
+        {
+            Helper.Data.WriteJsonFile(relativePath ?? ColorDataPath, new ColorData(ColorSchemas.Skip(1).ToList()));
         }
 
         [EventPriority(EventPriority.Low)]
@@ -136,11 +214,19 @@ namespace DeluxeJournal
             }
         }
 
+        private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
+        {
+            if (IsMainScreen)
+            {
+                LoadColorSchemas();
+            }
+        }
+
         private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
         {
             if (IsMainScreen)
             {
-                TaskManager?.Load();
+                TaskManager!.Load();
             }
 
             if (PageManager != null && !Game1.onScreenMenus.OfType<JournalButton>().Any())
@@ -158,7 +244,7 @@ namespace DeluxeJournal
 
             if (IsMainScreen)
             {
-                TaskManager?.Save();
+                TaskManager!.Save();
             }
         }
     }

@@ -45,8 +45,8 @@ namespace DeluxeJournal.Menus
 
         private int QuestPage => (int)(_questPageField.GetValue(QuestLog) ?? -1);
 
-        public QuestLogPage(Rectangle bounds, Texture2D tabTexture, ITranslationHelper translation)
-            : this("quests", translation.Get("ui.tab.quests"), bounds.X, bounds.Y, bounds.Width, bounds.Height, tabTexture, new Rectangle(0, 0, 16, 16))
+        public QuestLogPage(string name, Rectangle bounds, Texture2D tabTexture, ITranslationHelper translation)
+            : this(name, translation.Get("ui.tab.quests"), bounds.X, bounds.Y, bounds.Width, bounds.Height, tabTexture, new Rectangle(0, 0, 16, 16))
         {
         }
 

@@ -4,8 +4,8 @@ using DeluxeJournal.Task;
 
 namespace DeluxeJournal.Framework.Task
 {
-    /// <summary>A List wrapper for conveniently managing ITasks.</summary>
-    internal class TaskList : IList<ITask>, IReadOnlyList<ITask>
+    /// <summary>A List wrapper for conveniently managing <see cref="ITask"/> instances.</summary>
+    internal class EventManagedTaskList : IList<ITask>, IReadOnlyList<ITask>
     {
         private readonly ITaskEvents _events;
         private readonly List<ITask> _tasks;
@@ -13,14 +13,20 @@ namespace DeluxeJournal.Framework.Task
         public ITask this[int index]
         {
             get => _tasks[index];
-            set => _tasks[index] = value;
+
+            set
+            {
+                _tasks[index].EventUnsubscribe(_events);
+                value.EventSubscribe(_events);
+                _tasks[index] = value;
+            }
         }
 
         public int Count => _tasks.Count;
 
         public bool IsReadOnly => ((IList<ITask>)_tasks).IsReadOnly;
 
-        public TaskList(ITaskEvents events)
+        public EventManagedTaskList(ITaskEvents events)
         {
             _events = events;
             _tasks = new List<ITask>();
@@ -75,9 +81,12 @@ namespace DeluxeJournal.Framework.Task
             _tasks.RemoveAt(index);
         }
 
+        /// <summary>
+        /// Sort the <see cref="ITask"/> instances by their current state while preserving the ordering
+        /// among tasks in the same state.
+        /// </summary>
         public void Sort()
         {
-            // Preserve ordering among tasks in the same state
             for (int i = 0; i < _tasks.Count; i++)
             {
                 _tasks[i].SetSortingIndex(i);

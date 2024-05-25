@@ -53,14 +53,23 @@ namespace DeluxeJournal.Menus.Components
             ScrollDistance = scrollDistance;
             ClipToScrollDistance = clipToScrollDistance;
 
-            Rectangle bounds = new Rectangle(_scrollBarBounds.X, _scrollBarBounds.Y, _scrollBarBounds.Width, 40);
-            scrollBar = new ClickableTextureComponent(bounds, Game1.mouseCursors, new Rectangle(435, 463, 6, 10), 4f);
-
-            bounds = new Rectangle(_scrollBarBounds.X - 12, _scrollBarBounds.Y - 52, 44, 48);
-            upArrowButton = new ClickableTextureComponent(bounds, Game1.mouseCursors, new Rectangle(421, 459, 11, 12), 4f);
-
-            bounds = new Rectangle(_scrollBarBounds.X - 12, _scrollBarBounds.Y + _scrollBarBounds.Height + 4, 44, 48);
-            downArrowButton = new ClickableTextureComponent(bounds, Game1.mouseCursors, new Rectangle(421, 472, 11, 12), 4f);
+            scrollBar = new ClickableTextureComponent(
+                new Rectangle(_scrollBarBounds.X, _scrollBarBounds.Y, _scrollBarBounds.Width, 40),
+                Game1.mouseCursors,
+                new Rectangle(435, 463, 6, 10),
+                4f);
+            
+            upArrowButton = new ClickableTextureComponent(
+                new Rectangle(_scrollBarBounds.X - 12, _scrollBarBounds.Y - 48, 44, 48),
+                Game1.mouseCursors,
+                new Rectangle(421, 459, 11, 12),
+                4f);
+            
+            downArrowButton = new ClickableTextureComponent(
+                new Rectangle(_scrollBarBounds.X - 12, _scrollBarBounds.Y + _scrollBarBounds.Height + 4, 44, 48),
+                Game1.mouseCursors,
+                new Rectangle(421, 472, 11, 12),
+                4f);
         }
 
         public int GetScrollOffset()

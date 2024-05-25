@@ -2,7 +2,6 @@
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
-using StardewValley.GameData.Characters;
 using StardewValley.Menus;
 using StardewValley.Objects;
 using StardewValley.Tools;
@@ -14,7 +13,7 @@ using static StardewValley.Menus.ClickableComponent;
 
 namespace DeluxeJournal.Menus.Components
 {
-    public class SmartIconComponent
+    public class SmartIconComponent : IClickableComponentSupplier
     {
         /// <summary>Measure of the inner icon source in pixels.</summary>
         private const int InnerIconPixels = 9;

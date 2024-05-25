@@ -1,13 +1,15 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
+using StardewValley.Menus;
 using DeluxeJournal.Task;
 
 using static DeluxeJournal.Task.TaskParameterAttribute;
 
 namespace DeluxeJournal.Menus.Components
 {
-    public class TaskParameterDropDown : DropDownComponent
+    /// <summary>A drop-down menu component for a <see cref="TaskParameter"/>.</summary>
+    public class TaskParameterDropDown : DropDownComponent, ITaskParameterComponent
     {
         private readonly Texture2D? _backgroundTexture;
         private readonly IList<KeyValuePair<Texture2D, Rectangle>> _options;
@@ -15,7 +17,11 @@ namespace DeluxeJournal.Menus.Components
         /// <summary>Get the selected option as an item quality.</summary>
         public int Quality => SelectedOption == 3 ? 4 : SelectedOption;
 
-        public TaskParameter TaskParameter { get; set; }
+        public ClickableComponent ClickableComponent => this;
+
+        public TaskParameter Parameter { get; set; }
+
+        public string Label { get; set; } = string.Empty;
 
         public TaskParameterDropDown(TaskParameter parameter, IList<KeyValuePair<Texture2D, Rectangle>> options, Rectangle bounds)
             : base(Enumerable.Repeat(string.Empty, options.Count), bounds, parameter.Attribute.Name, true)
@@ -31,20 +37,32 @@ namespace DeluxeJournal.Menus.Components
 
             _backgroundTexture = Game1.content.Load<Texture2D>("LooseSprites\\textBox");
             _options = options.ToList();
-            TaskParameter = parameter;
+            Parameter = parameter;
+        }
+
+        public IEnumerable<ClickableComponent> GetClickableComponents()
+        {
+            yield return ClickableComponent;
+        }
+
+        public void TryHover(int x, int y)
+        {
         }
 
         public override void LeftClickReleased(int x, int y)
         {
             base.LeftClickReleased(x, y);
 
-            if (TaskParameter.Attribute.Tag == TaskParameterTag.Quality)
+            if (Active)
             {
-                TaskParameter.TrySetValue(Quality);
-            }
-            else
-            {
-                TaskParameter.TrySetValue(SelectedOption);
+                if (Parameter.Attribute.Tag == TaskParameterTag.Quality)
+                {
+                    Parameter.TrySetValue(Quality);
+                }
+                else
+                {
+                    Parameter.TrySetValue(SelectedOption);
+                }
             }
         }
 
@@ -56,8 +74,9 @@ namespace DeluxeJournal.Menus.Components
                 return;
             }
 
+            Color color = Active ? Color.White : Color.DimGray;
             bgBounds.X -= 4;
-            bgBounds.Width += 8;
+            bgBounds.Width += 4;
 
             if (dropDown)
             {
@@ -67,37 +86,37 @@ namespace DeluxeJournal.Menus.Components
                 b.Draw(_backgroundTexture,
                     new Rectangle(bgBounds.X, bgBounds.Y, 12, bgBounds.Height - 12),
                     new Rectangle(4, 12, 12, 24),
-                    Color.White);
+                    color);
 
                 // right border
                 b.Draw(_backgroundTexture,
                     new Rectangle(bgBounds.X + bgBounds.Width - 12, bgBounds.Y, 12, bgBounds.Height - 12),
                     new Rectangle(_backgroundTexture.Bounds.Width - 12, 12, 12, 24),
-                    Color.White);
+                    color);
 
                 // bottom-left corner
                 b.Draw(_backgroundTexture,
                     new Rectangle(bgBounds.X, bgBounds.Y + bgBounds.Height - 12, 12, 12),
                     new Rectangle(4, 36, 12, 12),
-                    Color.White);
+                    color);
 
                 // bottom-center border
                 b.Draw(_backgroundTexture,
                     new Rectangle(bgBounds.X + 12, bgBounds.Y + bgBounds.Height - 12, bgBounds.Width - 24, 12),
                     new Rectangle(16, 36, 4, 12),
-                    Color.White);
+                    color);
 
                 // bottom-right corner
                 b.Draw(_backgroundTexture,
                     new Rectangle(bgBounds.X + bgBounds.Width - 12, bgBounds.Y + bgBounds.Height - 12, 12, 12),
                     new Rectangle(_backgroundTexture.Bounds.Width - 12, 36, 12, 12),
-                    Color.White);
+                    color);
 
                 // fill
                 b.Draw(_backgroundTexture,
                     new Rectangle(bgBounds.X + 12, bgBounds.Y, bgBounds.Width - 24, bgBounds.Height - 12),
                     new Rectangle(16, 12, 4, 24),
-                    Color.White);
+                    color);
             }
             else
             {
@@ -105,19 +124,19 @@ namespace DeluxeJournal.Menus.Components
                 b.Draw(_backgroundTexture,
                     new Rectangle(bgBounds.X, bgBounds.Y, 12, bgBounds.Height + 4),
                     new Rectangle(4, 0, 12, 48),
-                    Color.White);
+                    color);
 
                 // center
                 b.Draw(_backgroundTexture,
                     new Rectangle(bgBounds.X + 12, bgBounds.Y, bgBounds.Width - 24, bgBounds.Height + 4),
                     new Rectangle(16, 0, 4, 48),
-                    Color.White);
+                    color);
 
                 // right side
                 b.Draw(_backgroundTexture,
                     new Rectangle(bgBounds.X + bgBounds.Width - 12, bgBounds.Y, 12, bgBounds.Height + 4),
                     new Rectangle(_backgroundTexture.Bounds.Width - 12, 0, 12, 48),
-                    Color.White);
+                    color);
             }
         }
 

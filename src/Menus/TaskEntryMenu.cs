@@ -126,7 +126,9 @@ namespace DeluxeJournal.Menus
 
         public override void draw(SpriteBatch b)
         {
-            _entry.Draw(b, _task, true);
+            int colorIndex = _task.ColorIndex > 0 || _task.GroupColorIndex < 0 ? _task.ColorIndex : _task.GroupColorIndex;
+
+            _entry.Draw(b, _task, DeluxeJournalMod.ColorSchemas[colorIndex < DeluxeJournalMod.ColorSchemas.Count ? colorIndex : 0], true);
 
             if (_hoverText.Length > 0)
             {

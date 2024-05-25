@@ -21,8 +21,8 @@ namespace DeluxeJournal.Menus
         private int _saveTimeSeconds;
         private bool _dirty;
 
-        public NotesPage(Rectangle bounds, Texture2D tabTexture, ITranslationHelper translation)
-            : this("notes", translation.Get("ui.tab.notes"), bounds.X, bounds.Y, bounds.Width, bounds.Height, tabTexture, new Rectangle(32, 0, 16, 16))
+        public NotesPage(string name, Rectangle bounds, Texture2D tabTexture, ITranslationHelper translation)
+            : this(name, translation.Get("ui.tab.notes"), bounds.X, bounds.Y, bounds.Width, bounds.Height, tabTexture, new Rectangle(32, 0, 16, 16))
         {
         }
 
