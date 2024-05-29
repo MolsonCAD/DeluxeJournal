@@ -95,7 +95,16 @@ namespace DeluxeJournal.Task
         /// <returns>The <see cref="Color"/> instance or <c>null</c> if <paramref name="encoded"/> could not be parsed.</returns>
         public static Color? HexToColor(string? encoded)
         {
-            if (string.IsNullOrEmpty(encoded) || encoded.Length > 8 || !uint.TryParse(encoded, NumberStyles.HexNumber, null, out uint packed))
+            if (string.IsNullOrEmpty(encoded))
+            {
+                return null;
+            }
+            else if (encoded.StartsWith('#'))
+            {
+                encoded = encoded[1..];
+            }
+
+            if (encoded.Length > 8 || !uint.TryParse(encoded, NumberStyles.HexNumber, null, out uint packed))
             {
                 return null;
             }
