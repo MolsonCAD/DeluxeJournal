@@ -4,7 +4,7 @@ using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
 using DeluxeJournal.Task;
-using DeluxeJournal.Task.Tasks;
+using DeluxeJournal.Util;
 
 namespace DeluxeJournal.Menus.Components
 {
@@ -16,15 +16,14 @@ namespace DeluxeJournal.Menus.Components
         public readonly ProgressBar progressBar;
 
         private readonly ITranslationHelper _translation;
-        private readonly SpriteFont _font;
-        private readonly Dictionary<char, SpriteFont.Glyph> _glyphs;
+        private readonly SpriteFontTools _fontTools;
         private readonly int _halfLineSpacing;
-        private readonly int _ellipsisWidth;
         private readonly int _centerY;
 
         private double _hoverStartTime;
         private bool _hovering;
-        private bool _nameTruncated;
+
+        public bool IsNameTruncated { get; private set; }
 
         public TaskEntryComponent(Rectangle bounds, string name, ITranslationHelper translation)
             : base(bounds, name)
@@ -35,14 +34,11 @@ namespace DeluxeJournal.Menus.Components
             }
 
             _translation = translation;
-            _font = Game1.dialogueFont;
-            _glyphs = _font.GetGlyphs();
-            _halfLineSpacing = (_font.LineSpacing / 2) - (_font.LineSpacing / 2 % 4);
-            _ellipsisWidth = (int)_font.MeasureString("...").X;
+            _fontTools = new(Game1.dialogueFont);
+            _halfLineSpacing = (_fontTools.LineSpacing / 2) - (_fontTools.LineSpacing / 2 % 4);
             _centerY = bounds.Y + (bounds.Height / 2);
             _hoverStartTime = 0;
             _hovering = false;
-            _nameTruncated = false;
 
             checkbox = new ClickableTextureComponent(
                 new Rectangle(bounds.X + 24, _centerY - 20, 36, 36),
@@ -75,21 +71,14 @@ namespace DeluxeJournal.Menus.Components
 
         public bool TryHover(int x, int y)
         {
-            bool hovering = containsPoint(x, y);
             removeButton.tryHover(x, y, 0.4f);
 
-            if (hovering && !_hovering)
+            if (!_hovering & (_hovering = containsPoint(x, y)))
             {
                 _hoverStartTime = Game1.currentGameTime.TotalGameTime.TotalSeconds;
             }
 
-            _hovering = hovering;
             return _hovering;
-        }
-
-        public bool IsNameTruncated()
-        {
-            return _nameTruncated;
         }
 
         public void Draw(SpriteBatch b, ITask task, ColorSchema colorSchema, bool popOut = false)
@@ -97,13 +86,12 @@ namespace DeluxeJournal.Menus.Components
             string name = task.Name;
             bool complete = task.Complete;
             bool pulse = !task.HasBeenViewed();
-            bool header = task.ID == TaskTypes.Header;
-            int nameWidth = bounds.Width - 76;
+            float nameWidth = bounds.Width - 76f;
             Rectangle borderBounds = new(bounds.X, bounds.Y - 4, bounds.Width, bounds.Height + 4);
             Rectangle contentBounds = new(bounds.X + 4, bounds.Y, bounds.Width - 8, bounds.Height - 4);
             Color shadowColor = colorSchema.Shadow;
             Color textColor = Game1.textColor;
-            Color fillColor = header ? colorSchema.Header : (_hovering ? colorSchema.Hover : colorSchema.Main);
+            Color fillColor = task.IsHeader ? colorSchema.Header : (_hovering ? colorSchema.Hover : colorSchema.Main);
             Color borderColor = DeluxeJournalMod.TaskBorderColor;
 
             if (popOut)
@@ -119,7 +107,7 @@ namespace DeluxeJournal.Menus.Components
 
             IClickableMenu.drawTextureBox(b,
                 DeluxeJournalMod.ColoredTaskMask,
-                new Rectangle(0, 0, 15, 15),
+                new(0, 0, 15, 15),
                 borderBounds.X,
                 borderBounds.Y,
                 borderBounds.Width,
@@ -130,7 +118,7 @@ namespace DeluxeJournal.Menus.Components
 
             IClickableMenu.drawTextureBox(b,
                 DeluxeJournalMod.ColoredTaskMask,
-                new Rectangle(16, 0, 15, 15),
+                new(16, 0, 15, 15),
                 borderBounds.X,
                 borderBounds.Y,
                 borderBounds.Width,
@@ -139,7 +127,7 @@ namespace DeluxeJournal.Menus.Components
                 4f,
                 popOut);
 
-            if (!header)
+            if (!task.IsHeader)
             {
                 if (task.Active)
                 {
@@ -163,15 +151,15 @@ namespace DeluxeJournal.Menus.Components
                         int count = task.Count;
                         int maxCount = task.MaxCount;
 
-                        nameWidth -= 260;
+                        nameWidth -= 260f;
 
                         if (complete && count < maxCount)
                         {
-                            progressBar.Draw(b, _font, Color.DarkBlue, Color.Gray * 0.6f, colorSchema, count, maxCount);
+                            progressBar.Draw(b, _fontTools.Font, Color.DarkBlue, Color.Gray * 0.6f, colorSchema, count, maxCount);
                         }
                         else
                         {
-                            progressBar.Draw(b, _font, Color.DarkBlue, colorSchema, count, maxCount);
+                            progressBar.Draw(b, _fontTools.Font, Color.DarkBlue, colorSchema, count, maxCount);
                         }
                     }
                     else if (task.ShouldShowCustomStatus())
@@ -184,7 +172,7 @@ namespace DeluxeJournal.Menus.Components
                             int emojiEnd = text.StartsWith('[') ? text.IndexOf(']') : -1;
                             int textOffset = 0;
 
-                            nameWidth -= 260;
+                            nameWidth -= 260f;
 
                             if (emojiEnd > 0 && int.TryParse(text[1..emojiEnd], out int emojiIndex))
                             {
@@ -203,7 +191,7 @@ namespace DeluxeJournal.Menus.Components
 
                             Utility.drawTextWithColoredShadow(b,
                                 text,
-                                _font,
+                                _fontTools.Font,
                                 new Vector2(progressBar.bounds.X + textOffset, _centerY - _halfLineSpacing - 6),
                                 Color.DarkBlue,
                                 shadowColor);
@@ -215,7 +203,7 @@ namespace DeluxeJournal.Menus.Components
                     int daysRemaining = task.DaysRemaining();
                     string daysRemainingKey = (daysRemaining == 1) ? "ui.tasks.renew.day" : "ui.tasks.renew.days";
 
-                    nameWidth -= 260;
+                    nameWidth -= 260f;
                     textColor = Game1.unselectedOptionColor * 0.9f;
                     shadowColor *= 0.9f;
                     checkbox.sourceRect.X = checkbox.containsPoint(Game1.getOldMouseX(), Game1.getOldMouseY()) ? 43 : 34;
@@ -232,38 +220,38 @@ namespace DeluxeJournal.Menus.Components
 
                     Utility.drawTextWithColoredShadow(b,
                         _translation.Get(daysRemainingKey, new { count = daysRemaining }),
-                        _font,
+                        _fontTools.Font,
                         new Vector2(progressBar.bounds.X + 48, _centerY - _halfLineSpacing - 6),
                         Color.DarkBlue,
                         shadowColor);
                 }
-
-                Utility.drawTextWithColoredShadow(b,
-                    TruncateString(name, nameWidth),
-                    _font,
-                    new Vector2(bounds.X + 68, _centerY - _halfLineSpacing - 6),
-                    textColor,
-                    shadowColor);
             }
-            else
+
+            Vector2 namePosition;
+            IsNameTruncated = _fontTools.Truncate(name, nameWidth, out name);
+
+            if (task.IsHeader)
             {
-                string text = TruncateString(name, nameWidth);
-                int textWidth = (int)_font.MeasureString(text).X;
-                Vector2 textPosition = new Vector2(bounds.X + (bounds.Width - textWidth - 8) / 2, _centerY - _halfLineSpacing - 6);
+                nameWidth = _fontTools.Font.MeasureString(name).X;
+                namePosition = new Vector2(bounds.X + (bounds.Width - nameWidth - 8f) / 2f, _centerY - _halfLineSpacing - 6);
 
                 IClickableMenu.drawTextureBox(b,
                     DeluxeJournalMod.ColoredTaskMask,
-                    new Rectangle(32, 0, 15, 15),
-                    (int)textPosition.X - 20,
+                    new(32, 0, 15, 15),
+                    (int)namePosition.X - 20,
                     contentBounds.Y + 8,
-                    textWidth + 36,
+                    (int)nameWidth + 36,
                     contentBounds.Height - 16,
                     colorSchema.Main,
                     4f,
-                    popOut);
-
-                Utility.drawTextWithColoredShadow(b, text, _font, textPosition, textColor, shadowColor);
+                    false);
             }
+            else
+            {
+                namePosition = new Vector2(bounds.X + 68, _centerY - _halfLineSpacing - 6);
+            }
+
+            Utility.drawTextWithColoredShadow(b, name, _fontTools.Font, namePosition, textColor, shadowColor);
 
             if (_hovering && (!Game1.options.SnappyMenus || popOut))
             {
@@ -276,50 +264,6 @@ namespace DeluxeJournal.Menus.Components
             b.Draw(Game1.staminaRect, new Rectangle(bounds.X, bounds.Y + cornerSize, bounds.Width, bounds.Height - cornerSize * 2), color);
             b.Draw(Game1.staminaRect, new Rectangle(bounds.X + cornerSize, bounds.Y, bounds.Width - cornerSize * 2, cornerSize), color);
             b.Draw(Game1.staminaRect, new Rectangle(bounds.X + cornerSize, bounds.Bottom - cornerSize, bounds.Width - cornerSize * 2, cornerSize), color);
-        }
-
-        private string TruncateString(string text, float width)
-        {
-            float currentWidth = 0;
-            int overflow = 0;
-            int i;
-
-            _nameTruncated = false;
-
-            for (i = 0; i < text.Length; i++)
-            {
-                char c = text[i];
-                SpriteFont.Glyph glyph;
-
-                if (_glyphs.ContainsKey(c))
-                {
-                    glyph = _glyphs[c];
-                }
-                else if (_font.DefaultCharacter != null)
-                {
-                    glyph = _glyphs[(char)_font.DefaultCharacter];
-                }
-                else
-                {
-                    continue;
-                }
-
-                currentWidth += glyph.LeftSideBearing + glyph.Width;
-
-                if (currentWidth > width)
-                {
-                    _nameTruncated = true;
-                    return text[0..(i - overflow)] + "...";
-                }
-                else if (currentWidth > width - _ellipsisWidth)
-                {
-                    overflow++;
-                }
-
-                currentWidth += glyph.RightSideBearing + _font.Spacing;
-            }
-
-            return text;
         }
     }
 }

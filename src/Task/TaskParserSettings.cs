@@ -3,16 +3,6 @@
     /// <summary>Settings for a <see cref="TaskParser"/> object.</summary>
     public class TaskParserSettings
     {
-        internal const bool DefaultEnableFuzzySearch = false;
-        internal const bool DefaultIgnoreItems = false;
-        internal const bool DefaultIgnoreNpcs = false;
-        internal const bool DefaultIgnoreBuildings = false;
-        internal const bool DefaultIgnoreFarmAnimals = false;
-        internal const bool DefaultSetItemCategoryObject = false;
-        internal const bool DefaultSetItemCategoryBigCraftable = false;
-        internal const bool DefaultSetItemCategoryCraftable = false;
-        internal const bool DefaultSetItemCategoryTool = false;
-
         private bool? _enableFuzzySearch;
         private bool? _ignoreItems;
         private bool? _ignoreNpcs;
@@ -30,7 +20,7 @@
         /// </summary>
         public bool EnableFuzzySearch
         {
-            get => _enableFuzzySearch ?? DefaultEnableFuzzySearch;
+            get => _enableFuzzySearch ?? false;
             set => _enableFuzzySearch = value;
         }
 
@@ -40,7 +30,7 @@
         /// </summary>
         public bool IgnoreItems
         {
-            get => _ignoreItems ?? DefaultIgnoreItems;
+            get => _ignoreItems ?? false;
             set => _ignoreItems = value;
         }
 
@@ -50,7 +40,7 @@
         /// </summary>
         public bool IgnoreNpcs
         {
-            get => _ignoreNpcs ?? DefaultIgnoreNpcs;
+            get => _ignoreNpcs ?? false;
             set => _ignoreNpcs = value;
         }
 
@@ -60,7 +50,7 @@
         /// </summary>
         public bool IgnoreBuildings
         {
-            get => _ignoreBuildings ?? DefaultIgnoreBuildings;
+            get => _ignoreBuildings ?? false;
             set => _ignoreBuildings = value;
         }
 
@@ -70,7 +60,7 @@
         /// </summary>
         public bool IgnoreFarmAnimals
         {
-            get => _ignoreFarmAnimals ?? DefaultIgnoreFarmAnimals;
+            get => _ignoreFarmAnimals ?? false;
             set => _ignoreFarmAnimals = value;
         }
 
@@ -82,7 +72,7 @@
         /// </summary>
         public bool SetItemCategoryObject
         {
-            get => _setItemCategoryObject ?? DefaultSetItemCategoryObject;
+            get => _setItemCategoryObject ?? false;
             set => _setItemCategoryObject = value;
         }
 
@@ -94,7 +84,7 @@
         /// </summary>
         public bool SetItemCategoryBigCraftable
         {
-            get => (_setItemCategoryBigCraftable ?? DefaultSetItemCategoryBigCraftable) || SetItemCategoryCraftable;
+            get => (_setItemCategoryBigCraftable ?? false) || SetItemCategoryCraftable;
             set => _setItemCategoryBigCraftable = value;
         }
 
@@ -106,7 +96,7 @@
         /// </summary>
         public bool SetItemCategoryCraftable
         {
-            get => _setItemCategoryCraftable ?? DefaultSetItemCategoryCraftable;
+            get => _setItemCategoryCraftable ?? false;
             set => _setItemCategoryCraftable = value;
         }
 
@@ -118,7 +108,7 @@
         /// </summary>
         public bool SetItemCategoryTool
         {
-            get => _setItemCategoryTool ?? DefaultSetItemCategoryTool;
+            get => _setItemCategoryTool ?? false;
             set => _setItemCategoryTool = value;
         }
 

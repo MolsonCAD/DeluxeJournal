@@ -7,7 +7,6 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Menus;
-using DeluxeJournal.Api;
 using DeluxeJournal.Framework;
 using DeluxeJournal.Framework.Data;
 using DeluxeJournal.Framework.Events;
@@ -25,9 +24,6 @@ namespace DeluxeJournal
     {
         /// <summary>Data key for the notes save data.</summary>
         public const string NotesDataKey = "notes-data";
-
-        /// <summary>Data key for the tasks save data.</summary>
-        public const string TasksDataKey = "tasks-data";
 
         /// <summary>Data assets file path.</summary>
         public const string DataPath = "assets/data";
@@ -65,20 +61,20 @@ namespace DeluxeJournal
         /// <summary>Translation helper.</summary>
         public static ITranslationHelper? Translation { get; private set; }
 
-        /// <summary>Notes save data.</summary>
-        private NotesData? NotesData { get; set; }
-
         /// <summary>Configuration settings.</summary>
-        public Config? Config { get; private set; }
+        public static Config? Config { get; private set; }
 
         /// <summary>Event manager for handling event subscriptions.</summary>
-        public EventManager? EventManager { get; private set; }
+        public static EventManager? EventManager { get; private set; }
 
         /// <summary>Task manager.</summary>
-        public TaskManager? TaskManager { get; private set; }
+        public static TaskManager? TaskManager { get; private set; }
 
-        /// <summary>Page manager for accessing journal pages.</summary>
-        public PageManager? PageManager { get; private set; }
+        /// <summary>Overlay manager.</summary>
+        public static OverlayManager? OverlayManager { get; private set; }
+
+        /// <summary>Notes save data.</summary>
+        private NotesData? NotesData { get; set; }
 
         public override void Entry(IModHelper helper)
         {
@@ -93,17 +89,18 @@ namespace DeluxeJournal
             ColoredTaskMask = helper.ModContent.Load<Texture2D>("assets/colored-task-mask.png");
             SmartIconComponent.AnimalIconIds = helper.ModContent.Load<Dictionary<string, int>>("assets/data/animal-icons.json");
             SmartIconComponent.BuildingIconData = helper.ModContent.Load<Dictionary<string, BuildingIconData>>("assets/data/building-icons.json");
+
             Config = helper.ReadConfig<Config>();
             NotesData = helper.Data.ReadGlobalData<NotesData>(NotesDataKey) ?? new NotesData();
 
             EventManager = new EventManager(helper.Events, helper.Multiplayer, Monitor);
-            TaskManager = new TaskManager(new TaskEvents(EventManager), helper.Data, Config, ModManifest.Version);
-            PageManager = new PageManager();
+            TaskManager = new TaskManager(EventManager, helper.Data, Config, ModManifest.Version);
+            OverlayManager = new OverlayManager(helper.Events, helper.Data, Config);
 
-            PageManager.RegisterPage("quests", (bounds) => new QuestLogPage("quests", bounds, UiTexture, helper.Translation), 999);
-            PageManager.RegisterPage("tasks", (bounds) => new TasksPage("tasks", bounds, UiTexture, helper.Translation), 998);
-            PageManager.RegisterPage("notes", (bounds) => new NotesPage("notes", bounds, UiTexture, helper.Translation), 997);
-            PageManager.RegisterPage("overlays", (bounds) => new OverlaysPage("overlays", bounds, UiTexture, helper.Translation), 996);
+            PageRegistry.Register("quests", (bounds) => new QuestLogPage("quests", bounds, UiTexture, helper.Translation), null, 999);
+            PageRegistry.Register("tasks", (bounds) => new TasksPage("tasks", bounds, UiTexture, helper.Translation), (bounds) => new TasksOverlay(bounds, helper.Input), 998);
+            PageRegistry.Register("notes", (bounds) => new NotesPage("notes", bounds, UiTexture, helper.Translation, GetNotes()), (bounds) => new NotesOverlay(bounds, GetNotes()), 997);
+            PageRegistry.Register("overlays", (bounds) => new OverlaysPage("overlays", bounds, UiTexture, helper.Translation), null, 996);
 
             helper.Events.Display.MenuChanged += OnMenuChanged;
             helper.Events.GameLoop.GameLaunched += OnGameLaunched;
@@ -119,11 +116,10 @@ namespace DeluxeJournal
             );
 
             ConsoleCommands.AddCommands(helper.ConsoleCommands);
-        }
 
-        public override object GetApi()
-        {
-            return new DeluxeJournalApi(this);
+#if DEBUG
+            Program.enableCheats = true;
+#endif
         }
 
         /// <summary>Get the stored notes page text.</summary>
@@ -144,6 +140,15 @@ namespace DeluxeJournal
             {
                 NotesData.Text[Constants.SaveFolderName] = text;
                 Helper.Data.WriteGlobalData(NotesDataKey, NotesData);
+
+                foreach (IClickableMenu menu in Game1.onScreenMenus)
+                {
+                    if (menu is NotesOverlay overlay)
+                    {
+                        overlay.UpdateText(text);
+                        return;
+                    }
+                }
             }
         }
 
@@ -206,9 +211,9 @@ namespace DeluxeJournal
         private void OnMenuChanged(object? sender, MenuChangedEventArgs e)
         {
             // Hijack QuestLog and replace it with DeluxeJournalMenu
-            if (PageManager != null && Game1.activeClickableMenu is QuestLog questLog)
+            if (Game1.activeClickableMenu is QuestLog questLog)
             {
-                DeluxeJournalMenu deluxeJournalMenu = new DeluxeJournalMenu(PageManager);
+                DeluxeJournalMenu deluxeJournalMenu = new DeluxeJournalMenu();
                 deluxeJournalMenu.SetQuestLog(questLog);
                 Game1.activeClickableMenu = deluxeJournalMenu;
             }
@@ -224,12 +229,7 @@ namespace DeluxeJournal
 
         private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
         {
-            if (IsMainScreen)
-            {
-                TaskManager!.Load();
-            }
-
-            if (PageManager != null && !Game1.onScreenMenus.OfType<JournalButton>().Any())
+            if (!Game1.onScreenMenus.OfType<JournalButton>().Any())
             {
                 Game1.onScreenMenus.Add(new JournalButton());
             }
@@ -240,11 +240,6 @@ namespace DeluxeJournal
             if (Config != null)
             {
                 Helper.WriteConfig(Config);
-            }
-
-            if (IsMainScreen)
-            {
-                TaskManager!.Save();
             }
         }
     }

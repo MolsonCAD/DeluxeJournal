@@ -63,15 +63,26 @@ namespace DeluxeJournal.Task
         /// <summary>Starting price value.</summary>
         int BasePrice { get; set; }
 
-        /// <summary>Index of the <see cref="ColorSchema"/> used to display this task.</summary>
+        /// <summary>
+        /// Index of the preferred <see cref="ColorSchema"/> used to display this task. May be overridden
+        /// by the <see cref="GroupColorIndex"/> if set to the default schema at index <c>0</c>.
+        /// </summary>
         int ColorIndex { get; set; }
 
         /// <summary>
-        /// Index of the <see cref="ColorSchema"/> used to display this task. Overrides
+        /// Index of the <see cref="ColorSchema"/> used to display this task group. Overrides
         /// default color unless set to a value less than zero.
         /// </summary>
         [JsonIgnore]
         int GroupColorIndex { get; set; }
+
+        /// <summary>Index of the <see cref="ColorSchema"/> used to display this task.</summary>
+        [JsonIgnore]
+        int DisplayColorIndex => ColorIndex > 0 || GroupColorIndex < 0 ? ColorIndex : GroupColorIndex;
+
+        /// <summary>Whether this is a header task type.</summary>
+        [JsonIgnore]
+        bool IsHeader { get; }
 
         /// <summary>Create a copy of this task.</summary>
         /// <remarks>Ensure any mutable data is deep copied.</remarks>

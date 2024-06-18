@@ -36,7 +36,11 @@ namespace DeluxeJournal.Menus
                 if ((_questLog = value) != null)
                 {
                     _questLog.backButton = _backButton;
-                    _questLog.exitFunction = CreateExitFunction(_questLog.exitFunction);
+                    _questLog.exitFunction = delegate
+                    {
+                        _questLog.exitFunction?.Invoke();
+                        ExitJournalMenu(false);
+                    };
                 }
             }
         }
@@ -75,15 +79,6 @@ namespace DeluxeJournal.Menus
                 rightNeighborID = CUSTOM_SNAP_BEHAVIOR,
                 downNeighborID = CUSTOM_SNAP_BEHAVIOR,
                 downNeighborImmutable = true
-            };
-        }
-
-        private static onExit CreateExitFunction(onExit? oldExitFunction)
-        {
-            return delegate
-            {
-                oldExitFunction?.Invoke();
-                Game1.exitActiveMenu();
             };
         }
 
@@ -145,8 +140,12 @@ namespace DeluxeJournal.Menus
         {
             if (QuestLog != null)
             {
-                currentlySnappedComponent = null;
+                if (Game1.options.doesInputListContain(Game1.options.journalButton, key) && readyToClose())
+                {
+                    exitThisMenuNoSound();
+                }
 
+                currentlySnappedComponent = null;
                 applyMovementKey(key);
                 QuestLog.receiveKeyPress(key);
 

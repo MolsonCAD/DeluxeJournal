@@ -28,14 +28,20 @@ namespace DeluxeJournal.Menus.Components
         /// <summary>The data value represented by this button.</summary>
         public virtual T? Value { get; set; }
 
-        /// <summary>Whether this button is selected/toggled on.</summary>
+        /// <summary>Whether this button is selected/toggled.</summary>
         public virtual bool Selected { get; set; }
+
+        /// <summary>Determines shadow darkness. Must be a value between <c>0f</c> and <c>1f</c>.</summary>
+        public float ShadowIntensity { get; set; } = 0.35f;
 
         /// <summary>Sound cue to be played on left click.</summary>
         public string SoundCueName { get; set; } = "smallSelect";
 
-        /// <summary>Determines shadow darkness. Must be a value between <c>0f</c> and <c>1f</c>.</summary>
-        public float ShadowIntensity { get; set; } = 0.35f;
+        /// <summary>Function that takes this button instance as a parameter and returns the pitch to be used while playing <see cref="SoundCueName"/>.</summary>
+        public Func<ButtonComponent<T>, int>? SoundPitch { get; set; }
+
+        /// <summary>Callback that takes this button instance as a parameter and fires on <see cref="ReceiveLeftClick"/>.</summary>
+        public Action<ButtonComponent<T>>? OnClick {  get; set; }
 
         public ButtonComponent(string name, string label, string hoverText, Rectangle bounds, T? value, Texture2D texture, Rectangle source, float scale, bool drawShadow = false)
             : base(name, bounds, label, hoverText, texture, source, scale, drawShadow)
@@ -53,15 +59,26 @@ namespace DeluxeJournal.Menus.Components
         {
         }
 
+        /// <summary>Toggle <see cref="Selected"/> and return the new state.</summary>
+        public virtual bool Toggle()
+        {
+            return Selected = !Selected;
+        }
+
         /// <summary>Receive a mouse click.</summary>
         /// <param name="x">Mouse X position.</param>
         /// <param name="y">Mouse Y position.</param>
         /// <param name="playSound">Allow a sound to be played.</param>
         public virtual void ReceiveLeftClick(int x, int y, bool playSound = true)
         {
-            if (playSound && !string.IsNullOrEmpty(SoundCueName))
+            if (visible)
             {
-                Game1.playSound(SoundCueName);
+                if (playSound && !string.IsNullOrEmpty(SoundCueName))
+                {
+                    Game1.playSound(SoundCueName, SoundPitch?.Invoke(this));
+                }
+
+                OnClick?.Invoke(this);
             }
         }
 

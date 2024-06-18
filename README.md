@@ -58,9 +58,5 @@ After this mod is run for the first time, a `config.json` file is created in the
 | `ShowAddTaskHelpMessage` | `true` | Show the help message when the task page is empty. *This is automatically set to `false` upon creating a new task.* |
 | `MoneyViewNetWealth` | `false` | Toggle between "Net Wealth" and "Total Amount to Pay/Gain" display modes. *This is automatically toggled by pressing the "G" icon on the Money Box.* |
 
-## Mod Integration
-There is some rudimentary support for adding custom pages and there's groundwork done for custom tasks.
-If there's interest, I can add some more information on this and implement support for it.
-
 ## See Also
 - [Source code](https://github.com/MolsonCAD/DeluxeJournal)

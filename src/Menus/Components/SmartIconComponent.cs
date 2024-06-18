@@ -79,7 +79,7 @@ namespace DeluxeJournal.Menus.Components
 
             set
             {
-                if (_visible && !(_visible = value))
+                if (_visible & !(_visible = value))
                 {
                     foreach (var target in _taskTargetIcons)
                     {
@@ -403,7 +403,7 @@ namespace DeluxeJournal.Menus.Components
             {
                 b.Draw(DeluxeJournalMod.UiTexture,
                     new Rectangle(bounds.X + bounds.Width - 22, bounds.Y + 6, 16, 20),
-                    new Rectangle(64 + (tier - 1) * 8, 80, 8, 10),
+                    new Rectangle(80 + (tier - 1) * 8, 80, 8, 10),
                     color);
             }
         }
@@ -441,7 +441,7 @@ namespace DeluxeJournal.Menus.Components
                 {
                     b.Draw(DeluxeJournalMod.UiTexture,
                         new Rectangle((int)digitPosition.X - 10, (int)digitPosition.Y + 2, 10, 10),
-                        new Rectangle(88, 80, 5, 5),
+                        new Rectangle(104, 80, 5, 5),
                         color);
                 }
             }

@@ -4,12 +4,17 @@ using StardewModdingAPI.Events;
 using DeluxeJournal.Events;
 using DeluxeJournal.Framework.Data;
 using DeluxeJournal.Task;
+using DeluxeJournal.Framework.Events;
 
 namespace DeluxeJournal.Framework.Task
 {
     internal class TaskManager
     {
-        private readonly ITaskEvents _events;
+        /// <summary>Data key for the tasks save data.</summary>
+        public const string TasksDataKey = "tasks-data";
+
+        private readonly EventManager _eventManager;
+        private readonly ITaskEvents _taskEvents;
         private readonly IDataHelper _dataHelper;
         private readonly Config _config;
         private readonly ISemanticVersion _version;
@@ -31,7 +36,7 @@ namespace DeluxeJournal.Framework.Task
             {
                 if (!_tasks.ContainsKey(Game1.player.UniqueMultiplayerID))
                 {
-                    _tasks[Game1.player.UniqueMultiplayerID] = new EventManagedTaskList(_events);
+                    _tasks[Game1.player.UniqueMultiplayerID] = new(_taskEvents, _eventManager.TaskListChanged);
                 }
 
                 return _tasks[Game1.player.UniqueMultiplayerID];
@@ -46,7 +51,7 @@ namespace DeluxeJournal.Framework.Task
                 // Delayed deserialization to allow for file migration using localized game data.
                 if (_data == null)
                 {
-                    _data = _dataHelper.ReadGlobalData<TaskData>(DeluxeJournalMod.TasksDataKey) ?? new TaskData(_version);
+                    _data = _dataHelper.ReadGlobalData<TaskData>(TasksDataKey) ?? new(_version);
                     Loaded = true;
                 }
 
@@ -54,22 +59,41 @@ namespace DeluxeJournal.Framework.Task
             }
         }
 
-        public TaskManager(ITaskEvents events, IDataHelper dataHelper, Config config, ISemanticVersion version)
+        public TaskManager(EventManager eventManager, IDataHelper dataHelper, Config config, ISemanticVersion version)
         {
-            _events = events;
+            _eventManager = eventManager;
+            _taskEvents = new TaskEvents(eventManager);
             _dataHelper = dataHelper;
             _config = config;
             _version = version;
             _tasks = new Dictionary<long, EventManagedTaskList>();
 
-            _events.ModEvents.GameLoop.DayStarted += OnDayStarted;
-            _events.ModEvents.GameLoop.DayEnding += OnDayEnding;
+            eventManager.ModEvents.GameLoop.SaveLoaded += OnSaveLoaded;
+            eventManager.ModEvents.GameLoop.Saving += OnSaving;
+            eventManager.ModEvents.GameLoop.DayStarted += OnDayStarted;
+            eventManager.ModEvents.GameLoop.DayEnding += OnDayEnding;
         }
 
         /// <summary>Sort local player tasks.</summary>
         public void SortTasks()
         {
             ((EventManagedTaskList)Tasks).Sort();
+        }
+
+        /// <summary>Refresh the <see cref="ColorSchema"/> indices assigned to each task.</summary>
+        public void RefreshColors()
+        {
+            int headerColorIndex = -1;
+
+            foreach (ITask task in Tasks)
+            {
+                if (task.IsHeader)
+                {
+                    headerColorIndex = task.ColorIndex;
+                }
+
+                task.GroupColorIndex = headerColorIndex;
+            }
         }
 
         /// <summary>Load the task list from save data.</summary>
@@ -94,7 +118,7 @@ namespace DeluxeJournal.Framework.Task
 
                     if (!_tasks.ContainsKey(umid))
                     {
-                        _tasks[umid] = new EventManagedTaskList(_events);
+                        _tasks[umid] = new(_taskEvents, _eventManager.TaskListChanged);
                     }
 
                     foreach (ITask task in Data.Tasks[saveFolderName][key])
@@ -105,6 +129,8 @@ namespace DeluxeJournal.Framework.Task
 
                     _tasks[umid].Sort();
                 }
+
+                RefreshColors();
             }
         }
 
@@ -118,7 +144,23 @@ namespace DeluxeJournal.Framework.Task
                     .Where(entry => entry.Value.Count > 0)
                     .ToDictionary(entry => entry.Key, entry => (IList<ITask>)entry.Value.ToList());
 
-                _dataHelper.WriteGlobalData(DeluxeJournalMod.TasksDataKey, Data);
+                _dataHelper.WriteGlobalData(TasksDataKey, Data);
+            }
+        }
+
+        private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
+        {
+            if (DeluxeJournalMod.IsMainScreen)
+            {
+                Load();
+            }
+        }
+
+        private void OnSaving(object? sender, SavingEventArgs e)
+        {
+            if (DeluxeJournalMod.IsMainScreen)
+            {
+                Save();
             }
         }
 
@@ -142,6 +184,8 @@ namespace DeluxeJournal.Framework.Task
 
                 task.Validate();
             }
+
+            RefreshColors();
         }
 
         private void OnDayEnding(object? sender, DayEndingEventArgs e)

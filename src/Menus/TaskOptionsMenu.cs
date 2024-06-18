@@ -312,7 +312,7 @@ namespace DeluxeJournal.Menus
             headerButton = new ButtonComponent(
                 new Rectangle(_sharedContentBounds.Right - 44, _sharedContentBounds.Y, 44, 48),
                 DeluxeJournalMod.UiTexture!,
-                new Rectangle(0, 52, 11, 12),
+                new Rectangle(16, 52, 11, 12),
                 4f)
             {
                 myID = 108,
@@ -327,7 +327,7 @@ namespace DeluxeJournal.Menus
             expandColorsButton = new ButtonComponent(
                 new(xPositionOnScreen + width - spaceToClearSideBorder + 8, _sharedContentBounds.Y + VerticalSpacing * 2, 32, 48),
                 DeluxeJournalMod.UiTexture!,
-                new(24, 51, 8, 12),
+                new(64, 51, 8, 12),
                 4f,
                 true)
             {
@@ -413,7 +413,7 @@ namespace DeluxeJournal.Menus
 
             if (_task != null)
             {
-                if (DeluxeJournalMod.Instance?.TaskManager is TaskManager taskManager)
+                if (DeluxeJournalMod.TaskManager is TaskManager taskManager)
                 {
                     IList<ITask> tasks = taskManager.Tasks;
                     int index = tasks.IndexOf(_task);
@@ -514,7 +514,7 @@ namespace DeluxeJournal.Menus
                                 {
                                     KeyValuePair<Texture2D, Rectangle>[] options = new KeyValuePair<Texture2D, Rectangle>[]
                                     {
-                                        new(uiTexture, new Rectangle(96, 80, 8, 8)),
+                                        new(uiTexture, new Rectangle(112, 80, 8, 8)),
                                         new(Game1.mouseCursors, new Rectangle(338, 400, 8, 8)),
                                         new(Game1.mouseCursors, new Rectangle(346, 400, 8, 8)),
                                         new(Game1.mouseCursors, new Rectangle(346, 392, 8, 8))

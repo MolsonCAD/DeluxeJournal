@@ -9,7 +9,7 @@ using DeluxeJournal.Task;
 
 namespace DeluxeJournal.Menus
 {
-    /// <summary>TasksPage child menu for selecting and navigating a TaskEntryComponent on a gamepad.</summary>
+    /// <summary><see cref="IPage"/> child menu for selecting and navigating a <see cref="TaskEntryComponent"/> on a gamepad.</summary>
     public class TaskEntryMenu : IClickableMenu
     {
         public readonly ClickableComponent checkbox;

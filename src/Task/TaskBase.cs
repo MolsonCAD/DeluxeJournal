@@ -5,6 +5,7 @@ using DeluxeJournal.Framework;
 using DeluxeJournal.Util;
 
 using static DeluxeJournal.Task.ITask;
+using DeluxeJournal.Framework.Events;
 
 namespace DeluxeJournal.Task
 {
@@ -16,6 +17,7 @@ namespace DeluxeJournal.Task
         private bool _active;
         private bool _complete;
         private bool _viewed;
+        private int _count;
         private int _index;
 
         public string ID => _id;
@@ -30,7 +32,20 @@ namespace DeluxeJournal.Task
 
         public int RenewCustomInterval { get; set; }
 
-        public virtual int Count { get; set; }
+        public virtual int Count
+        {
+            get => _count;
+
+            set
+            {
+                if (_count != value)
+                {
+                    int oldCount = _count;
+                    _count = value;
+                    NotifyStatusChanged(Active, Complete, oldCount);
+                }
+            }
+        }
 
         public virtual int MaxCount { get; set; }
 
@@ -46,13 +61,19 @@ namespace DeluxeJournal.Task
 
             set
             {
-                _active = value;
-
-                if (!value && RenewPeriod == Period.Custom)
+                if (_active != value)
                 {
-                    WorldDate renewDate = WorldDate.Now();
-                    renewDate.TotalDays += RenewCustomInterval;
-                    RenewDate = renewDate;
+                    bool oldActive = _active;
+                    _active = value;
+
+                    if (!value && RenewPeriod == Period.Custom)
+                    {
+                        WorldDate renewDate = WorldDate.Now();
+                        renewDate.TotalDays += RenewCustomInterval;
+                        RenewDate = renewDate;
+                    }
+
+                    NotifyStatusChanged(oldActive, Complete, Count);
                 }
             }
         }
@@ -63,15 +84,24 @@ namespace DeluxeJournal.Task
 
             set
             {
-                _complete = value;
-                _viewed = !value;
-
-                if (!value && Count >= MaxCount)
+                if (_complete != value)
                 {
-                    Count = 0;
+                    bool oldComplete = _complete;
+                    int count = Count;
+                    _complete = value;
+                    _viewed = !value;
+
+                    if (!value && count >= MaxCount)
+                    {
+                        Count = 0;
+                    }
+
+                    NotifyStatusChanged(Active, oldComplete, count);
                 }
             }
         }
+
+        public virtual bool IsHeader => false;
 
         protected TaskBase(string id) : this(id, string.Empty)
         {
@@ -147,7 +177,7 @@ namespace DeluxeJournal.Task
                 Complete = true;
                 Game1.playSound("jingle1");
 
-                if (DeluxeJournalMod.Instance?.Config is Config config && config.EnableVisualTaskCompleteIndicator)
+                if (DeluxeJournalMod.Config is Config config && config.EnableVisualTaskCompleteIndicator)
                 {
                     Game1.dayTimeMoneyBox.PingQuestLog();
                 }
@@ -169,6 +199,15 @@ namespace DeluxeJournal.Task
                 {
                     MarkAsCompleted();
                 }
+            }
+        }
+
+        /// <summary>Notify event subscribers that the status of this task has changed.</summary>
+        protected void NotifyStatusChanged(bool oldActive, bool oldComplete, int oldCount)
+        {
+            if (DeluxeJournalMod.EventManager is EventManager events)
+            {
+                events.TaskStatusChanged.Raise(this, new(this, oldActive, oldComplete, oldCount, Active, Complete, Count));
             }
         }
 

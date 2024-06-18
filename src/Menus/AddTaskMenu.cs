@@ -37,7 +37,7 @@ namespace DeluxeJournal.Menus
 
         public AddTaskMenu(ITranslationHelper translation) : base(0, 0, 612, 64)
         {
-            if (DeluxeJournalMod.Instance?.Config is not Config config)
+            if (DeluxeJournalMod.Config is not Config config)
             {
                 throw new InvalidOperationException("AddTaskMenu created before mod entry.");
             }

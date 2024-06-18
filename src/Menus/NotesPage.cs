@@ -16,19 +16,21 @@ namespace DeluxeJournal.Menus
         public readonly ClickableComponent gamepadCursorArea;
 
         private readonly MultilineTextBox _textBox;
+        private readonly NotesOverlay? _overlay;
 
         private int _totalTimeSeconds;
         private int _saveTimeSeconds;
         private bool _dirty;
 
-        public NotesPage(string name, Rectangle bounds, Texture2D tabTexture, ITranslationHelper translation)
-            : this(name, translation.Get("ui.tab.notes"), bounds.X, bounds.Y, bounds.Width, bounds.Height, tabTexture, new Rectangle(32, 0, 16, 16))
+        public NotesPage(string name, Rectangle bounds, Texture2D tabTexture, ITranslationHelper translation, string rawText)
+            : this(name, translation.Get("ui.tab.notes"), bounds.X, bounds.Y, bounds.Width, bounds.Height, tabTexture, new Rectangle(32, 0, 16, 16), rawText)
         {
         }
 
-        public NotesPage(string name, string title, int x, int y, int width, int height, Texture2D tabTexture, Rectangle tabSourceRect)
+        public NotesPage(string name, string title, int x, int y, int width, int height, Texture2D tabTexture, Rectangle tabSourceRect, string rawText)
             : base(name, title, x, y, width, height, tabTexture, tabSourceRect)
         {
+            _overlay = Game1.onScreenMenus.Where(menu => menu is NotesOverlay).FirstOrDefault() as NotesOverlay;
             _textBox = new MultilineTextBox(
                 new Rectangle(xPositionOnScreen + 30, yPositionOnScreen + 32, width - 60, height - 64),
                 null,
@@ -36,7 +38,7 @@ namespace DeluxeJournal.Menus
                 Game1.dialogueFont,
                 Game1.textColor)
             {
-                RawText = DeluxeJournalMod.Instance?.GetNotes() ?? ""
+                RawText = rawText
             };
 
             gamepadCursorArea = new ClickableComponent(new Rectangle(_textBox.Bounds.Right - 16, _textBox.Bounds.Bottom - 16, 16, 16), "")
@@ -97,9 +99,13 @@ namespace DeluxeJournal.Menus
                 _textBox.Selected = true;
                 _textBox.MoveCaretToPoint(x, y);
             }
-            else
+            else if (_textBox.Selected)
             {
                 _textBox.Selected = false;
+            }
+            else if (!isWithinBounds(x, y))
+            {
+                ExitJournalMenu(playSound);
             }
         }
 
@@ -146,6 +152,7 @@ namespace DeluxeJournal.Menus
             if (key == Keys.Escape)
             {
                 _textBox.Selected = false;
+                ExitJournalMenu();
             }
         }
 
@@ -200,8 +207,11 @@ namespace DeluxeJournal.Menus
         {
             if (_dirty)
             {
+                string rawText = _textBox.RawText;
+
+                DeluxeJournalMod.Instance?.SaveNotes(rawText);
+                _overlay?.UpdateText(rawText);
                 _dirty = false;
-                DeluxeJournalMod.Instance?.SaveNotes(_textBox.RawText);
             }
         }
     }

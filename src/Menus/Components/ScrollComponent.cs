@@ -6,11 +6,13 @@ using StardewValley.Menus;
 namespace DeluxeJournal.Menus.Components
 {
     /// <summary>Encapsulates scrolling logic.</summary>
-    public class ScrollComponent
+    public class ScrollComponent : IClickableComponentSupplier
     {
-        public readonly ClickableTextureComponent upArrowButton;
-        public readonly ClickableTextureComponent downArrowButton;
-        public readonly ClickableTextureComponent scrollBar;
+        public event Action<ScrollComponent>? OnScroll;
+
+        private readonly ClickableTextureComponent _upArrowButton;
+        private readonly ClickableTextureComponent _downArrowButton;
+        private readonly ClickableTextureComponent _scrollBar;
 
         private Rectangle _scrollBarBounds;
         private Rectangle _contentBounds;
@@ -53,23 +55,47 @@ namespace DeluxeJournal.Menus.Components
             ScrollDistance = scrollDistance;
             ClipToScrollDistance = clipToScrollDistance;
 
-            scrollBar = new ClickableTextureComponent(
+            _scrollBar = new ClickableTextureComponent(
                 new Rectangle(_scrollBarBounds.X, _scrollBarBounds.Y, _scrollBarBounds.Width, 40),
                 Game1.mouseCursors,
                 new Rectangle(435, 463, 6, 10),
-                4f);
+                4f)
+            {
+                myID = 12220,
+                upNeighborID = 12221,
+                downNeighborID = 12222,
+                upNeighborImmutable = true,
+                downNeighborImmutable = true
+            };
             
-            upArrowButton = new ClickableTextureComponent(
+            _upArrowButton = new ClickableTextureComponent(
                 new Rectangle(_scrollBarBounds.X - 12, _scrollBarBounds.Y - 48, 44, 48),
                 Game1.mouseCursors,
                 new Rectangle(421, 459, 11, 12),
-                4f);
+                4f)
+            {
+                myID = 12221,
+                downNeighborID = 12220,
+                downNeighborImmutable = true
+            };
             
-            downArrowButton = new ClickableTextureComponent(
+            _downArrowButton = new ClickableTextureComponent(
                 new Rectangle(_scrollBarBounds.X - 12, _scrollBarBounds.Y + _scrollBarBounds.Height + 4, 44, 48),
                 Game1.mouseCursors,
                 new Rectangle(421, 472, 11, 12),
-                4f);
+                4f)
+            {
+                myID = 12222,
+                upNeighborID = 12220,
+                upNeighborImmutable = true
+            };
+        }
+
+        public IEnumerable<ClickableComponent> GetClickableComponents()
+        {
+            yield return _upArrowButton;
+            yield return _downArrowButton;
+            yield return _scrollBar;
         }
 
         public int GetScrollOffset()
@@ -113,8 +139,8 @@ namespace DeluxeJournal.Menus.Components
 
         public void SetScrollFromY(int y, bool playSound = true)
         {
-            int oldScrollBarY = scrollBar.bounds.Y;
-            float percentage = (y - _scrollBarBounds.Y) / (float)(_scrollBarBounds.Height - scrollBar.bounds.Height);
+            int oldScrollBarY = _scrollBar.bounds.Y;
+            float percentage = (y - _scrollBarBounds.Y) / (float)(_scrollBarBounds.Height - _scrollBar.bounds.Height);
             float scrollAmount = Utility.Clamp(percentage, 0, 1f) * (ContentHeight - _contentBounds.Height);
 
             if (ClipToScrollDistance)
@@ -126,7 +152,7 @@ namespace DeluxeJournal.Menus.Components
                 ScrollAmount = (int)scrollAmount;
             }
 
-            if (playSound && oldScrollBarY != scrollBar.bounds.Y)
+            if (playSound && oldScrollBarY != _scrollBar.bounds.Y)
             {
                 Game1.playSound("shiny4");
             }
@@ -134,14 +160,15 @@ namespace DeluxeJournal.Menus.Components
 
         private void SetScrollFromAmount()
         {
-            int overflow = GetOverflowAmount();
-
             if (!CanScroll())
             {
                 _scrollAmount = 0;
                 return;
             }
-            else if (_scrollAmount < 8)
+
+            int overflow = GetOverflowAmount();
+
+            if (_scrollAmount < 8)
             {
                 _scrollAmount = 0;
             }
@@ -150,27 +177,28 @@ namespace DeluxeJournal.Menus.Components
                 _scrollAmount = overflow;
             }
 
-            int offset = (int)((_scrollBarBounds.Height - scrollBar.bounds.Height) * GetPercentScrolled());
-            scrollBar.bounds.Y = _scrollBarBounds.Y + offset;
+            int offset = (int)((_scrollBarBounds.Height - _scrollBar.bounds.Height) * GetPercentScrolled());
+            _scrollBar.bounds.Y = _scrollBarBounds.Y + offset;
+            OnScroll?.Invoke(this);
         }
 
         public virtual void ReceiveLeftClick(int x, int y, bool playSound = true)
         {
             if (CanScroll())
             {
-                if (downArrowButton.containsPoint(x, y) && _scrollAmount < GetOverflowAmount())
+                if (_downArrowButton.containsPoint(x, y) && _scrollAmount < GetOverflowAmount())
                 {
-                    downArrowButton.scale = downArrowButton.baseScale;
+                    _downArrowButton.scale = _downArrowButton.baseScale;
                     Scroll(-1, false);
                 }
-                else if (upArrowButton.containsPoint(x, y) && _scrollAmount > 0)
+                else if (_upArrowButton.containsPoint(x, y) && _scrollAmount > 0)
                 {
-                    upArrowButton.scale = upArrowButton.baseScale;
+                    _upArrowButton.scale = _upArrowButton.baseScale;
                     Scroll(1, false);
                 }
                 else
                 {
-                    if (scrollBar.containsPoint(x, y) || _scrollBarBounds.Contains(x, y))
+                    if (_scrollBar.containsPoint(x, y) || _scrollBarBounds.Contains(x, y))
                     {
                         _scrolling = true;
                     }
@@ -202,9 +230,9 @@ namespace DeluxeJournal.Menus.Components
         {
             if (CanScroll())
             {
-                upArrowButton.tryHover(x, y);
-                downArrowButton.tryHover(x, y);
-                scrollBar.tryHover(x, y);
+                _upArrowButton.tryHover(x, y);
+                _downArrowButton.tryHover(x, y);
+                _scrollBar.tryHover(x, y);
             }
         }
 
@@ -237,9 +265,9 @@ namespace DeluxeJournal.Menus.Components
         {
             if (CanScroll())
             {
-                upArrowButton.draw(b);
-                downArrowButton.draw(b);
-                scrollBar.draw(b);
+                _upArrowButton.draw(b);
+                _downArrowButton.draw(b);
+                _scrollBar.draw(b);
             }
         }
     }

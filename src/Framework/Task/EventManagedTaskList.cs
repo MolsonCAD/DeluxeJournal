@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using DeluxeJournal.Events;
+using DeluxeJournal.Framework.Events;
 using DeluxeJournal.Task;
 
 namespace DeluxeJournal.Framework.Task
@@ -16,9 +17,19 @@ namespace DeluxeJournal.Framework.Task
 
             set
             {
-                _tasks[index].EventUnsubscribe(_events);
-                value.EventSubscribe(_events);
-                _tasks[index] = value;
+                ITask old = _tasks[index];
+
+                if (old != value)
+                {
+                    old.EventUnsubscribe(_events);
+                    value.EventSubscribe(_events);
+                    _tasks[index] = value;
+
+                    if (TaskListChangedEvent.HasEventListeners)
+                    {
+                        TaskListChangedEvent.Raise(this, new(this, new ITask[] { value }, new ITask[] { old }));
+                    }
+                }
             }
         }
 
@@ -26,16 +37,24 @@ namespace DeluxeJournal.Framework.Task
 
         public bool IsReadOnly => ((IList<ITask>)_tasks).IsReadOnly;
 
-        public EventManagedTaskList(ITaskEvents events)
+        public IManagedEvent<TaskListChangedArgs> TaskListChangedEvent { get; }
+
+        public EventManagedTaskList(ITaskEvents events, IManagedEvent<TaskListChangedArgs> taskListChangedEvent)
         {
             _events = events;
             _tasks = new List<ITask>();
+            TaskListChangedEvent = taskListChangedEvent;
         }
 
         public void Add(ITask task)
         {
             task.EventSubscribe(_events);
             _tasks.Add(task);
+
+            if (TaskListChangedEvent.HasEventListeners)
+            {
+                TaskListChangedEvent.Raise(this, new(this, new ITask[] { task }, Enumerable.Empty<ITask>()));
+            }
         }
 
         public void Clear()
@@ -45,7 +64,13 @@ namespace DeluxeJournal.Framework.Task
                 _tasks[i].EventUnsubscribe(_events);
             }
 
+            IEnumerable<ITask> copy = _tasks.ToList();
             _tasks.Clear();
+
+            if (TaskListChangedEvent.HasEventListeners)
+            {
+                TaskListChangedEvent.Raise(this, new(this, Enumerable.Empty<ITask>(), copy));
+            }
         }
 
         public bool Contains(ITask task)
@@ -67,18 +92,36 @@ namespace DeluxeJournal.Framework.Task
         {
             task.EventSubscribe(_events);
             _tasks.Insert(index, task);
+
+            if (TaskListChangedEvent.HasEventListeners)
+            {
+                TaskListChangedEvent.Raise(this, new(this, new ITask[] { task }, Enumerable.Empty<ITask>()));
+            }
         }
 
         public bool Remove(ITask task)
         {
+            bool removed = _tasks.Remove(task);
             task.EventUnsubscribe(_events);
-            return _tasks.Remove(task);
+
+            if (TaskListChangedEvent.HasEventListeners)
+            {
+                TaskListChangedEvent.Raise(this, new(this, Enumerable.Empty<ITask>(), new ITask[] { task }));
+            }
+
+            return removed;
         }
 
         public void RemoveAt(int index)
         {
-            _tasks[index].EventUnsubscribe(_events);
+            ITask task = _tasks[index];
+            task.EventUnsubscribe(_events);
             _tasks.RemoveAt(index);
+
+            if (TaskListChangedEvent.HasEventListeners)
+            {
+                TaskListChangedEvent.Raise(this, new(this, Enumerable.Empty<ITask>(), new ITask[] { task }));
+            }
         }
 
         /// <summary>
@@ -93,6 +136,11 @@ namespace DeluxeJournal.Framework.Task
             }
 
             _tasks.Sort();
+
+            if (TaskListChangedEvent.HasEventListeners)
+            {
+                TaskListChangedEvent.Raise(this, new(this, Enumerable.Empty<ITask>(), Enumerable.Empty<ITask>()));
+            }
         }
 
         public IEnumerator<ITask> GetEnumerator()

@@ -52,7 +52,7 @@ namespace DeluxeJournal
                     "filename: Optional file name. Defaults to 'colors-saved.json'."),
                 SaveColorSchema);
 
-            helper.Add("dj_tasks_save", "Save the current state of the tasks list.", (string _, string[] _) => Mod.TaskManager?.Save());
+            helper.Add("dj_tasks_save", "Save the current state of the tasks list.", (string _, string[] _) => DeluxeJournalMod.TaskManager?.Save());
         }
 
         private static void LoadColorSchema(string command, string[] args)

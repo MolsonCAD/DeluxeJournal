@@ -15,6 +15,8 @@
             set { }
         }
 
+        public override bool IsHeader => true;
+
         /// <summary>Serialization constructor.</summary>
         public HeaderTask() : base(TaskTypes.Header)
         {
