@@ -207,7 +207,6 @@ namespace DeluxeJournal.Menus
             _taskManager.Tasks.Insert(i, task);
             _config.ShowAddTaskHelpMessage = false;
             scrollComponent.ContentHeight += scrollComponent.ScrollDistance;
-            scrollComponent.Refresh();
             OnTasksUpdated();
         }
 
@@ -238,10 +237,6 @@ namespace DeluxeJournal.Menus
             if (resetScroll)
             {
                 scrollComponent.ScrollAmount = 0;
-            }
-            else
-            {
-                scrollComponent.Refresh();
             }
 
             _taskManager.RefreshGroups();
@@ -439,7 +434,7 @@ namespace DeluxeJournal.Menus
                     }
                 }
 
-                if (!scrollComponent.CanScroll() || !_boundsWithScrollBar.Contains(x, y))
+                if (!scrollComponent.CanScroll || !_boundsWithScrollBar.Contains(x, y))
                 {
                     ExitJournalMenu(playSound);
                 }

@@ -124,10 +124,7 @@ namespace DeluxeJournal.Menus.Components
 
         public void ReceiveScrollWheelAction(int direction)
         {
-            bool moveCaret;
-
-            scrollComponent.Refresh();
-            moveCaret = (direction > 0 && scrollComponent.ScrollAmount > 0) || (direction < 0 && scrollComponent.GetPercentScrolled() < 1f);
+            bool moveCaret = (direction > 0 && scrollComponent.ScrollAmount > 0) || (direction < 0 && scrollComponent.GetPercentScrolled() < 1f);
             scrollComponent.Scroll(direction);
 
             if (moveCaret)
@@ -175,7 +172,6 @@ namespace DeluxeJournal.Menus.Components
                 return;
             }
 
-            scrollComponent.Refresh();
             target.X = Math.Clamp(target.X, 0, _bounds.Width);
             target.Y = target.Y / _font.LineSpacing * _font.LineSpacing;
             _caretPosition.X = 0;
@@ -244,7 +240,6 @@ namespace DeluxeJournal.Menus.Components
             int lineStart = 0;
             int i;
 
-            scrollComponent.Refresh();
             _caretPosition.X = 0;
             _caretPosition.Y = -scrollComponent.ScrollAmount;
 
