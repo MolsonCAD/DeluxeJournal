@@ -27,7 +27,7 @@ namespace DeluxeJournal.Framework.Task
 
                     if (TaskListChangedEvent.HasEventListeners)
                     {
-                        TaskListChangedEvent.Raise(this, new(this, new ITask[] { value }, new ITask[] { old }));
+                        TaskListChangedEvent.Raise(this, new(this, [value], [old]));
                     }
                 }
             }
@@ -37,12 +37,13 @@ namespace DeluxeJournal.Framework.Task
 
         public bool IsReadOnly => ((IList<ITask>)_tasks).IsReadOnly;
 
+        /// <summary>Managed event raised after this <see cref="IList{ITask}"/> is changed.</summary>
         public IManagedEvent<TaskListChangedArgs> TaskListChangedEvent { get; }
 
         public EventManagedTaskList(ITaskEvents events, IManagedEvent<TaskListChangedArgs> taskListChangedEvent)
         {
             _events = events;
-            _tasks = new List<ITask>();
+            _tasks = [];
             TaskListChangedEvent = taskListChangedEvent;
         }
 
@@ -53,7 +54,7 @@ namespace DeluxeJournal.Framework.Task
 
             if (TaskListChangedEvent.HasEventListeners)
             {
-                TaskListChangedEvent.Raise(this, new(this, new ITask[] { task }, Enumerable.Empty<ITask>()));
+                TaskListChangedEvent.Raise(this, new(this, [task], []));
             }
         }
 
@@ -64,12 +65,12 @@ namespace DeluxeJournal.Framework.Task
                 _tasks[i].EventUnsubscribe(_events);
             }
 
-            IEnumerable<ITask> copy = _tasks.ToList();
+            IEnumerable<ITask> copy = [.._tasks];
             _tasks.Clear();
 
             if (TaskListChangedEvent.HasEventListeners)
             {
-                TaskListChangedEvent.Raise(this, new(this, Enumerable.Empty<ITask>(), copy));
+                TaskListChangedEvent.Raise(this, new(this, [], copy));
             }
         }
 
@@ -95,7 +96,7 @@ namespace DeluxeJournal.Framework.Task
 
             if (TaskListChangedEvent.HasEventListeners)
             {
-                TaskListChangedEvent.Raise(this, new(this, new ITask[] { task }, Enumerable.Empty<ITask>()));
+                TaskListChangedEvent.Raise(this, new(this, [task], []));
             }
         }
 
@@ -106,7 +107,7 @@ namespace DeluxeJournal.Framework.Task
 
             if (TaskListChangedEvent.HasEventListeners)
             {
-                TaskListChangedEvent.Raise(this, new(this, Enumerable.Empty<ITask>(), new ITask[] { task }));
+                TaskListChangedEvent.Raise(this, new(this, [], [task]));
             }
 
             return removed;
@@ -120,7 +121,7 @@ namespace DeluxeJournal.Framework.Task
 
             if (TaskListChangedEvent.HasEventListeners)
             {
-                TaskListChangedEvent.Raise(this, new(this, Enumerable.Empty<ITask>(), new ITask[] { task }));
+                TaskListChangedEvent.Raise(this, new(this, [], [task]));
             }
         }
 
@@ -139,7 +140,7 @@ namespace DeluxeJournal.Framework.Task
 
             if (TaskListChangedEvent.HasEventListeners)
             {
-                TaskListChangedEvent.Raise(this, new(this, Enumerable.Empty<ITask>(), Enumerable.Empty<ITask>()));
+                TaskListChangedEvent.Raise(this, new(this, [], []));
             }
         }
 
