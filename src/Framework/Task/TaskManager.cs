@@ -80,19 +80,26 @@ namespace DeluxeJournal.Framework.Task
             ((EventManagedTaskList)Tasks).Sort();
         }
 
-        /// <summary>Refresh the <see cref="ColorSchema"/> indices assigned to each task.</summary>
-        public void RefreshColors()
+        /// <summary>Refresh the task groups.</summary>
+        /// <remarks>
+        /// Tasks are grouped by headers and are given the same <see cref="ITask.Group"/> value as the header
+        /// they fall under.
+        /// </remarks>
+        public void RefreshGroups()
         {
-            int headerColorIndex = -1;
+            int group = 0;
+            int colorIndex = -1;
 
             foreach (ITask task in Tasks)
             {
                 if (task.IsHeader)
                 {
-                    headerColorIndex = task.ColorIndex;
+                    group++;
+                    colorIndex = task.ColorIndex;
                 }
 
-                task.GroupColorIndex = headerColorIndex;
+                task.Group = group;
+                task.GroupColorIndex = colorIndex;
             }
         }
 
@@ -130,7 +137,7 @@ namespace DeluxeJournal.Framework.Task
                     _tasks[umid].Sort();
                 }
 
-                RefreshColors();
+                RefreshGroups();
             }
         }
 
@@ -166,26 +173,48 @@ namespace DeluxeJournal.Framework.Task
 
         private void OnDayStarted(object? sender, DayStartedEventArgs e)
         {
-            for (int i = Tasks.Count - 1, pushed = 0; i >= pushed; i--)
+            int pushGroup = 0;
+            int pushIndex = 0;
+
+            RefreshGroups();
+
+            for (int i = Tasks.Count - 1; i >= 0; i--)
             {
                 ITask task = Tasks[i];
 
-                if (task.RenewPeriod != ITask.Period.Never && !task.Active && task.DaysRemaining() == 0)
+                if (!task.Active && task.RenewPeriod != ITask.Period.Never && task.DaysRemaining() == 0)
                 {
                     task.Active = true;
 
                     if (_config.PushRenewedTasksToTheTop)
                     {
-                        Tasks.RemoveAt(i++);
-                        Tasks.Insert(0, task);
-                        pushed++;
+                        if (task.Group != pushGroup)
+                        {
+                            for (pushIndex = i; pushIndex > 0; pushIndex--)
+                            {
+                                ITask groupTask = Tasks[pushIndex - 1];
+
+                                if (groupTask.IsHeader)
+                                {
+                                    pushGroup = groupTask.Group;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (pushIndex < i)
+                        {
+                            Tasks.RemoveAt(i++);
+                            Tasks.Insert(pushIndex, task);
+                            continue;
+                        }
                     }
                 }
 
                 task.Validate();
             }
 
-            RefreshColors();
+            SortTasks();
         }
 
         private void OnDayEnding(object? sender, DayEndingEventArgs e)

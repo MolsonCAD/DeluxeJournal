@@ -8,18 +8,22 @@ using DeluxeJournal.Framework.Task;
 using DeluxeJournal.Task;
 using DeluxeJournal.Util;
 using DeluxeJournal.Events;
+using DeluxeJournal.Task.Tasks;
 
 namespace DeluxeJournal.Menus
 {
     public class TasksOverlay : IOverlay
     {
-        private readonly struct PrecomputedTaskInfo(ITask task, string name)
+        private readonly struct PrecomputedTaskInfo(ITask task, string name, Vector2 size)
         {
             /// <summary><see cref="ITask"/> reference.</summary>
             public readonly ITask Task { get; } = task;
 
             /// <summary><see cref="ITask.Name"/> truncated to fit the overlay bounds.</summary>
             public readonly string Name { get; } = name;
+
+            /// <summary>Size of the <see cref="Name"/> string.</summary>
+            public readonly Vector2 Size { get; } = size;
 
             /// <summary>Create a string representation of the current status of an <see cref="ITask"/>.</summary>
             /// <param name="task">Task whose status is to be stringified.</param>
@@ -35,6 +39,7 @@ namespace DeluxeJournal.Menus
         }
 
         private const int CheckBoxSpacing = 28;
+        private const int CollapseButtonSpacing = 24;
 
         private readonly IInputHelper _input;
         private readonly EventManager _events;
@@ -80,6 +85,9 @@ namespace DeluxeJournal.Menus
 
         public void ReloadTasks()
         {
+            int count = _taskManager.Tasks.Count;
+            bool collapsed = false;
+            bool hasGroupMembers = false;
             float maxNameWidth = 0f;
             float prevMaxNameWidth = 0f;
             float nameWidth;
@@ -89,27 +97,34 @@ namespace DeluxeJournal.Menus
             _contentBounds = EdgeSnappedBounds;
             _contentBounds.Height = 16;
 
-            for (int i = 0; i < _taskManager.Tasks.Count; i++)
+            for (int i = 0; i < count; i++)
             {
                 ITask task = _taskManager.Tasks[i];
 
                 if (task.Active && !task.Complete)
                 {
-                    string status = PrecomputedTaskInfo.CreateStatusString(task);
-                    float xOffset = task.IsHeader ? 16f : CheckBoxSpacing + 16f;
-
                     if (task.IsHeader)
                     {
-                        if (_tasks.Count > 0 && _tasks[^1].Task.IsHeader)
+                        if (!hasGroupMembers)
                         {
-                            PopTask();
+                            PopHeader();
                         }
 
-                        if (i == _taskManager.Tasks.Count - 1)
+                        if (i == count - 1)
                         {
                             break;
                         }
+
+                        collapsed = task is HeaderTask header && header.IsCollapsed;
                     }
+                    else if (collapsed)
+                    {
+                        hasGroupMembers = true;
+                        continue;
+                    }
+
+                    string status = PrecomputedTaskInfo.CreateStatusString(task);
+                    float xOffset = 16f + (task.IsHeader ? CollapseButtonSpacing : CheckBoxSpacing);
 
                     if (!string.IsNullOrEmpty(status))
                     {
@@ -118,8 +133,9 @@ namespace DeluxeJournal.Menus
                     }
 
                     _truncated |= _fontTools.Truncate(task.Name, width - xOffset, out string name);
-                    _tasks.Add(new(task, name + status));
+                    _tasks.Add(new(task, name + status, _fontTools.Font.MeasureString(name + status)));
                     _contentBounds.Height += LineSpacing;
+                    hasGroupMembers = !task.IsHeader;
                     prevMaxNameWidth = maxNameWidth;
 
                     if ((nameWidth = _fontTools.Font.MeasureString(name).X + xOffset) > maxNameWidth)
@@ -132,9 +148,9 @@ namespace DeluxeJournal.Menus
                         break;
                     }
                 }
-                else if (i == _taskManager.Tasks.Count - 1 && _tasks.Count > 0 && _tasks[^1].Task.IsHeader)
+                else if (i == count - 1 && (!collapsed || !hasGroupMembers))
                 {
-                    PopTask();
+                    PopHeader();
                 }
             }
 
@@ -151,11 +167,14 @@ namespace DeluxeJournal.Menus
                 _contentBounds.Width = contentWidth;
             }
 
-            void PopTask()
+            void PopHeader()
             {
-                maxNameWidth = prevMaxNameWidth;
-                _contentBounds.Height -= LineSpacing;
-                _tasks.RemoveAt(_tasks.Count - 1);
+                if (_tasks.Count > 0 && _tasks[^1].Task.IsHeader)
+                {
+                    maxNameWidth = prevMaxNameWidth;
+                    _contentBounds.Height -= LineSpacing;
+                    _tasks.RemoveAt(_tasks.Count - 1);
+                }
             }
         }
 
@@ -252,9 +271,26 @@ namespace DeluxeJournal.Menus
 
                 if (task.IsHeader)
                 {
-                    b.DrawString(_fontTools.Font, name, new(namePosition.X - 2, namePosition.Y + 3), shadowColor);
-                    b.DrawString(_fontTools.Font, name, new(namePosition.X, namePosition.Y + 3), shadowColor);
+                    bool hovering = new Rectangle(namePosition.ToPoint(), new((int)taskInfo.Size.X + CollapseButtonSpacing + 8, (int)taskInfo.Size.Y)).Contains(mousePosition);
+
+                    b.DrawString(_fontTools.Font, name, new(namePosition.X - 2f, namePosition.Y + 3f), shadowColor);
+                    b.DrawString(_fontTools.Font, name, new(namePosition.X, namePosition.Y + 3f), shadowColor);
                     Utility.drawBoldText(b, name, _fontTools.Font, namePosition, textColor);
+
+                    if (!IsEditing && task is HeaderTask header && (hovering || header.IsCollapsed))
+                    {
+                        Utility.drawWithShadow(b,
+                            DeluxeJournalMod.UiTexture,
+                            new Vector2(namePosition.X + taskInfo.Size.X + (CollapseButtonSpacing + 8f) / 2f, namePosition.Y + taskInfo.Size.Y / 2f),
+                            new(40, 50, 8, 5),
+                            textColor,
+                            header.IsCollapsed ? (float)Math.PI * 0.5f : 0f,
+                            new(4f, 2.5f),
+                            2f,
+                            horizontalShadowOffset: -2,
+                            verticalShadowOffset: 2,
+                            shadowIntensity: BackgroundOpacity);
+                    }
                 }
                 else
                 {
@@ -264,7 +300,7 @@ namespace DeluxeJournal.Menus
                     {
                         Utility.drawWithShadow(b,
                             DeluxeJournalMod.UiTexture,
-                            new Vector2(namePosition.X + 2, namePosition.Y + checkBoxOffsetY),
+                            new Vector2(namePosition.X + 2f, namePosition.Y + checkBoxOffsetY),
                             new(39, 55, 9, 9),
                             textColor,
                             0f,
@@ -277,7 +313,7 @@ namespace DeluxeJournal.Menus
                         if (mousePosition.X >= namePosition.X && mousePosition.X < namePosition.X + CheckBoxSpacing)
                         {
                             b.Draw(DeluxeJournalMod.UiTexture,
-                                new Vector2(namePosition.X + 12, namePosition.Y + checkBoxOffsetY + 10),
+                                new Vector2(namePosition.X + 12f, namePosition.Y + checkBoxOffsetY + 10f),
                                 new(26, 25, 7, 7),
                                 Color.White,
                                 0f,
@@ -351,8 +387,8 @@ namespace DeluxeJournal.Menus
                         statusWidth = _fontTools.Font.MeasureString(status).X;
                     }
 
-                    _fontTools.Truncate(task.Name, width - statusWidth - CheckBoxSpacing - 16f, out string truncated);
-                    _tasks[i] = new(task, truncated + status);
+                    _fontTools.Truncate(task.Name, width - statusWidth - CheckBoxSpacing - 16f, out string name);
+                    _tasks[i] = new(task, name + status, _fontTools.Font.MeasureString(name + status));
                     return;
                 }
             }
@@ -365,23 +401,31 @@ namespace DeluxeJournal.Menus
             if (IsVisible && !IsEditing && e.Button == SButton.MouseLeft && _contentBounds.Contains(mousePosition))
             {
                 int taskIndex = Math.Max((int)mousePosition.Y - _contentBounds.Y - 8, 0) / LineSpacing;
-                Rectangle checkBoxBounds = new(
-                    _contentBounds.X + 8,
-                    _contentBounds.Y + taskIndex * LineSpacing + 8,
-                    CheckBoxSpacing,
-                    LineSpacing);
 
-                if (checkBoxBounds.Contains(mousePosition) && taskIndex < _tasks.Count)
+                if (taskIndex < _tasks.Count)
                 {
                     ITask task = _tasks[taskIndex].Task;
+                    Point taskPosition = new(_contentBounds.X + 8, _contentBounds.Y + taskIndex * LineSpacing + 8);
+                    int taskWidth = (int)_tasks[taskIndex].Size.X;
 
-                    if (!task.IsHeader && !task.Complete)
+                    if (task is HeaderTask header && new Rectangle(taskPosition.X + taskWidth + 8, taskPosition.Y, CollapseButtonSpacing, LineSpacing).Contains(mousePosition))
+                    {
+                        header.IsCollapsed = !header.IsCollapsed;
+                        ReloadTasks();
+                        Game1.playSound("smallSelect");
+                    }
+                    else if (!task.IsHeader && !task.Complete && new Rectangle(taskPosition.X, taskPosition.Y, CheckBoxSpacing, LineSpacing).Contains(mousePosition))
                     {
                         task.Complete = true;
                         task.MarkAsViewed();
-                        _input.Suppress(SButton.MouseLeft);
                         Game1.playSound("tinyWhip", 2000);
                     }
+                    else
+                    {
+                        return;
+                    }
+
+                    _input.Suppress(SButton.MouseLeft);
                 }
             }
         }

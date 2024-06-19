@@ -51,7 +51,7 @@ The notes page provides a section for writing down anything beyond the scope of 
 After this mod is run for the first time, a `config.json` file is created in the mod folder with the following configuration settings:
 | Setting | Default | Description |
 | ------- | ------- | ----------- |
-| `PushRenewedTasksToTheTop` | `false` | Set to `true` to push renewed tasks to the top of the tasks list instead of keeping them at the bottom. |
+| `PushRenewedTasksToTheTop` | `false` | Set to `true` to push renewed tasks to the top of the task header group instead of keeping them at the bottom. |
 | `EnableDefaultSmartAdd` | `true` | Enable to have the "Smart Add" button be the default when creating a task (if applicable). Set to `false` to always create a "Basic" task instead. |
 | `EnableVisualTaskCompleteIndicator` | `false` | Set to `true` to enable a visual indicator, in addition to the audio cue, notifying you that a task has been completed. |
 | `ShowSmartAddTip` | `true` | Show the "Smart Add" info box in the "Add Task" menu. *This is automatically set to `false` when pressing the red "X" in-game.* |

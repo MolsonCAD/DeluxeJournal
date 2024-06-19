@@ -5,10 +5,10 @@ using StardewModdingAPI;
 using StardewModdingAPI.Utilities;
 using StardewValley;
 using DeluxeJournal.Framework;
+using DeluxeJournal.Framework.Events;
 using DeluxeJournal.Menus.Components;
 
 using static DeluxeJournal.Menus.IOverlay;
-using DeluxeJournal.Framework.Events;
 
 namespace DeluxeJournal.Menus
 {
@@ -526,7 +526,11 @@ namespace DeluxeJournal.Menus
 
         protected override void cleanupBeforeExit()
         {
-            if (EditMode == (EditMode = false))
+            if (EditMode)
+            {
+                EditMode = false;
+            }
+            else
             {
                 SaveSettings();
             }

@@ -39,8 +39,14 @@ namespace DeluxeJournal.Menus.Components
 
             set
             {
+                int scrollAmount = _scrollAmount;
                 _scrollAmount = value;
-                SetScrollFromAmount();
+                Refresh();
+
+                if (scrollAmount != _scrollAmount)
+                {
+                    OnScroll?.Invoke(this);
+                }
             }
         }
 
@@ -121,7 +127,25 @@ namespace DeluxeJournal.Menus.Components
 
         public void Refresh()
         {
-            SetScrollFromAmount();
+            if (!CanScroll())
+            {
+                _scrollAmount = 0;
+                return;
+            }
+
+            int overflow = GetOverflowAmount();
+
+            if (_scrollAmount < 8)
+            {
+                _scrollAmount = 0;
+            }
+            else if (_scrollAmount > overflow - 8)
+            {
+                _scrollAmount = overflow;
+            }
+
+            int offset = (int)((_scrollBarBounds.Height - _scrollBar.bounds.Height) * GetPercentScrolled());
+            _scrollBar.bounds.Y = _scrollBarBounds.Y + offset;
         }
 
         public void Scroll(int direction, bool playSound = true)
@@ -156,30 +180,6 @@ namespace DeluxeJournal.Menus.Components
             {
                 Game1.playSound("shiny4");
             }
-        }
-
-        private void SetScrollFromAmount()
-        {
-            if (!CanScroll())
-            {
-                _scrollAmount = 0;
-                return;
-            }
-
-            int overflow = GetOverflowAmount();
-
-            if (_scrollAmount < 8)
-            {
-                _scrollAmount = 0;
-            }
-            else if (_scrollAmount > overflow - 8)
-            {
-                _scrollAmount = overflow;
-            }
-
-            int offset = (int)((_scrollBarBounds.Height - _scrollBar.bounds.Height) * GetPercentScrolled());
-            _scrollBar.bounds.Y = _scrollBarBounds.Y + offset;
-            OnScroll?.Invoke(this);
         }
 
         public virtual void ReceiveLeftClick(int x, int y, bool playSound = true)

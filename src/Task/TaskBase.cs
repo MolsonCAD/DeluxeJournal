@@ -2,10 +2,10 @@
 using StardewValley.GameData.Tools;
 using DeluxeJournal.Events;
 using DeluxeJournal.Framework;
+using DeluxeJournal.Framework.Events;
 using DeluxeJournal.Util;
 
 using static DeluxeJournal.Task.ITask;
-using DeluxeJournal.Framework.Events;
 
 namespace DeluxeJournal.Task
 {
@@ -52,6 +52,8 @@ namespace DeluxeJournal.Task
         public virtual int BasePrice { get; set; }
 
         public virtual int ColorIndex { get; set; }
+
+        public virtual int Group { get; set; }
 
         public virtual int GroupColorIndex { get; set; }
 
@@ -290,6 +292,10 @@ namespace DeluxeJournal.Task
             if (other == null)
             {
                 return 1;
+            }
+            else if (Group != other.Group)
+            {
+                return Group - other.Group;
             }
             else if (Active && other.Active)
             {

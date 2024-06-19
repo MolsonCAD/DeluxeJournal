@@ -116,11 +116,12 @@ namespace DeluxeJournal.Framework
             {
                 if (!Settings.TryGetValue(pageId, out OverlaySettings? settings))
                 {
-                    Settings.Add(pageId, settings = OverlaySettings.NewDefault());
+                    settings = OverlaySettings.NewDefault();
                 }
 
                 IOverlay overlay = _overlays[pageId];
                 settings.Update(overlay);
+                Settings.TryAdd(pageId, settings);
 
                 if (overlay.IsVisible && !overlay.IsVisibilityLocked)
                 {
@@ -161,12 +162,13 @@ namespace DeluxeJournal.Framework
             {
                 if (!Settings.TryGetValue(pageId, out OverlaySettings? settings))
                 {
-                    Settings.Add(pageId, settings = OverlaySettings.NewDefault());
+                    settings = OverlaySettings.NewDefault();
                 }
 
                 if (PageRegistry.CreateOverlay(pageId, settings) is IOverlay overlay)
                 {
-                    _overlays.Add(overlay.PageId, overlay);
+                    Settings.TryAdd(pageId, settings);
+                    _overlays.Add(pageId, overlay);
                     Game1.onScreenMenus.Add(overlay);
 
                     if (overlay.IsVisible && !overlay.IsVisibilityLocked)

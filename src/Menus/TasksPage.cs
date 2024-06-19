@@ -189,7 +189,22 @@ namespace DeluxeJournal.Menus
 
         public void AddTask(ITask task)
         {
-            _taskManager.Tasks.Insert(0, task);
+            int i = 0;
+
+            for (; i < _taskManager.Tasks.Count; i++)
+            {
+                if (!_taskManager.Tasks[i].IsHeader)
+                {
+                    break;
+                }
+            }
+
+            if (task.IsHeader || (int)task.RenewPeriod != SelectedFilterTab)
+            {
+                SelectFilterTab(0, false);
+            }
+
+            _taskManager.Tasks.Insert(i, task);
             _config.ShowAddTaskHelpMessage = false;
             scrollComponent.ContentHeight += scrollComponent.ScrollDistance;
             scrollComponent.Refresh();
@@ -229,7 +244,7 @@ namespace DeluxeJournal.Menus
                 scrollComponent.Refresh();
             }
 
-            _taskManager.RefreshColors();
+            _taskManager.RefreshGroups();
 
             bool reverseFilterPredicate(ITask task)
             {
@@ -475,7 +490,7 @@ namespace DeluxeJournal.Menus
                                 FilteredTasks.Insert(_selectedTaskIndex, task);
                             }
 
-                            _taskManager.RefreshColors();
+                            _taskManager.RefreshGroups();
 
                             if (_dragging)
                             {
@@ -499,7 +514,7 @@ namespace DeluxeJournal.Menus
                                 FilteredTasks.Insert(_selectedTaskIndex, task);
                             }
 
-                            _taskManager.RefreshColors();
+                            _taskManager.RefreshGroups();
 
                             if (_dragging)
                             {

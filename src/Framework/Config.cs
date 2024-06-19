@@ -4,7 +4,7 @@ namespace DeluxeJournal.Framework
 {
     internal class Config
     {
-        /// <summary>Enable to push renewed tasks to the top of the task list instead of the bottom.</summary>
+        /// <summary>Enable to push renewed tasks to the top of the task group instead of the bottom.</summary>
         public bool PushRenewedTasksToTheTop { get; set; } = false;
 
         /// <summary>Enable to have the "Smart Add" button be the default when creating a task (if applicable).</summary>

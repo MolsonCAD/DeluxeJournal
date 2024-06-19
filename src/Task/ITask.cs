@@ -69,6 +69,10 @@ namespace DeluxeJournal.Task
         /// </summary>
         int ColorIndex { get; set; }
 
+        /// <summary>Task group ID value.</summary>
+        [JsonIgnore]
+        int Group { get; set; }
+
         /// <summary>
         /// Index of the <see cref="ColorSchema"/> used to display this task group. Overrides
         /// default color unless set to a value less than zero.

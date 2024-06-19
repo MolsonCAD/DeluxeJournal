@@ -17,6 +17,10 @@
 
         public override bool IsHeader => true;
 
+        /// <summary>Whether this header has its task group collapsed.</summary>
+        /// <remarks>Only the tasks shown in the <see cref="Menus.TasksOverlay"/> may be collapsed.</remarks>
+        public bool IsCollapsed { get; set; }
+
         /// <summary>Serialization constructor.</summary>
         public HeaderTask() : base(TaskTypes.Header)
         {
