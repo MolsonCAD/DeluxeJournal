@@ -32,7 +32,7 @@ namespace DeluxeJournal.Menus
         {
             _overlay = Game1.onScreenMenus.Where(menu => menu is NotesOverlay).FirstOrDefault() as NotesOverlay;
             _textBox = new MultilineTextBox(
-                new Rectangle(xPositionOnScreen + 30, yPositionOnScreen + 32, width - 60, height - 64),
+                new Rectangle(xPositionOnScreen + 32, yPositionOnScreen + 32, width - 64, height - 64),
                 null,
                 null,
                 Game1.dialogueFont,

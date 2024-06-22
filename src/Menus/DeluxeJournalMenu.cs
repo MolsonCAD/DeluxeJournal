@@ -203,6 +203,11 @@ namespace DeluxeJournal.Menus
             GetActiveMenu().receiveGamePadButton(b);
         }
 
+        public override void gamePadButtonHeld(Buttons b)
+        {
+            GetActiveMenu().gamePadButtonHeld(b);
+        }
+
         public override void setUpForGamePadMode()
         {
             GetActiveMenu().setUpForGamePadMode();
@@ -333,7 +338,7 @@ namespace DeluxeJournal.Menus
                 upperRightCloseButton.draw(b);
             }
 
-            drawMouse(b, false, Game1.mouseCursor == Game1.cursor_default && Game1.options.snappyMenus && Game1.options.gamepadControls ? Game1.cursor_gamepad_pointer : Game1.mouseCursor);
+            drawMouse(b, false, Game1.mouseCursor == Game1.cursor_default && Game1.options.SnappyMenus ? Game1.cursor_gamepad_pointer : Game1.mouseCursor);
 
             if (HoverText.Length > 0 && ElementsEnabled())
             {

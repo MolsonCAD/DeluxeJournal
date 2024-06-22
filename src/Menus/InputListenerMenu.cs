@@ -60,6 +60,15 @@ namespace DeluxeJournal.Menus
                 {
                     return false;
                 }
+                else if (button.TryGetController(out Buttons gamePadButton))
+                {
+                    key = Utility.mapGamePadButtonToKey(gamePadButton);
+
+                    if (key != Keys.None && Game1.options.isKeyInUse(key))
+                    {
+                        return false;
+                    }
+                }
             }
 
             return true;
@@ -67,7 +76,7 @@ namespace DeluxeJournal.Menus
 
         public override void receiveKeyPress(Keys key)
         {
-            if (key == Keys.Escape)
+            if (IsExitKey(key))
             {
                 exitThisMenu();
             }
@@ -84,6 +93,11 @@ namespace DeluxeJournal.Menus
             _events.Input.ButtonsChanged -= OnButtonsChanged;
         }
 
+        private static bool IsExitKey(Keys key)
+        {
+            return key == Keys.Escape || (Game1.options.SnappyMenus && Game1.options.doesInputListContain(Game1.options.menuButton, key));
+        }
+
         private void OnButtonsChanged(object? sender, ButtonsChangedEventArgs e)
         {
             if (e.Pressed.Any())
@@ -91,6 +105,15 @@ namespace DeluxeJournal.Menus
                 Keybind keybind = new(e.Pressed
                     .Where(button => button != SButton.MouseLeft && button != SButton.MouseRight)
                     .ToArray());
+
+                foreach (SButton button in keybind.Buttons)
+                {
+                    if ((button.TryGetKeyboard(out Keys key) && IsExitKey(key))
+                        || (button.TryGetController(out Buttons gamePadButton) && IsExitKey(Utility.mapGamePadButtonToKey(gamePadButton))))
+                    {
+                        return;
+                    }
+                }
 
                 if (keybind.IsBound && (Predicate == null || Predicate(keybind)))
                 {

@@ -9,9 +9,12 @@ namespace DeluxeJournal.Menus.Components
 {
     public class ColorSliderBar : ClickableComponent
     {
+        public const int SliderWidth = 168;
+        public const int SliderHeight = 20;
+        public const int BarHeight = 8;
+        
         private const int CheckeredTileWidth = 5;
 
-        private readonly int _barHeight;
         private float _value;
 
         /// <summary>Number of color samples to draw.</summary>
@@ -24,55 +27,64 @@ namespace DeluxeJournal.Menus.Components
             set => _value = Math.Clamp(value, 0f, 1f);
         }
 
-        public ColorSliderBar(int x, int y, int width, int height, int barHeight = 8, float value = 0.5f)
-            : base(new(x, y, width, height), string.Empty)
+        /// <summary>Slider value in the range <c>[0,255]</c>.</summary>
+        public int ValueInt
         {
-            _barHeight = barHeight;
-            Value = value;
+            get => (int)(_value * 255f);
+            set => _value = Math.Clamp(value / 255f, 0f, 1f);
         }
 
-        public virtual void ReceiveLeftClick(int x, int y)
+        /// <summary>Whether this slider should be interactable.</summary>
+        public bool IsEnabled { get; set; }
+
+        public ColorSliderBar(int x, int y, string name, int myId = -500, float value = 0.5f)
+            : base(new(x, y, SliderWidth, SliderHeight), name)
+        {
+            myID = myId;
+            upNeighborID = SNAP_AUTOMATIC;
+            downNeighborID = SNAP_AUTOMATIC;
+            Value = value;
+            IsEnabled = true;
+        }
+
+        public void SetValueFromPoint(int x, int y)
         {
             if (containsPoint(x, y))
             {
-                Value = (x - bounds.X) / (float)bounds.Width;
+                Value = (x - bounds.X) / (float)SliderWidth;
             }
         }
 
-        public virtual void LeftClickHeld(int x, int y)
+        public void DrawHueBar(SpriteBatch b, float alpha = 1f)
         {
-            Value = (x - bounds.X) / (float)bounds.Width;
+            DrawSliderBar(b, -1f, 0.9f, 0.9f, alpha, IsEnabled ? Game1.textColor : Game1.unselectedOptionColor);
         }
 
-        public virtual void ReleaseLeftClick(int x, int y)
+        public void DrawSaturationBar(SpriteBatch b, float hue, float value, float alpha = 1f)
         {
+            DrawSliderBar(b, hue, -1f, value, alpha, IsEnabled ? Game1.textColor : Game1.unselectedOptionColor);
         }
 
-        public void DrawHueBar(SpriteBatch b, float alpha = 1f, bool greyed = false)
+        public void DrawValueBar(SpriteBatch b, float hue, float saturation, float alpha = 1f)
         {
-            DrawSliderBar(b, -1f, 0.9f, 0.9f, alpha, greyed ? Game1.unselectedOptionColor : Game1.textColor);
+            DrawSliderBar(b, hue, saturation, -1f, alpha, IsEnabled ? Game1.textColor : Game1.unselectedOptionColor);
         }
 
-        public void DrawSaturationBar(SpriteBatch b, float hue, float value, float alpha = 1f, bool greyed = false)
+        public void DrawAlphaBar(SpriteBatch b, float hue, float saturation, float value, float maxAlpha = 1f)
         {
-            DrawSliderBar(b, hue, -1f, value, alpha, greyed ? Game1.unselectedOptionColor : Game1.textColor);
-        }
-
-        public void DrawValueBar(SpriteBatch b, float hue, float saturation, float alpha = 1f, bool greyed = false)
-        {
-            DrawSliderBar(b, hue, saturation, -1f, alpha, greyed ? Game1.unselectedOptionColor : Game1.textColor);
-        }
-
-        public void DrawAlphaBar(SpriteBatch b, float hue, float saturation, float value, float maxAlpha = 1f, bool greyed = false)
-        {
-            DrawSliderBar(b, hue, saturation, value, maxAlpha, greyed ? Game1.unselectedOptionColor : Game1.textColor);
+            DrawSliderBar(b, hue, saturation, value, maxAlpha, IsEnabled ? Game1.textColor : Game1.unselectedOptionColor);
         }
 
         private void DrawSliderBar(SpriteBatch b, float hue, float saturation, float value, float alpha, Color textColor)
         {
-            int sampleWidth = bounds.Width / Samples;
-            int samplesInCheckeredTile = Math.Max(CheckeredTileWidth * Samples / bounds.Width, 1);
-            Rectangle sampleBounds = new Rectangle(bounds.X, bounds.Y + (bounds.Height - _barHeight) / 2, sampleWidth, _barHeight);
+            if (!visible)
+            {
+                return;
+            }
+
+            int sampleWidth = SliderWidth / Samples;
+            int samplesInCheckeredTile = Math.Max(CheckeredTileWidth * Samples / SliderWidth, 1);
+            Rectangle sampleBounds = new Rectangle(bounds.X, bounds.Y + (SliderHeight - BarHeight) / 2, sampleWidth, BarHeight);
 
             for (int i = 0; i < Samples; i++)
             {
@@ -114,8 +126,8 @@ namespace DeluxeJournal.Menus.Components
                 sampleBounds.X += sampleWidth;
             }
 
-            b.Draw(Game1.mouseCursors, new Vector2(bounds.X + bounds.Width * Value, bounds.Y), new(64, 256, 32, 20), Color.White, 0f, new(16f, 0f), 1f, SpriteEffects.None, 0.86f);
-            Utility.drawTextWithShadow(b, ((int)(Value * 100f)).ToString(), Game1.smallFont, new(bounds.Right + 16, bounds.Bottom - Game1.smallFont.LineSpacing), textColor);
+            b.Draw(Game1.mouseCursors, new Vector2(bounds.X + SliderWidth * Value, bounds.Y), new(64, 256, 32, 20), Color.White, 0f, new(16f, 0f), 1f, SpriteEffects.None, 0.86f);
+            Utility.drawTextWithShadow(b, ((int)(Value * 100f)).ToString(), Game1.smallFont, new(bounds.X + SliderWidth + 16, bounds.Y + SliderHeight - Game1.smallFont.LineSpacing), textColor);
         }
     }
 }

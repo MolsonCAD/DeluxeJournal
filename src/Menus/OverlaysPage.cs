@@ -8,6 +8,7 @@ using DeluxeJournal.Framework;
 using DeluxeJournal.Framework.Events;
 using DeluxeJournal.Menus.Components;
 
+using static StardewValley.Menus.ClickableComponent;
 using static DeluxeJournal.Menus.IOverlay;
 
 namespace DeluxeJournal.Menus
@@ -52,10 +53,11 @@ namespace DeluxeJournal.Menus
         private static readonly Color OutlineColor = Color.Cyan;
         private static readonly Color HoverColor = Color.Red;
 
+        public readonly ButtonComponent hotkeySetButton;
+        public readonly ButtonComponent editModeButton;
+        public readonly ButtonComponent cancelButton;
+
         private readonly ColorPickerComponent _backgroundColorPicker;
-        private readonly ButtonComponent _hotkeySetButton;
-        private readonly ButtonComponent _editModeButton;
-        private readonly ButtonComponent _cancelButton;
 
         private readonly ITranslationHelper _translation;
         private readonly Config _config;
@@ -66,6 +68,7 @@ namespace DeluxeJournal.Menus
         private DragPoint? _dragPoint;
         private bool _dirty;
         private bool _editMode;
+        private bool _muteHoverSoundOnce;
 
         public override bool ParentElementsDisabled => _editMode;
 
@@ -78,7 +81,7 @@ namespace DeluxeJournal.Menus
                 if (_editMode != (_editMode = value))
                 {
                     _overlayManager.SetEditing(value);
-                    _cancelButton.visible = value;
+                    cancelButton.visible = value;
                     SaveSettings();
                 }
             }
@@ -110,10 +113,10 @@ namespace DeluxeJournal.Menus
             _translation = translation;
             _config = config;
             _overlayManager = overlayManager;
-            _overlaySettingsComponents = new();
+            _overlaySettingsComponents = [];
             _contentBounds = new(x + 32, y + 36, width - 60, height - 56);
 
-            _hotkeySetButton = new ButtonComponent(
+            hotkeySetButton = new ButtonComponent(
                 new(_contentBounds.Right - 292, _contentBounds.Y, 84, 44),
                 Game1.mouseCursors,
                 new(294, 428, 21, 11),
@@ -121,6 +124,8 @@ namespace DeluxeJournal.Menus
                 true)
             {
                 myID = 100,
+                downNeighborID = SNAP_AUTOMATIC,
+                leftNeighborID = CUSTOM_SNAP_BEHAVIOR,
                 hoverText = translation.Get("ui.overlays.hotkey", new { keybind = _config.ToggleOverlaysKeybind.ToString() }),
                 SoundCueName = string.Empty,
                 OnClick = (self) => SetSnappyChildMenu(new InputListenerMenu(events.ModEvents, delegate (Keybind keybind)
@@ -131,30 +136,42 @@ namespace DeluxeJournal.Menus
                 }))
             };
 
-            _backgroundColorPicker = new ColorPickerComponent(_contentBounds.Right - 292, _contentBounds.Y + 60, 101)
+            _backgroundColorPicker = new ColorPickerComponent(
+                _contentBounds.Right - 292,
+                _contentBounds.Y + 60,
+                101,
+                CUSTOM_SNAP_BEHAVIOR)
             {
                 AlphaBlendColor = BackgroundColor,
                 EnableAlphaSlider = true
             };
 
-            _editModeButton = new ButtonComponent(
+            editModeButton = new ButtonComponent(
                 new(x + width - 68, y + height, 60, 68),
                 DeluxeJournalMod.UiTexture!,
                 new(0, 32, 15, 17),
                 4f)
             {
                 myID = 1000,
+                upNeighborID = SNAP_AUTOMATIC,
+                leftNeighborID = CUSTOM_SNAP_BEHAVIOR,
+                rightNeighborID = SNAP_AUTOMATIC,
                 SoundCueName = "shwip",
                 OnClick = (_) => EditMode = true
             };
 
-            _cancelButton = new ButtonComponent(
+            cancelButton = new ButtonComponent(
                 new(Game1.uiViewport.Width - 128, Game1.uiViewport.Height - 128, 64, 64),
                 Game1.mouseCursors,
                 new(192, 256, 64, 64),
                 1f)
             {
                 myID = 1001,
+                upNeighborID = SNAP_TO_DEFAULT,
+                downNeighborID = SNAP_TO_DEFAULT,
+                leftNeighborID = SNAP_TO_DEFAULT,
+                rightNeighborID = SNAP_TO_DEFAULT,
+                fullyImmutable = true,
                 visible = false,
                 SoundCueName = "bigDeSelect",
                 OnClick = (_) => EditMode = false
@@ -165,11 +182,37 @@ namespace DeluxeJournal.Menus
 
             foreach (string pageId in PageRegistry.PriorityOrderedKeys.Where(overlayManager.Overlays.ContainsKey))
             {
-                IOverlay overlay = overlayManager.Overlays[pageId];
-                OverlaySettingsComponent component = new(overlay, componentBounds, translation.Get("ui.tab." + pageId), componentId++);
+                OverlaySettingsComponent component = new(
+                    overlayManager.Overlays[pageId],
+                    componentBounds,
+                    translation.Get("ui.tab." + pageId),
+                    componentId,
+                    CUSTOM_SNAP_BEHAVIOR);
                 
                 _overlaySettingsComponents.Add(component);
                 componentBounds.Y += component.Bounds.Height - 4;
+                componentId += 10;
+            }
+
+            if (_overlaySettingsComponents.Count > 0)
+            {
+                foreach (var component in _overlaySettingsComponents.First().GetClickableComponents())
+                {
+                    if (component is not ColorSliderBar || component.name == ColorPickerComponent.HueSliderName)
+                    {
+                        component.upNeighborID = _backgroundColorPicker.AlphaSliderBar.myID;
+                        component.upNeighborImmutable = true;
+                    }
+                }
+
+                foreach (var component in _overlaySettingsComponents.Last().GetClickableComponents())
+                {
+                    if (component is not ColorSliderBar || component.name == ColorPickerComponent.ValueSliderName)
+                    {
+                        component.downNeighborID = editModeButton.myID;
+                        component.downNeighborImmutable = true;
+                    }
+                }
             }
         }
 
@@ -180,8 +223,62 @@ namespace DeluxeJournal.Menus
 
         public override void gameWindowSizeChanged(Rectangle oldBounds, Rectangle newBounds)
         {
-            _cancelButton.bounds.X = Game1.uiViewport.Width - 128;
-            _cancelButton.bounds.Y = Game1.uiViewport.Height - 128;
+            cancelButton.bounds.X = Game1.uiViewport.Width - 128;
+            cancelButton.bounds.Y = Game1.uiViewport.Height - 128;
+        }
+
+        public override void populateClickableComponentList()
+        {
+            base.populateClickableComponentList();
+            allClickableComponents.AddRange(_backgroundColorPicker.GetClickableComponents());
+            
+            foreach (var overlayComponent in _overlaySettingsComponents)
+            {
+                allClickableComponents.AddRange(overlayComponent.GetClickableComponents());
+            }
+        }
+
+        public override void snapToDefaultClickableComponent()
+        {
+            if (EditMode)
+            {
+                currentlySnappedComponent = cancelButton;
+            }
+            else
+            {
+                _muteHoverSoundOnce = currentlySnappedComponent == null;
+                currentlySnappedComponent = getComponentWithID(0);
+            }
+
+            snapCursorToCurrentSnappedComponent();
+        }
+
+        /// <summary>Freezes snappy cursor movement if <c>true</c>.</summary>
+        public override bool overrideSnappyMenuCursorMovementBan()
+        {
+            return !EditMode && Game1.options.SnappyMenus && currentlySnappedComponent is ColorSliderBar && Game1.oldPadState.IsButtonDown(Buttons.A);
+        }
+
+        public override void applyMovementKey(int direction)
+        {
+            if (EditMode)
+            {
+                currentlySnappedComponent = cancelButton;
+                snapCursorToCurrentSnappedComponent();
+                return;
+            }
+
+            base.applyMovementKey(direction);
+        }
+
+        protected override void customSnapBehavior(int direction, int oldRegion, int oldID)
+        {
+            switch (direction)
+            {
+                case Game1.left:
+                    SnapToActiveTabComponent();
+                    return;
+            }
         }
 
         public override void receiveLeftClick(int x, int y, bool playSound = true)
@@ -190,9 +287,9 @@ namespace DeluxeJournal.Menus
 
             if (EditMode)
             {
-                if (_cancelButton.containsPoint(x, y))
+                if (cancelButton.containsPoint(x, y))
                 {
-                    _cancelButton.ReceiveLeftClick(x, y, playSound);
+                    cancelButton.ReceiveLeftClick(x, y, playSound);
                     return;
                 }
 
@@ -253,19 +350,19 @@ namespace DeluxeJournal.Menus
             }
             else
             {
-                if (_editModeButton.containsPoint(x, y))
+                if (editModeButton.containsPoint(x, y))
                 {
-                    _editModeButton.ReceiveLeftClick(x, y, playSound);
+                    editModeButton.ReceiveLeftClick(x, y, playSound);
                 }
                 else if (!isWithinBounds(x, y))
                 {
                     ExitJournalMenu(playSound);
                 }
-                else if (_hotkeySetButton.containsPoint(x, y))
+                else if (hotkeySetButton.containsPoint(x, y))
                 {
-                    _hotkeySetButton.ReceiveLeftClick(x, y, playSound);
+                    hotkeySetButton.ReceiveLeftClick(x, y, playSound);
                 }
-                else if (_backgroundColorPicker.Bounds.Contains(x, y))
+                else if (!Game1.options.SnappyMenus && _backgroundColorPicker.Bounds.Contains(x, y))
                 {
                     _backgroundColorPicker.ReceiveLeftClick(x, y, playSound);
                 }
@@ -361,12 +458,30 @@ namespace DeluxeJournal.Menus
         {
             base.receiveKeyPress(key);
 
-            switch (key)
+            if (EditMode && (key == Keys.Escape || (Game1.options.SnappyMenus && Game1.options.doesInputListContain(Game1.options.menuButton, key))))
             {
-                case Keys.Escape:
-                    EditMode = false;
-                    Game1.playSound(_cancelButton.SoundCueName);
-                    break;
+                EditMode = false;
+                Game1.playSound(cancelButton.SoundCueName);
+            }
+        }
+
+        public override void gamePadButtonHeld(Buttons b)
+        {
+            base.gamePadButtonHeld(b);
+
+            if (currentlySnappedComponent is ColorSliderBar slider && slider.IsEnabled && Game1.oldPadState.IsButtonDown(Buttons.A))
+            {
+                switch (b)
+                {
+                    case Buttons.DPadLeft:
+                    case Buttons.LeftThumbstickLeft:
+                        slider.ValueInt--;
+                        break;
+                    case Buttons.DPadRight:
+                    case Buttons.RightThumbstickRight:
+                        slider.ValueInt++;
+                        break;
+                }
             }
         }
 
@@ -378,18 +493,33 @@ namespace DeluxeJournal.Menus
             {
                 if (overlayComponent.TryHover(x, y) && !overlayComponent.Bounds.Contains(Game1.getOldMouseX(), Game1.getOldMouseY()))
                 {
-                    Game1.playSound("Cowboy_gunshot");
+                    // Workaround for the sound playing when initially opening the journal on this page.
+                    // The mouse position will always be snapped to the default QuestLog component for two
+                    // updates due to how SMAPI overrides the game's input system.
+                    if (_muteHoverSoundOnce)
+                    {
+                        _muteHoverSoundOnce = false;
+                    }
+                    else
+                    {
+                        Game1.playSound("Cowboy_gunshot");
+                    }
                 }
             }
 
-            _editModeButton.tryHover(x, y, EditMode ? 0f : 0.1f);
-            _cancelButton.tryHover(x, y);
+            if (Game1.options.SnappyMenus && currentlySnappedComponent is ColorSliderBar slider && slider.IsEnabled && !Game1.oldPadState.IsButtonDown(Buttons.A))
+            {
+                Game1.mouseCursor = Game1.cursor_grab;
+            }
+
+            editModeButton.tryHover(x, y, EditMode ? 0f : 0.1f);
+            cancelButton.tryHover(x, y);
         }
 
         public override void draw(SpriteBatch b)
         {
-            Utility.drawTextWithShadow(b, _hotkeySetButton.hoverText, Game1.dialogueFont, new(_contentBounds.X, _contentBounds.Y), Game1.textColor);
-            _hotkeySetButton.draw(b);
+            Utility.drawTextWithShadow(b, hotkeySetButton.hoverText, Game1.dialogueFont, new(_contentBounds.X, _contentBounds.Y), Game1.textColor);
+            hotkeySetButton.draw(b);
 
             Utility.drawTextWithShadow(b, _translation.Get("ui.overlays.backgroundcolor"), Game1.dialogueFont, new(_contentBounds.X, _backgroundColorPicker.Bounds.Y + 8), Game1.textColor);
             _backgroundColorPicker.Draw(b);
@@ -404,9 +534,9 @@ namespace DeluxeJournal.Menus
                 overlayComponent.Draw(b);
             }
 
-            _editModeButton.draw(b);
+            editModeButton.draw(b);
             b.Draw(DeluxeJournalMod.UiTexture,
-                new Rectangle(_editModeButton.bounds.X + 16, _editModeButton.bounds.Y + 24, 28, 28),
+                new Rectangle(editModeButton.bounds.X + 16, editModeButton.bounds.Y + 24, 28, 28),
                 new(7, 49, 9, 9),
                 Color.White);
 
@@ -516,7 +646,7 @@ namespace DeluxeJournal.Menus
                 }
             }
 
-            _cancelButton.draw(b);
+            cancelButton.draw(b);
         }
 
         public override bool readyToClose()

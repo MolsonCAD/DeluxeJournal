@@ -4,6 +4,8 @@ using StardewValley;
 using StardewValley.BellsAndWhistles;
 using StardewValley.Menus;
 
+using static StardewValley.Menus.ClickableComponent;
+
 namespace DeluxeJournal.Menus.Components
 {
     public class OverlaySettingsComponent : IClickableComponentSupplier
@@ -22,7 +24,7 @@ namespace DeluxeJournal.Menus.Components
 
         public string Label { get; set; }
 
-        public OverlaySettingsComponent(IOverlay overlay, Rectangle bounds, string label, int myId)
+        public OverlaySettingsComponent(IOverlay overlay, Rectangle bounds, string label, int myId, int leftNeighborId = -1, int rightNeighborId = -1)
         {
             _bounds = bounds;
             Overlay = overlay;
@@ -34,6 +36,11 @@ namespace DeluxeJournal.Menus.Components
                 new(16, 16, 9, 9),
                 4f)
             {
+                myID = myId,
+                upNeighborID = SNAP_AUTOMATIC,
+                downNeighborID = SNAP_AUTOMATIC,
+                leftNeighborID = leftNeighborId,
+                rightNeighborID = SNAP_AUTOMATIC,
                 Selected = Overlay.IsVisible,
                 SoundCueName = "tinyWhip",
                 SoundPitch = (self) => self.Selected ? 1000 : 2000,
@@ -46,10 +53,21 @@ namespace DeluxeJournal.Menus.Components
                 new(71, 16, 7, 10),
                 4f)
             {
+                myID = myId + 1,
+                upNeighborID = SNAP_AUTOMATIC,
+                downNeighborID = SNAP_AUTOMATIC,
+                leftNeighborID = SNAP_AUTOMATIC,
+                rightNeighborID = SNAP_AUTOMATIC,
                 Selected = Overlay.IsVisibilityLocked,
                 SoundCueName = "tinyWhip",
                 SoundPitch = (self) => self.Selected ? 1000 : 2000,
                 OnClick = (self) => Overlay.IsVisibilityLocked = self.Toggle()
+            };
+
+            _colorPicker = new ColorPickerComponent(bounds.Right - 304, bounds.Y + 20, myId + 3, SNAP_AUTOMATIC, rightNeighborId)
+            {
+                AlphaBlendColor = Overlay.CustomColor,
+                IsEnabled = Overlay.IsColorSelected
             };
 
             _colorCheckBox = new ButtonComponent(
@@ -58,16 +76,16 @@ namespace DeluxeJournal.Menus.Components
                 new(16, 16, 9, 9),
                 4f)
             {
+                myID = myId + 2,
+                upNeighborID = SNAP_AUTOMATIC,
+                downNeighborID = SNAP_AUTOMATIC,
+                leftNeighborID = SNAP_AUTOMATIC,
+                rightNeighborID = SNAP_AUTOMATIC,
                 visible = Overlay.IsColorOptional,
                 Selected = Overlay.IsColorSelected,
                 SoundCueName = "tinyWhip",
                 SoundPitch = (self) => self.Selected ? 1000 : 2000,
-                OnClick = (self) => Overlay.IsColorSelected = self.Toggle()
-            };
-
-            _colorPicker = new ColorPickerComponent(bounds.Right - 304, bounds.Y + 20)
-            {
-                AlphaBlendColor = Overlay.CustomColor
+                OnClick = (self) => _colorPicker.IsEnabled = Overlay.IsColorSelected = self.Toggle()
             };
 
             _bounds.Height = _colorPicker.Bounds.Height + 40;
@@ -79,9 +97,9 @@ namespace DeluxeJournal.Menus.Components
             yield return _visibilityLockButton;
             yield return _colorCheckBox;
 
-            foreach (var cc in _colorPicker.GetClickableComponents())
+            foreach (var slider in _colorPicker.GetClickableComponents().Take(3))
             {
-                yield return cc;
+                yield return slider;
             }
         }
 
@@ -104,7 +122,7 @@ namespace DeluxeJournal.Menus.Components
             {
                 _colorCheckBox.ReceiveLeftClick(x, y, playSound);
             }
-            else if (Overlay.IsColorSelected && _colorPicker.Bounds.Contains(x, y))
+            else if (!Game1.options.SnappyMenus && _colorPicker.IsEnabled && _colorPicker.Bounds.Contains(x, y))
             {
                 _colorPicker.ReceiveLeftClick(x, y, playSound);
             }
@@ -146,7 +164,7 @@ namespace DeluxeJournal.Menus.Components
 
             if (Overlay.IsColorSelected || Overlay.IsColorOptional)
             {
-                _colorPicker.Draw(b, !Overlay.IsColorSelected);
+                _colorPicker.Draw(b);
             }
         }
     }
