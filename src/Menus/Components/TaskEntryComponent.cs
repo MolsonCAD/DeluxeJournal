@@ -96,8 +96,8 @@ namespace DeluxeJournal.Menus.Components
 
             if (popOut)
             {
-                borderBounds.Inflate(2, 2);
-                contentBounds.Inflate(2, 2);
+                borderBounds.Inflate(4, 4);
+                contentBounds.Inflate(4, 4);
             }
 
             DrawCornerlessBox(b, borderBounds, borderColor);
@@ -114,7 +114,7 @@ namespace DeluxeJournal.Menus.Components
                 borderBounds.Height,
                 colorSchema.Accent,
                 4f,
-                popOut);
+                false);
 
             IClickableMenu.drawTextureBox(b,
                 DeluxeJournalMod.ColoredTaskMask,
@@ -125,7 +125,7 @@ namespace DeluxeJournal.Menus.Components
                 borderBounds.Height,
                 colorSchema.Shadow,
                 4f,
-                popOut);
+                false);
 
             if (!task.IsHeader)
             {

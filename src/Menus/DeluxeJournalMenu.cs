@@ -198,6 +198,11 @@ namespace DeluxeJournal.Menus
             GetActiveMenu().snapCursorToCurrentSnappedComponent();
         }
 
+        public override void applyMovementKey(int direction)
+        {
+            GetActiveMenu().applyMovementKey(direction);
+        }
+
         public override void receiveGamePadButton(Buttons b)
         {
             GetActiveMenu().receiveGamePadButton(b);
