@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using StardewModdingAPI;
+using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.BellsAndWhistles;
 using StardewValley.Menus;
@@ -26,6 +27,7 @@ namespace DeluxeJournal.Menus
 
         private static readonly Rectangle LightFilterTabSource = new(96, 0, 16, 16);
         private static readonly Rectangle DarkFilterTabSource = new(112, 0, 16, 16);
+        private static readonly PerScreen<int> ScrollAmountPerScreen = new();
 
         public readonly List<TaskEntryComponent> taskEntries;
         public readonly List<ClickableTextureComponent> filterTabs;
@@ -80,8 +82,8 @@ namespace DeluxeJournal.Menus
             _selectedTaskIndex = -1;
             _filterTabsVisible = false;
             _dragging = false;
-            taskEntries = new List<TaskEntryComponent>();
-            filterTabs = new List<ClickableTextureComponent>();
+            taskEntries = [];
+            filterTabs = [];
             moneyDial = new MoneyDial(8, false);
             FilteredTasks = Array.Empty<ITask>();
 
@@ -157,13 +159,16 @@ namespace DeluxeJournal.Menus
 
             Rectangle scrollBarBounds = new(x + width + 16, y + 148, 24, height - 216);
             Rectangle scrollContentBounds = new(x, y + 16, width, height - 32);
+
             scrollComponent = new ScrollComponent(scrollBarBounds, scrollContentBounds, (height - 32) / 8, true);
             scrollComponent.ContentHeight = _taskManager.Tasks.Count * scrollComponent.ScrollDistance;
+            scrollComponent.ScrollAmount = ScrollAmountPerScreen.Value;
+            scrollComponent.OnScroll += (self) => ScrollAmountPerScreen.Value = self.ScrollAmount;
 
             _boundsWithScrollBar = new(x, y, scrollBarBounds.Right - x + 16, height);
 
             SelectFilterTab(SelectedFilterTab, false, false);
-            ReloadFilteredTasks(true);
+            ReloadFilteredTasks();
         }
 
         public void OpenAddTaskMenu()

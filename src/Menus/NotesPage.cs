@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using StardewModdingAPI;
+using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Menus;
 using DeluxeJournal.Menus.Components;
@@ -13,6 +14,8 @@ namespace DeluxeJournal.Menus
     /// <summary>Notes page.</summary>
     public class NotesPage : PageBase
     {
+        private static readonly PerScreen<int> ScrollAmountPerScreen = new();
+
         public readonly ClickableComponent gamepadCursorArea;
 
         private readonly MultilineTextBox _textBox;
@@ -40,6 +43,9 @@ namespace DeluxeJournal.Menus
             {
                 RawText = rawText
             };
+
+            _textBox.ScrollComponent.ScrollAmount = ScrollAmountPerScreen.Value;
+            _textBox.ScrollComponent.OnScroll += (self) => ScrollAmountPerScreen.Value = self.ScrollAmount;
 
             gamepadCursorArea = new ClickableComponent(new Rectangle(_textBox.Bounds.Right - 16, _textBox.Bounds.Bottom - 16, 16, 16), "")
             {

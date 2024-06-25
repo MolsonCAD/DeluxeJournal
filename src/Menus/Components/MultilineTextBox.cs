@@ -14,8 +14,6 @@ namespace DeluxeJournal.Menus.Components
         private const double HeldDelay = 200.0;
         private const double RepeatDelay = 40.0;
 
-        public readonly ScrollComponent scrollComponent;
-
         private readonly StringBuilder _text;
         private Rectangle _bounds;
         private SpriteFontTools _fontTools;
@@ -28,7 +26,11 @@ namespace DeluxeJournal.Menus.Components
         private double _heldTimer;
         private double _repeatTimer;
 
+        /// <summary>Bounding box for the text region.</summary>
         public Rectangle Bounds => _bounds;
+
+        /// <summary>Scrolling controller.</summary>
+        public ScrollComponent ScrollComponent { get; }
 
         /// <summary>
         /// Replaces the <see cref="TextBox.Text"/> property (sort of a hack because <see cref="TextBox.Text"/>
@@ -98,8 +100,8 @@ namespace DeluxeJournal.Menus.Components
             scrollContentBounds = Utility.ConstrainScissorRectToScreen(scrollContentBounds);
             scrollContentBounds.Height = scrollContentBounds.Height / _font.LineSpacing * _font.LineSpacing;
 
-            scrollComponent = new ScrollComponent(scrollBarBounds, scrollContentBounds, _font.LineSpacing, true);
-            scrollComponent.OnScroll += (_) => BuildDisplayText();
+            ScrollComponent = new ScrollComponent(scrollBarBounds, scrollContentBounds, _font.LineSpacing, true);
+            ScrollComponent.OnScroll += (_) => BuildDisplayText();
         }
 
         public void SetFont(SpriteFont font)
@@ -109,23 +111,23 @@ namespace DeluxeJournal.Menus.Components
 
         public void ReceiveLeftClick(int x, int y, bool playSound = true)
         {
-            scrollComponent.ReceiveLeftClick(x, y, playSound);
+            ScrollComponent.ReceiveLeftClick(x, y, playSound);
         }
 
         public void LeftClickHeld(int x, int y)
         {
-            scrollComponent.LeftClickHeld(x, y);
+            ScrollComponent.LeftClickHeld(x, y);
         }
 
         public void ReleaseLeftClick(int x, int y)
         {
-            scrollComponent.ReleaseLeftClick(x, y);
+            ScrollComponent.ReleaseLeftClick(x, y);
         }
 
         public void ReceiveScrollWheelAction(int direction)
         {
-            bool moveCaret = (direction > 0 && scrollComponent.ScrollAmount > 0) || (direction < 0 && scrollComponent.GetPercentScrolled() < 1f);
-            scrollComponent.Scroll(direction);
+            bool moveCaret = (direction > 0 && ScrollComponent.ScrollAmount > 0) || (direction < 0 && ScrollComponent.GetPercentScrolled() < 1f);
+            ScrollComponent.Scroll(direction);
 
             if (moveCaret)
             {
@@ -135,7 +137,7 @@ namespace DeluxeJournal.Menus.Components
 
         public void TryHover(int x, int y)
         {
-            scrollComponent.TryHover(x, y);
+            ScrollComponent.TryHover(x, y);
         }
 
         public void MoveCaretToPoint(int x, int y)
@@ -153,12 +155,12 @@ namespace DeluxeJournal.Menus.Components
             else if (target.Y < 0)
             {
                 target.Y = 0;
-                scrollComponent.Scroll(1);
+                ScrollComponent.Scroll(1);
             }
-            else if (target.Y > scrollComponent.ContentBounds.Height - _font.LineSpacing)
+            else if (target.Y > ScrollComponent.ContentBounds.Height - _font.LineSpacing)
             {
-                target.Y = scrollComponent.ContentBounds.Height - _font.LineSpacing;
-                scrollComponent.Scroll(-1);
+                target.Y = ScrollComponent.ContentBounds.Height - _font.LineSpacing;
+                ScrollComponent.Scroll(-1);
             }
 
             MoveCaretToPoint(target);
@@ -180,7 +182,7 @@ namespace DeluxeJournal.Menus.Components
 
             bool first = true;
             float lineWidth = 0;
-            int lineCount = (target.Y + scrollComponent.ScrollAmount) / _font.LineSpacing;
+            int lineCount = (target.Y + ScrollComponent.ScrollAmount) / _font.LineSpacing;
 
             for (int i = 0; i < _text.Length && lineCount > 0; ++i)
             {
@@ -241,7 +243,7 @@ namespace DeluxeJournal.Menus.Components
             int i;
 
             _caretPosition.X = 0;
-            _caretPosition.Y = -scrollComponent.ScrollAmount;
+            _caretPosition.Y = -ScrollComponent.ScrollAmount;
 
             for (i = 0; i < _index; ++i)
             {
@@ -254,13 +256,13 @@ namespace DeluxeJournal.Menus.Components
 
             if (_caretPosition.Y < 0)
             {
-                scrollComponent.ScrollAmount += _caretPosition.Y;
+                ScrollComponent.ScrollAmount += _caretPosition.Y;
                 _caretPosition.Y = 0;
             }
-            else if (_caretPosition.Y > scrollComponent.ContentBounds.Height - _font.LineSpacing)
+            else if (_caretPosition.Y > ScrollComponent.ContentBounds.Height - _font.LineSpacing)
             {
-                scrollComponent.ScrollAmount += _caretPosition.Y - scrollComponent.ContentBounds.Height + _font.LineSpacing;
-                _caretPosition.Y = scrollComponent.ContentBounds.Height - _font.LineSpacing;
+                ScrollComponent.ScrollAmount += _caretPosition.Y - ScrollComponent.ContentBounds.Height + _font.LineSpacing;
+                _caretPosition.Y = ScrollComponent.ContentBounds.Height - _font.LineSpacing;
             }
 
             for (i = lineStart; i < _index; ++i)
@@ -357,7 +359,7 @@ namespace DeluxeJournal.Menus.Components
             int caretY = _caretPosition.Y + (int)(_font.LineSpacing * 0.05f);
             int caretHeight = (int)(_font.LineSpacing * 0.9f);
 
-            scrollComponent.BeginScissorTest(b);
+            ScrollComponent.BeginScissorTest(b);
 
             if (drawShadow)
             {
@@ -373,8 +375,8 @@ namespace DeluxeJournal.Menus.Components
                 b.Draw(Game1.staminaRect, new Rectangle(_bounds.X + _caretPosition.X, _bounds.Y + caretY, 4, caretHeight), _textColor);
             }
 
-            scrollComponent.EndScissorTest(b);
-            scrollComponent.DrawScrollBar(b);
+            ScrollComponent.EndScissorTest(b);
+            ScrollComponent.DrawScrollBar(b);
         }
 
         public override void RecieveTextInput(char inputChar)
@@ -469,8 +471,8 @@ namespace DeluxeJournal.Menus.Components
 
         private void BuildDisplayText()
         {
-            int minLine = scrollComponent.ScrollAmount / _font.LineSpacing;
-            int maxLine = minLine + scrollComponent.ContentBounds.Height / _font.LineSpacing;
+            int minLine = ScrollComponent.ScrollAmount / _font.LineSpacing;
+            int maxLine = minLine + ScrollComponent.ContentBounds.Height / _font.LineSpacing;
             int currentLine = 0;
             int startIndex = minLine == 0 ? 0 : -1;
             int i;
@@ -496,7 +498,7 @@ namespace DeluxeJournal.Menus.Components
             bool indexAtNewline = _index >= 0 && (_index == _text.Length || _text[_index] == '\n' || _text[_index] == '\r');
             int newlines = _fontTools.Wrap(_text, _bounds.Width);
 
-            scrollComponent.ContentHeight = (newlines + 1) * _font.LineSpacing;
+            ScrollComponent.ContentHeight = (newlines + 1) * _font.LineSpacing;
             _index = Math.Clamp(_index, 0, _text.Length);
 
             if (indexAtNewline && indexDelta > 0 && _index < _text.Length && !(_text[_index] == '\n' || _text[_index] == '\r'))
