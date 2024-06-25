@@ -658,8 +658,6 @@ namespace DeluxeJournal.Menus
                     }
                     break;
             }
-
-            snapCursorToCurrentSnappedComponent();
         }
 
         public ClickableComponent? GetSelectedTypeIcon(string name)

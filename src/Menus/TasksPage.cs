@@ -355,8 +355,6 @@ namespace DeluxeJournal.Menus
             {
                 _currentlySnappedEntryId = currentlySnappedComponent.myID;
             }
-
-            snapCursorToCurrentSnappedComponent();
         }
 
         public override void snapToDefaultClickableComponent()
