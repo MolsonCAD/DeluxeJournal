@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
+using StardewModdingAPI.Utilities;
 using StardewValley;
 using DeluxeJournal.Framework.Data;
 using DeluxeJournal.Menus;
@@ -15,46 +16,48 @@ namespace DeluxeJournal.Framework
 
         private readonly IDataHelper _dataHelper;
         private readonly Config _config;
-        private readonly Dictionary<string, IOverlay> _overlays;
+        private readonly PerScreen<Dictionary<string, IOverlay>> _overlays;
+        private readonly PerScreen<Dictionary<string, OverlaySettings>> _settings;
+        private readonly PerScreen<KeybindList> _toggleKeybind;
+        private readonly PerScreen<bool> _toggleVisible;
 
-        private Dictionary<string, OverlaySettings>? _settings;
-        private bool _toggleVisible;
+        /// <summary>Active on-screen <see cref="IOverlay"/> menus by their registered page IDs.</summary>
+        public IReadOnlyDictionary<string, IOverlay> Overlays => _overlays.Value;
 
-        /// <summary>Active <see cref="IOverlay"/> menus by their registered page IDs.</summary>
-        public IReadOnlyDictionary<string, IOverlay> Overlays => _overlays;
-
-        /// <summary>Mapping of <see cref="OverlaySettings"/> by their registered page IDs.</summary>
-        /// <remarks>Lazy instantiation to allow <see cref="Game1.options"/> to load first.</remarks>
-        private Dictionary<string, OverlaySettings> Settings
+        /// <summary>Keybind for toggling the visibility of overlays.</summary>
+        public KeybindList ToggleKeybind
         {
-            get
+            get => _toggleKeybind.Value;
+            set
             {
-                if (_settings == null)
+                _toggleKeybind.Value = value;
+
+                if (Context.IsMainPlayer)
                 {
-                    Point defaultSize = new(500);
-                    Point notesPosition = new(0, defaultSize.Y);
-
-                    if (Game1.options is Options options)
-                    {
-                        notesPosition.Y = (int)Math.Ceiling(Game1.viewport.Height * options.zoomLevel / options.uiScale) - defaultSize.Y;
-                    }
-
-                    _settings = _dataHelper.ReadGlobalData<Dictionary<string, OverlaySettings>>(OverlaySettingsKey) ?? new()
-                    {
-                        { "tasks", new(new(Point.Zero, defaultSize), true, false, false, Color.White) },
-                        { "notes", new(new(notesPosition, defaultSize), false, true, true, Color.White) }
-                    };
+                    _config.ToggleOverlaysKeybind = value;
                 }
-
-                return _settings;
             }
         }
+
+        /// <summary>Whether the overlays have been toggled visible or not (hotkey).</summary>
+        private bool ToggleVisible
+        {
+            get => _toggleVisible.Value;
+            set => _toggleVisible.Value = value;
+        }
+
+        /// <summary>Mapping of <see cref="OverlaySettings"/> by their registered page IDs.</summary>
+        /// <remarks>Lazy instantiation allows <see cref="Game1.options"/> to load first.</remarks>
+        private Dictionary<string, OverlaySettings> Settings => _settings.Value;
 
         public OverlayManager(IModEvents events, IDataHelper dataHelper, Config config)
         {
             _dataHelper = dataHelper;
             _config = config;
-            _overlays = new(2);
+            _overlays = new(() => new(2));
+            _settings = new(GetOrCreateSettings);
+            _toggleKeybind = new(() => _config.ToggleOverlaysKeybind);
+            _toggleVisible = new();
 
             if (ColorSchema.HexToColor(config.OverlayBackgroundColor) is Color backgroundColor)
             {
@@ -71,15 +74,19 @@ namespace DeluxeJournal.Framework
         public void SetBackgroundColor(Color color)
         {
             IOverlay.BackgroundColor = color;
-            _config.OverlayBackgroundColor = ColorSchema.ColorToHex(color, true);
-            _config.Save();
+
+            if (Context.IsMainPlayer)
+            {
+                _config.OverlayBackgroundColor = ColorSchema.ColorToHex(color, true);
+                _config.Save();
+            }
         }
 
         /// <summary>Set the <see cref="IOverlay.IsEditing"/> flag in each visible overlay.</summary>
         /// <param name="editing">Whether the overlays are in edit-mode.</param>
         public void SetEditing(bool editing)
         {
-            foreach (IOverlay overlay in _overlays.Values)
+            foreach (IOverlay overlay in Overlays.Values)
             {
                 if (overlay.IsVisible)
                 {
@@ -92,17 +99,21 @@ namespace DeluxeJournal.Framework
         public void SaveSettings()
         {
             UpdateSettings();
-            _dataHelper.WriteGlobalData(OverlaySettingsKey, _settings);
+
+            if (Context.IsMainPlayer)
+            {
+                _dataHelper.WriteGlobalData(OverlaySettingsKey, _settings.Value);
+            }
         }
 
         /// <summary>Restore the state of each overlay to their saved settings.</summary>
         public void RestoreSettings()
         {
-            foreach (string pageId in _overlays.Keys)
+            foreach (string key in Overlays.Keys)
             {
-                if (Settings.TryGetValue(pageId, out OverlaySettings? settings))
+                if (Settings.TryGetValue(key, out OverlaySettings? settings))
                 {
-                    settings.Apply(_overlays[pageId]);
+                    settings.Apply(Overlays[key]);
                 }
             }
         }
@@ -110,22 +121,22 @@ namespace DeluxeJournal.Framework
         /// <summary>Update the overlay settings with the state of each active overlay.</summary>
         private void UpdateSettings()
         {
-            _toggleVisible = false;
+            ToggleVisible = false;
 
-            foreach (string pageId in _overlays.Keys)
+            foreach (string key in Overlays.Keys)
             {
-                if (!Settings.TryGetValue(pageId, out OverlaySettings? settings))
+                if (!Settings.TryGetValue(key, out OverlaySettings? settings))
                 {
                     settings = OverlaySettings.NewDefault();
                 }
 
-                IOverlay overlay = _overlays[pageId];
+                IOverlay overlay = Overlays[key];
                 settings.Update(overlay);
-                Settings.TryAdd(pageId, settings);
+                Settings.TryAdd(key, settings);
 
                 if (overlay.IsVisible && !overlay.IsVisibilityLocked)
                 {
-                    _toggleVisible = true;
+                    ToggleVisible = true;
                 }
             }
         }
@@ -137,43 +148,43 @@ namespace DeluxeJournal.Framework
 
         private void OnButtonsChanged(object? sender, ButtonsChangedEventArgs e)
         {
-            if (Game1.activeClickableMenu == null && _config.ToggleOverlaysKeybind.JustPressed())
+            if (Game1.activeClickableMenu == null && ToggleKeybind.JustPressed())
             {
-                _toggleVisible = !_toggleVisible;
+                ToggleVisible = !ToggleVisible;
 
-                foreach (var overlay in _overlays.Values)
+                foreach (var overlay in Overlays.Values)
                 {
+                    DeluxeJournalMod.Instance?.Monitor.Log($"<{GetType().Name}>.button: {overlay.GetType().Name}:{overlay.Bounds}", LogLevel.Warn);
                     if (!overlay.IsVisibilityLocked)
                     {
-                        overlay.IsVisible = _toggleVisible;
+                        overlay.IsVisible = ToggleVisible;
                     }
                 }
 
-                Game1.playSound(_toggleVisible ? "breathin" : "breathout", 1800);
+                Game1.playSound(ToggleVisible ? "breathin" : "breathout", 1800);
             }
         }
 
         private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
         {
-            DisposeOverlays();
-            _toggleVisible = false;
+            ToggleVisible = false;
 
-            foreach (string pageId in PageRegistry.Keys)
+            foreach (string key in PageRegistry.Keys)
             {
-                if (!Settings.TryGetValue(pageId, out OverlaySettings? settings))
+                if (!Settings.TryGetValue(key, out OverlaySettings? settings))
                 {
                     settings = OverlaySettings.NewDefault();
                 }
 
-                if (PageRegistry.CreateOverlay(pageId, settings) is IOverlay overlay)
+                if (PageRegistry.CreateOverlay(key, settings) is IOverlay overlay)
                 {
-                    Settings.TryAdd(pageId, settings);
-                    _overlays.Add(pageId, overlay);
+                    Settings.TryAdd(key, settings);
+                    _overlays.Value.Add(key, overlay);
                     Game1.onScreenMenus.Add(overlay);
 
                     if (overlay.IsVisible && !overlay.IsVisibilityLocked)
                     {
-                        _toggleVisible = true;
+                        ToggleVisible = true;
                     }
                 }
             }
@@ -182,17 +193,58 @@ namespace DeluxeJournal.Framework
         private void OnReturnToTitle(object? sender, ReturnedToTitleEventArgs e)
         {
             SaveSettings();
-            DisposeOverlays();
+            DisposeOverlays(Context.ScreenId);
         }
 
-        private void DisposeOverlays()
+        private void DisposeOverlays(int screenId)
         {
-            foreach (IDisposable overlay in _overlays.Values)
+            Dictionary<string, IOverlay> overlays = _overlays.GetValueForScreen(screenId);
+
+            foreach (IOverlay overlay in overlays.Values)
             {
                 overlay.Dispose();
             }
 
-            _overlays.Clear();
+            overlays.Clear();
+        }
+
+        private Dictionary<string, OverlaySettings> GetOrCreateSettings()
+        {
+            if (!Context.IsMainPlayer)
+            {
+                Dictionary<string, OverlaySettings> settings = new(2);
+
+                foreach ((string key, IOverlay overlay) in _overlays.GetValueForScreen(0))
+                {
+                    OverlaySettings copy = OverlaySettings.NewDefault();
+                    copy.Update(overlay);
+
+                    // Force notes off and locked since they do not work for farmhands.
+                    if (overlay is NotesOverlay)
+                    {
+                        copy.IsVisible = false;
+                        copy.IsVisibilityLocked = true;
+                    }
+
+                    settings.Add(key, copy);
+                }
+
+                return settings;
+            }
+
+            Point defaultSize = new(500);
+            Point notesPosition = new(0, defaultSize.Y);
+
+            if (Game1.options is Options options)
+            {
+                notesPosition.Y = (int)Math.Ceiling(Game1.viewport.Height * options.zoomLevel / options.uiScale) - defaultSize.Y;
+            }
+
+            return _dataHelper.ReadGlobalData<Dictionary<string, OverlaySettings>>(OverlaySettingsKey) ?? new()
+            {
+                { "tasks", new(new(Point.Zero, defaultSize), true, false, false, Color.White) },
+                { "notes", new(new(notesPosition, defaultSize), false, true, true, Color.White) }
+            };
         }
     }
 }

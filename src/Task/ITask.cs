@@ -38,9 +38,9 @@ namespace DeluxeJournal.Task
         [JsonProperty(Order = -2)]
         bool Complete { get; set; }
 
-        /// <summary>UMID of the player that owns this task.</summary>
+        /// <summary>Unique Multiplayer ID of the player that owns this task.</summary>
         [JsonIgnore]
-        long OwnerUMID { get; set; }
+        long OwnerUniqueMultiplayerID { get; set; }
 
         /// <summary>Renew period. Tasks will be renewed at the end of the period.</summary>
         /// <remarks>Note: Tasks marked as completed are removed at the end of the day if set to <see cref="Period.Never"/>.</remarks>

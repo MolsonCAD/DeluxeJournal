@@ -1,5 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using StardewModdingAPI;
+using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Menus;
 using DeluxeJournal.Framework;
@@ -23,11 +25,20 @@ namespace DeluxeJournal.Menus
         /// <summary>Outline texture box source.</summary>
         public static readonly Rectangle OutlineSource = new(48, 61, 3, 3);
 
+        /// <summary>Background texture box color per screen.</summary>
+        private static readonly PerScreen<Color> BackgroundColorPerScreen = new(() => Context.ScreenId == 0 ? Color.Black * 0.25f : BackgroundColorPerScreen!.GetValueForScreen(0));
+
         /// <summary>Background texture box color.</summary>
-        public static Color BackgroundColor { get; set; } = Color.Black * 0.25f;
+        public static Color BackgroundColor
+        {
+            get => BackgroundColorPerScreen.Value;
+            set => BackgroundColorPerScreen.Value = value;
+        }
 
         /// <summary>Background color opacity value between <c>0f</c> and <c>1f</c>.</summary>
         public static float BackgroundOpacity => BackgroundColor.A / 255f;
+
+        private Point _oldWindowSize;
 
         /// <summary>Registered page ID value assigned by the <see cref="PageRegistry"/> (this value is set immediately AFTER construction).</summary>
         public string PageId { get; set; } = string.Empty;
@@ -42,8 +53,8 @@ namespace DeluxeJournal.Menus
 
             set
             {
-                Move(value.X, value.Y);
                 Resize(value.Width, value.Height);
+                Move(value.X, value.Y);
             }
         }
 
@@ -85,6 +96,9 @@ namespace DeluxeJournal.Menus
         /// <summary>Margin between the screen edge when snapped.</summary>
         public int SnapMargin { get; set; } = -4;
 
+        /// <summary>Unique split-screen ID that this overlay is visible on. Set on instantiation.</summary>
+        protected int ScreenId { get; }
+
         public IOverlay(Rectangle bounds)
             : this(bounds.X, bounds.Y, bounds.Width, bounds.Height)
         {
@@ -93,13 +107,24 @@ namespace DeluxeJournal.Menus
         public IOverlay(int x, int y, int width, int height)
             : base(x, y, width, height, false)
         {
+            if (Game1.uiMode)
+            {
+                _oldWindowSize = new(Game1.uiViewport.Width, Game1.uiViewport.Height);
+            }
+            else
+            {
+                float uiMultiplier = Game1.options.zoomLevel / Game1.options.uiScale;
+                _oldWindowSize = new((int)(Game1.viewport.Width * uiMultiplier), (int)(Game1.viewport.Height * uiMultiplier));
+            }
+
+            ScreenId = Context.ScreenId;
         }
 
         /// <summary>Move the overlay in the specified on-screen coordinates.</summary>
         public virtual void Move(int x, int y)
         {
-            xPositionOnScreen = x;
-            yPositionOnScreen = y;
+            xPositionOnScreen = Math.Clamp(x, 0, Game1.uiViewport.Width - width);
+            yPositionOnScreen = Math.Clamp(y, 0, Game1.uiViewport.Height - height);
             CalculateEdgeSnappedBounds();
         }
 
@@ -113,32 +138,13 @@ namespace DeluxeJournal.Menus
 
         public override void gameWindowSizeChanged(Rectangle oldBounds, Rectangle newBounds)
         {
-            int x = (int)((newBounds.Width - this.width) * (xPositionOnScreen / (float)(oldBounds.Width - this.width)));
-            int y = (int)((newBounds.Height - this.height) * (yPositionOnScreen / (float)(oldBounds.Height - this.height)));
-            int width = this.width;
-            int height = this.height;
+            Point windowSize = new(Game1.uiViewport.Width, Game1.uiViewport.Height);
+            int x = (int)((windowSize.X - width) * (xPositionOnScreen / (float)(_oldWindowSize.X - width)));
+            int y = (int)((windowSize.Y - height) * (yPositionOnScreen / (float)(_oldWindowSize.Y - height)));
+            _oldWindowSize = windowSize;
 
-            x -= Math.Max(0, x + this.width - newBounds.Width);
-            y -= Math.Max(0, y + this.height - newBounds.Height);
-
-            if (x < 0)
-            {
-                width += x - ResizeBoxSize;
-                x = 0;
-            }
-
-            if (y < 0)
-            {
-                height += y - ResizeBoxSize;
-                y = 0;
-            }
-
+            Resize(width, height);
             Move(x, y);
-
-            if (width != this.width || height != this.height)
-            {
-                Resize(width, height);
-            }
         }
 
         public override void draw(SpriteBatch b)

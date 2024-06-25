@@ -126,12 +126,12 @@ namespace DeluxeJournal.Menus
                 myID = 100,
                 downNeighborID = SNAP_AUTOMATIC,
                 leftNeighborID = CUSTOM_SNAP_BEHAVIOR,
-                hoverText = translation.Get("ui.overlays.hotkey", new { keybind = _config.ToggleOverlaysKeybind.ToString() }),
+                hoverText = translation.Get("ui.overlays.hotkey", new { keybind = _overlayManager.ToggleKeybind.ToString() }),
                 SoundCueName = string.Empty,
                 OnClick = (self) => SetSnappyChildMenu(new InputListenerMenu(events.ModEvents, delegate (Keybind keybind)
                 {
                     KeybindList hotkey = new KeybindList(keybind);
-                    _config.ToggleOverlaysKeybind = hotkey;
+                    _overlayManager.ToggleKeybind = hotkey;
                     self.hoverText = translation.Get("ui.overlays.hotkey", new { keybind = hotkey.ToString() });
                 }))
             };
@@ -446,11 +446,15 @@ namespace DeluxeJournal.Menus
         public override void releaseLeftClick(int x, int y)
         {
             _dragPoint = null;
-            _backgroundColorPicker.ReleaseLeftClick(x, y);
 
-            foreach (var overlayComponent in _overlaySettingsComponents)
+            if (!EditMode)
             {
-                overlayComponent.ReleaseLeftClick(x, y);
+                _backgroundColorPicker.ReleaseLeftClick(x, y);
+
+                foreach (var overlayComponent in _overlaySettingsComponents)
+                {
+                    overlayComponent.ReleaseLeftClick(x, y);
+                }
             }
         }
 
@@ -489,27 +493,30 @@ namespace DeluxeJournal.Menus
         {
             base.performHoverAction(x, y);
 
-            foreach (var overlayComponent in _overlaySettingsComponents)
+            if (!EditMode)
             {
-                if (overlayComponent.TryHover(x, y) && !overlayComponent.Bounds.Contains(Game1.getOldMouseX(), Game1.getOldMouseY()))
+                foreach (var overlayComponent in _overlaySettingsComponents)
                 {
-                    // Workaround for the sound playing when initially opening the journal on this page.
-                    // The mouse position will always be snapped to the default QuestLog component for two
-                    // updates due to how SMAPI overrides the game's input system.
-                    if (_muteHoverSoundOnce)
+                    if (overlayComponent.TryHover(x, y) && !overlayComponent.Bounds.Contains(Game1.getOldMouseX(), Game1.getOldMouseY()))
                     {
-                        _muteHoverSoundOnce = false;
-                    }
-                    else
-                    {
-                        Game1.playSound("Cowboy_gunshot");
+                        // Workaround for the sound playing when initially opening the journal on this page.
+                        // The mouse position will always be snapped to the default QuestLog component for two
+                        // updates due to how SMAPI overrides the game's input system.
+                        if (_muteHoverSoundOnce)
+                        {
+                            _muteHoverSoundOnce = false;
+                        }
+                        else
+                        {
+                            Game1.playSound("Cowboy_gunshot");
+                        }
                     }
                 }
-            }
 
-            if (Game1.options.SnappyMenus && currentlySnappedComponent is ColorSliderBar slider && slider.IsEnabled && !Game1.oldPadState.IsButtonDown(Buttons.A))
-            {
-                Game1.mouseCursor = Game1.cursor_grab;
+                if (Game1.options.SnappyMenus && currentlySnappedComponent is ColorSliderBar slider && slider.IsEnabled && !Game1.oldPadState.IsButtonDown(Buttons.A))
+                {
+                    Game1.mouseCursor = Game1.cursor_grab;
+                }
             }
 
             editModeButton.tryHover(x, y, EditMode ? 0f : 0.1f);

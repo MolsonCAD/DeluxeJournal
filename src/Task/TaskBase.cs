@@ -24,7 +24,7 @@ namespace DeluxeJournal.Task
 
         public string Name { get; set; }
 
-        public long OwnerUMID { get; set; }
+        public long OwnerUniqueMultiplayerID { get; set; }
 
         public Period RenewPeriod { get; set; }
 
@@ -118,7 +118,7 @@ namespace DeluxeJournal.Task
             _index = 0;
 
             Name = name;
-            OwnerUMID = Game1.player?.UniqueMultiplayerID ?? 0;
+            OwnerUniqueMultiplayerID = Game1.player?.UniqueMultiplayerID ?? 0;
             RenewPeriod = Period.Never;
             RenewDate = new WorldDate(1, Season.Spring, 1);
             RenewCustomInterval = 1;
@@ -267,12 +267,12 @@ namespace DeluxeJournal.Task
 
         public bool IsTaskOwner(Farmer farmer)
         {
-            return OwnerUMID == farmer.UniqueMultiplayerID;
+            return OwnerUniqueMultiplayerID == farmer.UniqueMultiplayerID;
         }
 
         public bool IsTaskOwner(long umid)
         {
-            return OwnerUMID == umid;
+            return OwnerUniqueMultiplayerID == umid;
         }
 
         public virtual void EventSubscribe(ITaskEvents events)

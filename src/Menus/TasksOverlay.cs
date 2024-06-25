@@ -1,14 +1,15 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using StardewModdingAPI.Events;
 using StardewModdingAPI;
+using StardewModdingAPI.Events;
 using StardewValley;
+using DeluxeJournal.Events;
 using DeluxeJournal.Framework.Events;
 using DeluxeJournal.Framework.Task;
 using DeluxeJournal.Task;
-using DeluxeJournal.Util;
-using DeluxeJournal.Events;
 using DeluxeJournal.Task.Tasks;
+using DeluxeJournal.Util;
+using System.Security.Cryptography;
 
 namespace DeluxeJournal.Menus
 {
@@ -186,7 +187,12 @@ namespace DeluxeJournal.Menus
             base.Resize(width, height);
             capacity = Math.Max((Math.Min(height, EdgeSnappedBounds.Height) - 12) / LineSpacing, 1);
 
-            if (capacity != _capacity && capacity <= _taskManager.Tasks.Count)
+            // Resize shouldn't be called from the wrong game instance, but check just in case.
+            if (ScreenId != Context.ScreenId)
+            {
+                return;
+            }
+            else if (capacity != _capacity && capacity <= _taskManager.Tasks.Count)
             {
                 _capacity = capacity;
                 ReloadTasks();
@@ -358,11 +364,19 @@ namespace DeluxeJournal.Menus
 
         private void OnTaskListChanged(object? sender, TaskListChangedArgs e)
         {
-            ReloadTasks();
+            if (ScreenId == Context.ScreenId)
+            {
+                ReloadTasks();
+            }
         }
 
         private void OnTaskStatusChanged(object? sender, TaskStatusChangedArgs e)
         {
+            if (ScreenId != Context.ScreenId)
+            {
+                return;
+            }
+
             if (e.OldActive != e.NewActive || e.OldComplete != e.NewComplete)
             {
                 ReloadTasks();

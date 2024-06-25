@@ -34,12 +34,14 @@ namespace DeluxeJournal.Framework.Task
         {
             get
             {
-                if (!_tasks.ContainsKey(Game1.player.UniqueMultiplayerID))
+                long umid = Game1.player.UniqueMultiplayerID;
+
+                if (!_tasks.ContainsKey(umid))
                 {
-                    _tasks[Game1.player.UniqueMultiplayerID] = new(_taskEvents, _eventManager.TaskListChanged);
+                    _tasks[umid] = new(umid, _taskEvents, _eventManager.TaskListChanged);
                 }
 
-                return _tasks[Game1.player.UniqueMultiplayerID];
+                return _tasks[umid];
             }
         }
 
@@ -125,12 +127,12 @@ namespace DeluxeJournal.Framework.Task
 
                     if (!_tasks.ContainsKey(umid))
                     {
-                        _tasks[umid] = new(_taskEvents, _eventManager.TaskListChanged);
+                        _tasks[umid] = new(umid, _taskEvents, _eventManager.TaskListChanged);
                     }
 
                     foreach (ITask task in Data.Tasks[saveFolderName][key])
                     {
-                        task.OwnerUMID = umid;
+                        task.OwnerUniqueMultiplayerID = umid;
                         _tasks[umid].Add(task.Copy());
                     }
 
@@ -157,7 +159,7 @@ namespace DeluxeJournal.Framework.Task
 
         private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
         {
-            if (DeluxeJournalMod.IsMainScreen)
+            if (Context.IsMainPlayer)
             {
                 Load();
             }
@@ -165,7 +167,7 @@ namespace DeluxeJournal.Framework.Task
 
         private void OnSaving(object? sender, SavingEventArgs e)
         {
-            if (DeluxeJournalMod.IsMainScreen)
+            if (Context.IsMainPlayer)
             {
                 Save();
             }

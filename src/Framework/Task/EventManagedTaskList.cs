@@ -10,6 +10,7 @@ namespace DeluxeJournal.Framework.Task
     {
         private readonly ITaskEvents _events;
         private readonly List<ITask> _tasks;
+        private readonly long _umid;
 
         public ITask this[int index]
         {
@@ -27,7 +28,7 @@ namespace DeluxeJournal.Framework.Task
 
                     if (TaskListChangedEvent.HasEventListeners)
                     {
-                        TaskListChangedEvent.Raise(this, new(this, [value], [old]));
+                        TaskListChangedEvent.Raise(this, new(this, [value], [old], _umid));
                     }
                 }
             }
@@ -40,8 +41,9 @@ namespace DeluxeJournal.Framework.Task
         /// <summary>Managed event raised after this <see cref="IList{ITask}"/> is changed.</summary>
         public IManagedEvent<TaskListChangedArgs> TaskListChangedEvent { get; }
 
-        public EventManagedTaskList(ITaskEvents events, IManagedEvent<TaskListChangedArgs> taskListChangedEvent)
+        public EventManagedTaskList(long umid, ITaskEvents events, IManagedEvent<TaskListChangedArgs> taskListChangedEvent)
         {
+            _umid = umid;
             _events = events;
             _tasks = [];
             TaskListChangedEvent = taskListChangedEvent;
@@ -54,7 +56,7 @@ namespace DeluxeJournal.Framework.Task
 
             if (TaskListChangedEvent.HasEventListeners)
             {
-                TaskListChangedEvent.Raise(this, new(this, [task], []));
+                TaskListChangedEvent.Raise(this, new(this, [task], [], _umid));
             }
         }
 
@@ -70,7 +72,7 @@ namespace DeluxeJournal.Framework.Task
 
             if (TaskListChangedEvent.HasEventListeners)
             {
-                TaskListChangedEvent.Raise(this, new(this, [], copy));
+                TaskListChangedEvent.Raise(this, new(this, [], copy, _umid));
             }
         }
 
@@ -96,7 +98,7 @@ namespace DeluxeJournal.Framework.Task
 
             if (TaskListChangedEvent.HasEventListeners)
             {
-                TaskListChangedEvent.Raise(this, new(this, [task], []));
+                TaskListChangedEvent.Raise(this, new(this, [task], [], _umid));
             }
         }
 
@@ -107,7 +109,7 @@ namespace DeluxeJournal.Framework.Task
 
             if (TaskListChangedEvent.HasEventListeners)
             {
-                TaskListChangedEvent.Raise(this, new(this, [], [task]));
+                TaskListChangedEvent.Raise(this, new(this, [], [task], _umid));
             }
 
             return removed;
@@ -121,7 +123,7 @@ namespace DeluxeJournal.Framework.Task
 
             if (TaskListChangedEvent.HasEventListeners)
             {
-                TaskListChangedEvent.Raise(this, new(this, [], [task]));
+                TaskListChangedEvent.Raise(this, new(this, [], [task], _umid));
             }
         }
 
@@ -140,7 +142,7 @@ namespace DeluxeJournal.Framework.Task
 
             if (TaskListChangedEvent.HasEventListeners)
             {
-                TaskListChangedEvent.Raise(this, new(this, [], []));
+                TaskListChangedEvent.Raise(this, new(this, [], [], _umid));
             }
         }
 

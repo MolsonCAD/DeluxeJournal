@@ -49,12 +49,6 @@ namespace DeluxeJournal
         /// <summary>The color of the task entry border.</summary>
         public static Color TaskBorderColor { get; private set; } = new(68, 18, 28);
 
-        /// <summary>
-        /// Check if this is the main screen. Returns <c>false</c> if this is a co-op player
-        /// while playing in split-screen mode, and <c>true</c> otherwise.
-        /// </summary>
-        public static bool IsMainScreen => !Context.IsSplitScreen || Context.ScreenId == 0;
-
         /// <summary>The mod instance.</summary>
         public static DeluxeJournalMod? Instance { get; private set; }
 
@@ -221,7 +215,7 @@ namespace DeluxeJournal
 
         private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
         {
-            if (IsMainScreen)
+            if (Context.IsMainPlayer)
             {
                 LoadColorSchemas();
             }
