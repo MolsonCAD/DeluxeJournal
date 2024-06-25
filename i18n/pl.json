@@ -23,6 +23,7 @@
 	"ui.tab.quests": "Quests",
 	"ui.tab.tasks": "Tasks",
 	"ui.tab.notes": "Notes",
+	"ui.tab.overlays": "Overlays",
 
 	// tasks page
 	"ui.tasks.help": "naciśnij przycisk 'Dodaj Zadanie'.",
@@ -69,6 +70,10 @@
 	"ui.tasks.parameter.npc": "Mieszkaniec",
 	"ui.tasks.parameter.quality": "Jakość (Minimalna)",
 	"ui.tasks.parameter.tool": "Narzędzie",
+
+	// overlays page
+	"ui.overlays.backgroundcolor": "Kolor tła",
+	"ui.overlays.hotkey": "Klawisz skrótu: {{keybind}}",
 
 	// +---------------------------------+
 	// | display name aliases (OPTIONAL) |

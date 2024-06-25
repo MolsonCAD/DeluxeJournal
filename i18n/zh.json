@@ -23,6 +23,7 @@
 	"ui.tab.quests": "人物",
 	"ui.tab.tasks": "任务",
 	"ui.tab.notes": "笔记",
+	"ui.tab.overlays": "屏幕叠加层",
 	
 	// tasks page
 	"ui.tasks.help": "点击加号新建任务",
@@ -70,6 +71,10 @@
 	"ui.tasks.parameter.npc": "村民",
 	"ui.tasks.parameter.quality": "质量 (最低)",
 	"ui.tasks.parameter.tool": "工具",
+
+	// overlays page
+	"ui.overlays.backgroundcolor": "背景颜色",
+	"ui.overlays.hotkey": "热键: {{keybind}}",
 
 	// +---------------------------------+
 	// | display name aliases (OPTIONAL) |

@@ -23,6 +23,7 @@
 	"ui.tab.quests": "Missões",
 	"ui.tab.tasks": "Tarefas",
 	"ui.tab.notes": "Notas",
+	"ui.tab.overlays": "Sobreposições",
 	
 	// tasks page
 	"ui.tasks.help": "Pressione o botão Adicionar Tarefa",
@@ -69,6 +70,10 @@
 	"ui.tasks.parameter.npc": "Aldeão",
 	"ui.tasks.parameter.quality": "Qualidade (Mínima)",
 	"ui.tasks.parameter.tool": "Ferramenta",
+
+	// overlays page
+	"ui.overlays.backgroundcolor": "Cor de fundo",
+	"ui.overlays.hotkey": "Tecla de atalho: {{keybind}}",
 
 	// +---------------------------------+
 	// | display name aliases (OPTIONAL) |
