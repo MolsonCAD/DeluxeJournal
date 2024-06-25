@@ -164,6 +164,7 @@ namespace DeluxeJournal.Menus
         /// <summary>Draw the overlay contents.</summary>
         public abstract void DrawContents(SpriteBatch b);
 
+        /// <inheritdoc/>
         public void Dispose()
         {
             Dispose(true);

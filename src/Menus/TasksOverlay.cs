@@ -9,7 +9,6 @@ using DeluxeJournal.Framework.Task;
 using DeluxeJournal.Task;
 using DeluxeJournal.Task.Tasks;
 using DeluxeJournal.Util;
-using System.Security.Cryptography;
 
 namespace DeluxeJournal.Menus
 {
@@ -82,6 +81,11 @@ namespace DeluxeJournal.Menus
 
             CalculateEdgeSnappedBounds();
             ReloadTasks();
+        }
+
+        ~TasksOverlay()
+        {
+            Dispose(false);
         }
 
         public void ReloadTasks()
@@ -356,10 +360,7 @@ namespace DeluxeJournal.Menus
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
-            {
-                cleanupBeforeExit();
-            }
+            cleanupBeforeExit();
         }
 
         private void OnTaskListChanged(object? sender, TaskListChangedArgs e)
