@@ -62,18 +62,23 @@ namespace DeluxeJournal.Menus
 
         internal DeluxeJournalMenu() : base(0, 0, 832, 576, showUpperRightCloseButton: true)
         {
+            Vector2 topLeft;
+
             if (LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.ko ||
                 LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.fr)
             {
-                height += 64;
+                topLeft = Utility.getTopLeftPositionForCenteringOnScreen(width, height + 64, 0, 32);
+            }
+            else
+            {
+                topLeft = Utility.getTopLeftPositionForCenteringOnScreen(width, height, 0, 32);
             }
 
-            Vector2 topLeft = Utility.getTopLeftPositionForCenteringOnScreen(width, height, 0, 32);
             xPositionOnScreen = (int)topLeft.X;
             yPositionOnScreen = (int)topLeft.Y;
 
             _pages = PageRegistry.CreatePages(new Rectangle(xPositionOnScreen, yPositionOnScreen, width, height));
-            _tabs = new List<ClickableTextureComponent>();
+            _tabs = [];
             _hoverText = string.Empty;
 
             upperRightCloseButton.bounds = new Rectangle(xPositionOnScreen + width - 20, yPositionOnScreen - 8, 48, 48);
