@@ -154,7 +154,6 @@ namespace DeluxeJournal.Framework
 
                 foreach (var overlay in Overlays.Values)
                 {
-                    DeluxeJournalMod.Instance?.Monitor.Log($"<{GetType().Name}>.button: {overlay.GetType().Name}:{overlay.Bounds}", LogLevel.Warn);
                     if (!overlay.IsVisibilityLocked)
                     {
                         overlay.IsVisible = ToggleVisible;
