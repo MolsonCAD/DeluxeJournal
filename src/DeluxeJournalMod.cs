@@ -20,16 +20,16 @@ using DeluxeJournal.Task.Tasks;
 namespace DeluxeJournal
 {
     /// <summary>The mod entry point.</summary>
-    internal class DeluxeJournalMod : Mod
+    internal sealed class DeluxeJournalMod : Mod
     {
         /// <summary>Data key for the notes save data.</summary>
         public const string NotesDataKey = "notes-data";
 
-        /// <summary>Data assets file path.</summary>
-        public const string DataPath = "assets/data";
+        /// <summary>Color schema data file path.</summary>
+        public const string ColorDataPath = "assets/data/colors";
 
-        /// <summary>Default color data file path.</summary>
-        public const string ColorDataPath = "assets/data/colors-default.json";
+        /// <summary>Default color schema data file path.</summary>
+        public const string ColorDataDefault = $"{ColorDataPath}/default.json";
 
         /// <summary>UI spirte sheet texture.</summary>
         public static Texture2D? UiTexture { get; private set; }
@@ -109,7 +109,7 @@ namespace DeluxeJournal
                 new ShopMenuPatch(EventManager, Monitor)
             );
 
-            ConsoleCommands.AddCommands(helper.ConsoleCommands);
+            ConsoleCommands.AddCommands(helper.ConsoleCommands, Monitor);
 
 #if DEBUG
             Program.enableCheats = true;
@@ -148,40 +148,48 @@ namespace DeluxeJournal
 
         /// <summary>Load the color schemas.</summary>
         /// <param name="relativePath">Optional file path relative to the mod folder. If <c>null</c>, attempts to load a custom file first, then falls back on the default.</param>
-        public void LoadColorSchemas(string? relativePath = null)
+        /// <param name="tryNext">Attempt to load the next available color file on failure. Attempts to load the default first. Ignored if <paramref name="relativePath"/> is <c>null</c>.</param>
+        /// <returns>The relative file path of the loaded color data.</returns>
+        /// <exception cref="ContentLoadException">Could not load a color schema.</exception>
+        public string LoadColorSchemas(string? relativePath = null, bool tryNext = true)
         {
+            string loadedPath = string.Empty;
+            IEnumerable<string> paths = Directory.GetFiles($"{Helper.DirectoryPath}/{ColorDataPath}")
+                .Select(f => $"{ColorDataPath}/{Path.GetFileName(f)}");
+
             if (relativePath == null)
             {
-                IEnumerable<string> paths = Directory.GetFiles(Helper.DirectoryPath + "/" + DataPath, "colors-*")
-                    .Select(f => $"{DataPath}/{Path.GetFileName(f)}")
-                    .Where(f => f != ColorDataPath);
-
-                foreach (string path in paths)
-                {
-                    if (Helper.Data.ReadJsonFile<ColorData>(path)?.Colors is IList<ColorSchema> customColors)
-                    {
-                        ColorSchemas = customColors;
-                        goto ExtractDefault;
-                    }
-                    else
-                    {
-                        Monitor.Log($"Unable to load color data from '{path}' ... skipping", LogLevel.Warn);
-                    }
-                }
-
-                relativePath = ColorDataPath;
-            }
-
-            if (Helper.Data.ReadJsonFile<ColorData>(relativePath)?.Colors is IList<ColorSchema> loadedColors)
-            {
-                ColorSchemas = loadedColors;
+                paths = paths.Where(f => f != ColorDataDefault).Append(ColorDataDefault);
             }
             else
             {
-                throw new ContentLoadException($"Could not load color data from file: {relativePath}");
+                paths = [relativePath];
+
+                if (tryNext)
+                {
+                    paths = paths.Append(ColorDataDefault).Where(f => f != ColorDataDefault && f != relativePath);
+                }
             }
 
-        ExtractDefault:
+            foreach (string path in paths)
+            {
+                if (Helper.Data.ReadJsonFile<ColorData>(path)?.Colors is IList<ColorSchema> customColors)
+                {
+                    ColorSchemas = customColors;
+                    loadedPath = path;
+                    break;
+                }
+                else
+                {
+                    Monitor.Log($"Unable to load color data from '{path}' ... skipping", LogLevel.Warn);
+                }
+            }
+
+            if (string.IsNullOrEmpty(loadedPath))
+            {
+                throw new ContentLoadException($"Could not load color data. Do not remove or modify '{ColorDataDefault}'.");
+            }
+
             if (Game1.mouseCursors != null)
             {
                 ColorSchemas.Insert(0, ColorSchema.ExtractFromTextureBox(Game1.mouseCursors, new(384, 396, 15, 15), out Color border));
@@ -192,13 +200,21 @@ namespace DeluxeJournal
                 ColorSchemas.Insert(0, new ColorSchema(Color.White, Color.LightGray, Color.DarkGray, Color.Black, Color.DarkGray));
                 Monitor.Log("Color schemas loaded before game textures. Unable to extract default color schema.\n\tTry running the following command: dj_colors_load", LogLevel.Error);
             }
+
+            return loadedPath;
         }
 
         /// <summary>Save the color schemas.</summary>
         /// <param name="relativePath">Optional file path relative to the mod folder. Overwrites default file if <c>null</c>.</param>
+        /// <exception cref="InvalidOperationException">Relative path is not within the colors data folder.</exception>
         public void SaveColorSchemas(string? relativePath = null)
         {
-            Helper.Data.WriteJsonFile(relativePath ?? ColorDataPath, new ColorData(ColorSchemas.Skip(1).ToList()));
+            if (relativePath?.StartsWith(ColorDataPath) == false)
+            {
+                throw new InvalidOperationException($"Relative path is not within '{ColorDataPath}/'.");
+            }
+
+            Helper.Data.WriteJsonFile(relativePath ?? ColorDataDefault, new ColorData(ColorSchemas.Skip(1).ToList()));
         }
 
         [EventPriority(EventPriority.Low)]
@@ -217,7 +233,7 @@ namespace DeluxeJournal
         {
             if (Context.IsMainPlayer)
             {
-                LoadColorSchemas();
+                LoadColorSchemas(string.IsNullOrEmpty(Config?.TargetColorSchemaFile) ? null : $"{ColorDataPath}/{Config.TargetColorSchemaFile}");
             }
         }
 

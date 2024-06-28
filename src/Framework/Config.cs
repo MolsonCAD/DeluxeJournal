@@ -28,6 +28,9 @@ namespace DeluxeJournal.Framework
         /// <summary>Overlay background color hex code (alpha normalized RGB values for blending).</summary>
         public string OverlayBackgroundColor { get; set; } = "00000040";
 
+        /// <summary>The name of the color schema file to load from "assets/data/colors/". Uses the default loading rules if empty.</summary>
+        public string TargetColorSchemaFile { get; set; } = string.Empty;
+
         /// <summary>Save data to the mod configuration file.</summary>
         public void Save()
         {
