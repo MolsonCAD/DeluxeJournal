@@ -128,7 +128,7 @@ namespace DeluxeJournal.Menus
                 leftNeighborID = CUSTOM_SNAP_BEHAVIOR,
                 hoverText = translation.Get("ui.overlays.hotkey", new { keybind = _overlayManager.ToggleKeybind.ToString() }),
                 SoundCueName = string.Empty,
-                OnClick = (self) => SetSnappyChildMenu(new InputListenerMenu(events.ModEvents, delegate (Keybind keybind)
+                OnClick = (self, _) => SetSnappyChildMenu(new InputListenerMenu(events.ModEvents, (Keybind keybind) =>
                 {
                     KeybindList hotkey = new KeybindList(keybind);
                     _overlayManager.ToggleKeybind = hotkey;
@@ -157,7 +157,7 @@ namespace DeluxeJournal.Menus
                 leftNeighborID = CUSTOM_SNAP_BEHAVIOR,
                 rightNeighborID = SNAP_AUTOMATIC,
                 SoundCueName = "shwip",
-                OnClick = (_) => EditMode = true
+                OnClick = (_, _) => EditMode = true
             };
 
             cancelButton = new ButtonComponent(
@@ -174,7 +174,7 @@ namespace DeluxeJournal.Menus
                 fullyImmutable = true,
                 visible = false,
                 SoundCueName = "bigDeSelect",
-                OnClick = (_) => EditMode = false
+                OnClick = (_, _) => EditMode = false
             };
 
             Rectangle componentBounds = new(x + 16, y + height - 376, width - 32, 0);

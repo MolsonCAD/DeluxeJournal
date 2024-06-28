@@ -40,8 +40,8 @@ namespace DeluxeJournal.Menus.Components
         /// <summary>Function that takes this button instance as a parameter and returns the pitch to be used while playing <see cref="SoundCueName"/>.</summary>
         public Func<ButtonComponent<T>, int>? SoundPitch { get; set; }
 
-        /// <summary>Callback that takes this button instance as a parameter and fires on <see cref="ReceiveLeftClick"/>.</summary>
-        public Action<ButtonComponent<T>>? OnClick {  get; set; }
+        /// <summary>Callback that takes this button instance and a <see cref="Point"/> mouse position as parameters and fires on <see cref="ReceiveLeftClick"/>.</summary>
+        public Action<ButtonComponent<T>, Point>? OnClick {  get; set; }
 
         public ButtonComponent(string name, string label, string hoverText, Rectangle bounds, T? value, Texture2D texture, Rectangle source, float scale, bool drawShadow = false)
             : base(name, bounds, label, hoverText, texture, source, scale, drawShadow)
@@ -78,8 +78,16 @@ namespace DeluxeJournal.Menus.Components
                     Game1.playSound(SoundCueName, SoundPitch?.Invoke(this));
                 }
 
-                OnClick?.Invoke(this);
+                OnClick?.Invoke(this, new(x, y));
             }
+        }
+
+        /// <summary>Simulate a mouse click on the center of this button.</summary>
+        /// <param name="playSound">Allow a sound to be played.</param>
+        public virtual void SimulateLeftClick(bool playSound = true)
+        {
+            Point center = bounds.Center;
+            ReceiveLeftClick(center.X, center.Y, playSound);
         }
 
         public override void draw(SpriteBatch b, Color color, float layerDepth, int frameOffset = 0, int xOffset = 0, int yOffset = 0)

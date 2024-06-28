@@ -44,7 +44,7 @@ namespace DeluxeJournal.Menus.Components
                 Selected = Overlay.IsVisible,
                 SoundCueName = "tinyWhip",
                 SoundPitch = (self) => self.Selected ? 1000 : 2000,
-                OnClick = (self) => Overlay.IsVisible = self.Toggle()
+                OnClick = (self, _) => Overlay.IsVisible = self.Toggle()
             };
 
             _visibilityLockButton = new ButtonComponent(
@@ -61,7 +61,7 @@ namespace DeluxeJournal.Menus.Components
                 Selected = Overlay.IsVisibilityLocked,
                 SoundCueName = "tinyWhip",
                 SoundPitch = (self) => self.Selected ? 1000 : 2000,
-                OnClick = (self) => Overlay.IsVisibilityLocked = self.Toggle()
+                OnClick = (self, _) => Overlay.IsVisibilityLocked = self.Toggle()
             };
 
             _colorPicker = new ColorPickerComponent(bounds.Right - 304, bounds.Y + 20, myId + 3, SNAP_AUTOMATIC, rightNeighborId)
@@ -85,7 +85,7 @@ namespace DeluxeJournal.Menus.Components
                 Selected = Overlay.IsColorSelected,
                 SoundCueName = "tinyWhip",
                 SoundPitch = (self) => self.Selected ? 1000 : 2000,
-                OnClick = (self) => _colorPicker.IsEnabled = Overlay.IsColorSelected = self.Toggle()
+                OnClick = (self, _) => _colorPicker.IsEnabled = Overlay.IsColorSelected = self.Toggle()
             };
 
             _bounds.Height = _colorPicker.Bounds.Height + 40;
