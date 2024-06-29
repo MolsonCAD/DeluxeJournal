@@ -170,6 +170,12 @@ namespace DeluxeJournal.Framework
 
             foreach (string key in PageRegistry.Keys)
             {
+                // TODO: Disable notes overlay for farmhands. Remove this when notes are given better split-screen support.
+                if (!Context.IsMainPlayer && key == "notes")
+                {
+                    continue;
+                }
+
                 if (!Settings.TryGetValue(key, out OverlaySettings? settings))
                 {
                     settings = OverlaySettings.NewDefault();
