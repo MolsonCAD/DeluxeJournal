@@ -15,6 +15,7 @@
 	"task.craft.keywords": "créer,création,cuisiner,cuisine,fabrication,fabriquer,faire,obtenir,obtention",
 	"task.gift": "Cadeau",
 	"task.gift.keywords": "anniversaire,donner,don,offrir,offre",
+	"task.header": "En-Tête",
 	"task.sell": "Vente",
 	"task.sell.keywords": "livrer,livraison,vendre,vente",
 
@@ -22,6 +23,7 @@
 	"ui.tab.quests": "Quêtes",
 	"ui.tab.tasks": "Tâches",
 	"ui.tab.notes": "Notes",
+	"ui.tab.overlays": "Superpositions",
 	
 	// tasks page
 	"ui.tasks.help": "Appuyez sur le bouton Ajouter une tâche",
@@ -62,11 +64,16 @@
 	// task parameter names
 	"ui.tasks.parameter.animal": "Animal",
 	"ui.tasks.parameter.building": "Bâtiment",
+	"ui.tasks.parameter.color": "Couleur",
 	"ui.tasks.parameter.count": "Nombre",
 	"ui.tasks.parameter.item": "Objet",
 	"ui.tasks.parameter.npc": "PNJ",
 	"ui.tasks.parameter.quality": "Qualité (minimum)",
 	"ui.tasks.parameter.tool": "Outil",
+
+	// overlays page
+	"ui.overlays.backgroundcolor": "Couleur de fond",
+	"ui.overlays.hotkey": "Raccourci clavier: {{keybind}}",
 
 	// +---------------------------------+
 	// | display name aliases (OPTIONAL) |
