@@ -1,5 +1,4 @@
-﻿using Microsoft.Xna.Framework.Content;
-using StardewModdingAPI;
+﻿using StardewModdingAPI;
 
 namespace DeluxeJournal.Framework.Commands.Colors
 {
