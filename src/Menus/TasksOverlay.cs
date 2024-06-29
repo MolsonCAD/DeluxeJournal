@@ -72,7 +72,7 @@ namespace DeluxeJournal.Menus
             _taskManager = taskManager;
             _fontTools = new(Game1.smallFont);
             LineSpacing = (int)(_fontTools.LineSpacing * 1.5f);
-            _capacity = (height - 12) / LineSpacing;
+            _capacity = (bounds.Height - 12) / LineSpacing;
             _tasks = new(_capacity);
 
             events.TaskListChanged.Add(OnTaskListChanged);
@@ -137,7 +137,7 @@ namespace DeluxeJournal.Menus
                         xOffset += _fontTools.Font.MeasureString(status).X;
                     }
 
-                    _truncated |= _fontTools.Truncate(task.Name, width - xOffset, out string name);
+                    _truncated |= _fontTools.Truncate(task.Name, Size.X - xOffset, out string name);
                     _tasks.Add(new(task, name + status, _fontTools.Font.MeasureString(name + status)));
                     _contentBounds.Height += LineSpacing;
                     hasGroupMembers = !task.IsHeader;
@@ -402,7 +402,7 @@ namespace DeluxeJournal.Menus
                         statusWidth = _fontTools.Font.MeasureString(status).X;
                     }
 
-                    _fontTools.Truncate(task.Name, width - statusWidth - CheckBoxSpacing - 16f, out string name);
+                    _fontTools.Truncate(task.Name, Size.X - statusWidth - CheckBoxSpacing - 16f, out string name);
                     _tasks[i] = new(task, name + status, _fontTools.Font.MeasureString(name + status));
                     return;
                 }

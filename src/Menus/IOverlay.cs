@@ -39,6 +39,8 @@ namespace DeluxeJournal.Menus
         public static float BackgroundOpacity => BackgroundColor.A / 255f;
 
         private Point _oldWindowSize;
+        private int _width;
+        private int _height;
 
         /// <summary>Registered page ID value assigned by the <see cref="PageRegistry"/> (this value is set immediately AFTER construction).</summary>
         public string PageId { get; set; } = string.Empty;
@@ -49,7 +51,7 @@ namespace DeluxeJournal.Menus
         /// <summary><see cref="Rectangle"/> wrapper for the <see cref="IClickableMenu"/> bounds.</summary>
         public virtual Rectangle Bounds
         {
-            get => new(xPositionOnScreen, yPositionOnScreen, width, height);
+            get => new(xPositionOnScreen, yPositionOnScreen, _width, _height);
 
             set
             {
@@ -68,7 +70,7 @@ namespace DeluxeJournal.Menus
         /// <summary>Size of this overlay.</summary>
         public Point Size
         {
-            get => new(width, height);
+            get => new(_width, _height);
             set => Resize(value.X, value.Y);
         }
 
@@ -105,8 +107,11 @@ namespace DeluxeJournal.Menus
         }
 
         public IOverlay(int x, int y, int width, int height)
-            : base(x, y, width, height, false)
+            : base(x, y, 0, 0, false)
         {
+            _width = width;
+            _height = height;
+
             if (Game1.uiMode)
             {
                 _oldWindowSize = new(Game1.uiViewport.Width, Game1.uiViewport.Height);
@@ -123,27 +128,27 @@ namespace DeluxeJournal.Menus
         /// <summary>Move the overlay in the specified on-screen coordinates.</summary>
         public virtual void Move(int x, int y)
         {
-            xPositionOnScreen = Math.Clamp(x, 0, Game1.uiViewport.Width - width);
-            yPositionOnScreen = Math.Clamp(y, 0, Game1.uiViewport.Height - height);
+            xPositionOnScreen = Math.Clamp(x, 0, Game1.uiViewport.Width - _width);
+            yPositionOnScreen = Math.Clamp(y, 0, Game1.uiViewport.Height - _height);
             CalculateEdgeSnappedBounds();
         }
 
         /// <summary>Resize the overlay to the specified dimensions.</summary>
         public virtual void Resize(int width, int height)
         {
-            this.width = Math.Clamp(width, MinWidth, Game1.uiViewport.Width - ResizeBoxSize);
-            this.height = Math.Clamp(height, MinHeight, Game1.uiViewport.Height - ResizeBoxSize);
+            _width = Math.Clamp(width, MinWidth, Game1.uiViewport.Width - ResizeBoxSize);
+            _height = Math.Clamp(height, MinHeight, Game1.uiViewport.Height - ResizeBoxSize);
             CalculateEdgeSnappedBounds();
         }
 
         public override void gameWindowSizeChanged(Rectangle oldBounds, Rectangle newBounds)
         {
             Point windowSize = new(Game1.uiViewport.Width, Game1.uiViewport.Height);
-            int x = (int)((windowSize.X - width) * (xPositionOnScreen / (float)(_oldWindowSize.X - width)));
-            int y = (int)((windowSize.Y - height) * (yPositionOnScreen / (float)(_oldWindowSize.Y - height)));
+            int x = (int)((windowSize.X - _width) * (xPositionOnScreen / (float)(_oldWindowSize.X - _width)));
+            int y = (int)((windowSize.Y - _height) * (yPositionOnScreen / (float)(_oldWindowSize.Y - _height)));
             _oldWindowSize = windowSize;
 
-            Resize(width, height);
+            Resize(_width, _height);
             Move(x, y);
         }
 

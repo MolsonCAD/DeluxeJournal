@@ -37,11 +37,11 @@ namespace DeluxeJournal.Menus
 
             base.Resize(width, height);
 
-            if (oldSize.X != this.width)
+            if (oldSize.X != Size.X)
             {
                 WrapText();
             }
-            else if (oldSize.Y != this.height)
+            else if (oldSize.Y != Size.Y)
             {
                 BuildDisplayText();
             }
@@ -76,7 +76,7 @@ namespace DeluxeJournal.Menus
                 return;
             }
 
-            int maxLine = (height - 16) / _fontTools.LineSpacing;
+            int maxLine = (Size.Y - 16) / _fontTools.LineSpacing;
             int currentLine = 0;
             int i;
 
@@ -93,7 +93,7 @@ namespace DeluxeJournal.Menus
 
         private void WrapText()
         {
-            _fontTools.Wrap(_text, width - 16);
+            _fontTools.Wrap(_text, Size.X - 16);
             BuildDisplayText();
         }
     }
