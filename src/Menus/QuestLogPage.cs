@@ -36,7 +36,11 @@ namespace DeluxeJournal.Menus
                 if ((_questLog = value) != null)
                 {
                     _questLog.backButton = _backButton;
-                    _questLog.exitFunction = CreateExitFunction(_questLog.exitFunction);
+                    _questLog.exitFunction = delegate
+                    {
+                        _questLog.exitFunction?.Invoke();
+                        ExitJournalMenu(false);
+                    };
                 }
             }
         }
@@ -45,8 +49,8 @@ namespace DeluxeJournal.Menus
 
         private int QuestPage => (int)(_questPageField.GetValue(QuestLog) ?? -1);
 
-        public QuestLogPage(Rectangle bounds, Texture2D tabTexture, ITranslationHelper translation)
-            : this("quests", translation.Get("ui.tab.quests"), bounds.X, bounds.Y, bounds.Width, bounds.Height, tabTexture, new Rectangle(0, 0, 16, 16))
+        public QuestLogPage(string name, Rectangle bounds, Texture2D tabTexture, ITranslationHelper translation)
+            : this(name, translation.Get("ui.tab.quests"), bounds.X, bounds.Y, bounds.Width, bounds.Height, tabTexture, new Rectangle(0, 0, 16, 16))
         {
         }
 
@@ -75,15 +79,6 @@ namespace DeluxeJournal.Menus
                 rightNeighborID = CUSTOM_SNAP_BEHAVIOR,
                 downNeighborID = CUSTOM_SNAP_BEHAVIOR,
                 downNeighborImmutable = true
-            };
-        }
-
-        private static onExit CreateExitFunction(onExit? oldExitFunction)
-        {
-            return delegate
-            {
-                oldExitFunction?.Invoke();
-                Game1.exitActiveMenu();
             };
         }
 
@@ -145,8 +140,12 @@ namespace DeluxeJournal.Menus
         {
             if (QuestLog != null)
             {
-                currentlySnappedComponent = null;
+                if (Game1.options.doesInputListContain(Game1.options.journalButton, key) && readyToClose())
+                {
+                    exitThisMenuNoSound();
+                }
 
+                currentlySnappedComponent = null;
                 applyMovementKey(key);
                 QuestLog.receiveKeyPress(key);
 

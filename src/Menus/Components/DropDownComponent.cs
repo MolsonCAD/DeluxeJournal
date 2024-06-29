@@ -17,7 +17,7 @@ namespace DeluxeJournal.Menus.Components
             Vertical
         }
 
-        public const int ButtonWidth = 48;
+        public const int ButtonWidth = 40;
         public const int TextBufferWidth = 16;
 
         private readonly List<string> _options;
@@ -28,9 +28,16 @@ namespace DeluxeJournal.Menus.Components
         private int _selectedOption;
         private int _selectedOptionOld;
         private bool _clicked;
+        private bool _active;
 
         /// <summary>List of underlying option values in the drop down.</summary>
         public IReadOnlyList<string> Options => _options;
+
+        /// <summary>The wrap style of the options grid. <see cref="WrapStyle.None"/> is always drawn as a single column.</summary>
+        public WrapStyle Wrap { get; }
+
+        /// <summary>The number of options to draw in sequence before wrapping.</summary>
+        public int WrapLimit { get; }
 
         /// <summary>Index of the option selected from the <see cref="Options"/> list.</summary>
         public int SelectedOption
@@ -43,11 +50,12 @@ namespace DeluxeJournal.Menus.Components
             }
         }
 
-        /// <summary>The wrap style of the options grid. <see cref="WrapStyle.None"/> is always drawn as a single column.</summary>
-        public WrapStyle Wrap { get; }
-
-        /// <summary>The number of options to draw in sequence before wrapping.</summary>
-        public int WrapLimit { get; }
+        /// <summary>Whether this component is active (interactable).</summary>
+        public bool Active
+        {
+            get => _active && visible;
+            set => _active = value;
+        }
 
         public DropDownComponent(IEnumerable<string> options, Rectangle bounds, string name, bool fixedWidth = false)
             : this(options, options, bounds, name, WrapStyle.None, 1, fixedWidth)
@@ -72,6 +80,7 @@ namespace DeluxeJournal.Menus.Components
             _fixedWidth = fixedWidth;
             Wrap = wrap;
             WrapLimit = wrap == WrapStyle.None ? 1 : wrapLimit;
+            Active = true;
 
             if (_options.Count != _displayNames.Count)
             {
@@ -118,9 +127,13 @@ namespace DeluxeJournal.Menus.Components
             };
         }
 
-        public virtual void ReceiveLeftClick(int x, int y)
+        public virtual void ReceiveLeftClick(int x, int y, bool playSound = true)
         {
-            if (!_clicked)
+            if (!Active)
+            {
+                return;
+            }
+            else if (playSound && !_clicked)
             {
                 Game1.playSound("shwip");
             }
@@ -132,6 +145,11 @@ namespace DeluxeJournal.Menus.Components
 
         public virtual void LeftClickHeld(int x, int y)
         {
+            if (!Active)
+            {
+                return;
+            }
+
             _clicked = true;
 
             if (_optionsBounds.Contains(x, y) && !Game1.options.SnappyMenus)
@@ -150,7 +168,11 @@ namespace DeluxeJournal.Menus.Components
 
         public virtual void LeftClickReleased(int x, int y)
         {
-            if (_clicked)
+            if (!Active)
+            {
+                return;
+            }
+            else if (_clicked)
             {
                 Game1.playSound("drumkit6");
             }
@@ -165,7 +187,7 @@ namespace DeluxeJournal.Menus.Components
 
         public virtual void ReceiveKeyPress(Keys key)
         {
-            if (!Game1.options.SnappyMenus || !_clicked)
+            if (!Game1.options.SnappyMenus || !Active || !_clicked)
             {
                 return;
             }
@@ -208,9 +230,9 @@ namespace DeluxeJournal.Menus.Components
             DrawBackground(b, selectedBounds, false);
 
             b.Draw(Game1.mouseCursors,
-                new Rectangle(bounds.Right - ButtonWidth, bounds.Y, ButtonWidth, bounds.Height),
+                new Rectangle(bounds.Right - ButtonWidth - 4, bounds.Y, ButtonWidth, bounds.Height),
                 dropDownButtonSource,
-                Color.White);
+                Active ? Color.White : Color.DimGray);
 
             if (_clicked)
             {
@@ -246,7 +268,8 @@ namespace DeluxeJournal.Menus.Components
                 Game1.mouseCursors,
                 dropDownBGSource,
                 bgBounds.X, bgBounds.Y, bgBounds.Width, bgBounds.Height,
-                Color.White, 4f, false);
+                Active ? Color.White : Color.DimGray,
+                4f, false);
         }
 
         protected virtual void DrawOption(SpriteBatch b, Rectangle optionBounds, int whichOption, float layerDepth)

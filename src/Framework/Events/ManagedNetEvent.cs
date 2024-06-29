@@ -22,7 +22,7 @@ namespace DeluxeJournal.Framework.Events
         }
     }
 
-    internal abstract class ManagedNetEvent<TEventArgs, TMessage> : ManagedEvent<TEventArgs>, IManagedNetEvent
+    internal abstract class ManagedNetEvent<TEventArgs, TMessage> : ManagedEvent<TEventArgs>, IManagedNetEvent<TEventArgs>
         where TEventArgs : EventArgs
         where TMessage : notnull
     {
@@ -39,10 +39,6 @@ namespace DeluxeJournal.Framework.Events
         /// <summary>Construct <see cref="TEventArgs"/> from a broadcasted message.</summary>
         protected abstract TEventArgs MessageToEventArgs(TMessage message);
 
-        /// <summary>Raise this event from a broadcast message.</summary>
-        /// <param name="invoker">Object that raised this event.</param>
-        /// <param name="args"><see cref="IMultiplayerEvents.ModMessageReceived"/> event args.</param>
-        /// <exception cref="ArgumentException">Thrown when message payload cannot be deserialized as a <see cref="TMessage"/>.</exception>
         public void RaiseFromMessage(object? invoker, ModMessageReceivedEventArgs args)
         {
             if (args.Type == EventName && args.ReadAs<TMessage>() is TMessage message)
@@ -51,10 +47,6 @@ namespace DeluxeJournal.Framework.Events
             }
         }
 
-        /// <summary>Broadcast this event to all peers via multiplayer message.</summary>
-        /// <param name="args">Event arguments for <see cref="TMessage"/>.</param>
-        /// <param name="sendToSelf">Raise event locally, since multiplayer messages are not sent back to the sender.</param>
-        /// <exception cref="InvalidOperationException">Thrown when broadcasting before mod initialization.</exception>
         public void Broadcast(TEventArgs args, bool sendToSelf = true)
         {
             if (DeluxeJournalMod.Instance is not DeluxeJournalMod mod)

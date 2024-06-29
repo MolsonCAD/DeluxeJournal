@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using StardewModdingAPI;
+using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.BellsAndWhistles;
 using StardewValley.Menus;
@@ -26,6 +27,7 @@ namespace DeluxeJournal.Menus
 
         private static readonly Rectangle LightFilterTabSource = new(96, 0, 16, 16);
         private static readonly Rectangle DarkFilterTabSource = new(112, 0, 16, 16);
+        private static readonly PerScreen<int> ScrollAmountPerScreen = new();
 
         public readonly List<TaskEntryComponent> taskEntries;
         public readonly List<ClickableTextureComponent> filterTabs;
@@ -51,26 +53,26 @@ namespace DeluxeJournal.Menus
         public static int SelectedFilterTab { get; private set; } = 0;
 
         /// <summary>A list of tasks filtered by the selected filter tab rules.</summary>
-        public IReadOnlyList<ITask> FilteredTasks { get; private set; }
+        public IList<ITask> FilteredTasks { get; private set; }
 
-        public TasksPage(Rectangle bounds, Texture2D tabTexture, ITranslationHelper translation)
-            : this("tasks", translation.Get("ui.tab.tasks"), bounds.X, bounds.Y, bounds.Width, bounds.Height, tabTexture, new Rectangle(16, 0, 16, 16), translation)
+        public TasksPage(string name, Rectangle bounds, Texture2D tabTexture, ITranslationHelper translation)
+            : this(name, translation.Get("ui.tab.tasks"), bounds.X, bounds.Y, bounds.Width, bounds.Height, tabTexture, new Rectangle(16, 0, 16, 16), translation)
         {
         }
 
         public TasksPage(string name, string title, int x, int y, int width, int height, Texture2D tabTexture, Rectangle tabSourceRect, ITranslationHelper translation)
             : base(name, title, x, y, width, height, tabTexture, tabSourceRect)
         {
-            if (DeluxeJournalMod.Instance?.Config is not Config config)
+            if (DeluxeJournalMod.Config is not Config config)
             {
-                throw new InvalidOperationException("TasksPage created before mod entry.");
+                throw new InvalidOperationException($"{nameof(TasksPage)} created before mod entry.");
             }
 
-            if (DeluxeJournalMod.Instance?.TaskManager is not TaskManager taskManager)
+            if (DeluxeJournalMod.TaskManager is not TaskManager taskManager)
             {
-                throw new InvalidOperationException("TasksPage created before instantiation of TaskManager");
+                throw new InvalidOperationException($"{nameof(TasksPage)} created before instantiation of {nameof(TaskManager)}");
             }
-
+            
             _translation = translation;
             _config = config;
             _taskManager = taskManager;
@@ -80,8 +82,8 @@ namespace DeluxeJournal.Menus
             _selectedTaskIndex = -1;
             _filterTabsVisible = false;
             _dragging = false;
-            taskEntries = new List<TaskEntryComponent>();
-            filterTabs = new List<ClickableTextureComponent>();
+            taskEntries = [];
+            filterTabs = [];
             moneyDial = new MoneyDial(8, false);
             FilteredTasks = Array.Empty<ITask>();
 
@@ -101,28 +103,28 @@ namespace DeluxeJournal.Menus
                 });
             }
 
-            foreach (int period in Enum.GetValues<ITask.Period>())
+            foreach (ITask.Period period in Enum.GetValues<ITask.Period>())
             {
                 filterTabs.Add(new ClickableTextureComponent(
-                    new(x + 16 + period * 64, y + height, 64, 64),
+                    new(x + 16 + (int)period * 64, y + height, 64, 64),
                     DeluxeJournalMod.UiTexture,
                     DarkFilterTabSource,
                     4f)
                 {
-                    myID = FilterTabId + period,
+                    myID = FilterTabId + (int)period,
                     upNeighborID = CUSTOM_SNAP_BEHAVIOR,
                     fullyImmutable = true,
                     hoverText = translation.Get("ui.tasks.filter", new
                     {
-                        category = translation.Get(period == 0
+                        category = translation.Get(period == ITask.Period.Never
                             ? "ui.tasks.filter.all"
-                            : "ui.tasks.options.renew." + Enum.GetName((ITask.Period)period))
+                            : "ui.tasks.options.renew." + Enum.GetName(period))
                     })
                 });
             }
 
             addTaskButton = new ClickableTextureComponent(
-                new(x + width - 336, y + height, 60, 60),
+                new(x + width - 336, y + height, 60, 68),
                 DeluxeJournalMod.UiTexture,
                 new(0, 32, 15, 17),
                 4f)
@@ -157,13 +159,16 @@ namespace DeluxeJournal.Menus
 
             Rectangle scrollBarBounds = new(x + width + 16, y + 148, 24, height - 216);
             Rectangle scrollContentBounds = new(x, y + 16, width, height - 32);
+
             scrollComponent = new ScrollComponent(scrollBarBounds, scrollContentBounds, (height - 32) / 8, true);
             scrollComponent.ContentHeight = _taskManager.Tasks.Count * scrollComponent.ScrollDistance;
+            scrollComponent.ScrollAmount = ScrollAmountPerScreen.Value;
+            scrollComponent.OnScroll += (self) => ScrollAmountPerScreen.Value = self.ScrollAmount;
 
             _boundsWithScrollBar = new(x, y, scrollBarBounds.Right - x + 16, height);
 
             SelectFilterTab(SelectedFilterTab, false, false);
-            ReloadFilteredTasks(true);
+            ReloadFilteredTasks();
         }
 
         public void OpenAddTaskMenu()
@@ -189,10 +194,24 @@ namespace DeluxeJournal.Menus
 
         public void AddTask(ITask task)
         {
-            _taskManager.Tasks.Insert(0, task);
+            int i = 0;
+
+            for (; i < _taskManager.Tasks.Count; i++)
+            {
+                if (!_taskManager.Tasks[i].IsHeader)
+                {
+                    break;
+                }
+            }
+
+            if (task.IsHeader || (int)task.RenewPeriod != SelectedFilterTab)
+            {
+                SelectFilterTab(0, false);
+            }
+
+            _taskManager.Tasks.Insert(i, task);
             _config.ShowAddTaskHelpMessage = false;
             scrollComponent.ContentHeight += scrollComponent.ScrollDistance;
-            scrollComponent.Refresh();
             OnTasksUpdated();
         }
 
@@ -212,19 +231,38 @@ namespace DeluxeJournal.Menus
 
         public void ReloadFilteredTasks(bool resetScroll = false)
         {
-            FilteredTasks = SelectedFilterTab == 0
-                    ? (IReadOnlyList<ITask>)_taskManager.Tasks
-                    : _taskManager.Tasks.Where(task => (int)task.RenewPeriod == SelectedFilterTab).ToList();
+            bool skipHeader = true;
 
+            FilteredTasks = SelectedFilterTab == 0
+                ? _taskManager.Tasks
+                : _taskManager.Tasks.Reverse().Where(reverseFilterPredicate).Reverse().ToList();
+            
             scrollComponent.ContentHeight = FilteredTasks.Count * scrollComponent.ScrollDistance;
 
             if (resetScroll)
             {
                 scrollComponent.ScrollAmount = 0;
             }
-            else
+
+            _taskManager.RefreshGroups();
+
+            bool reverseFilterPredicate(ITask task)
             {
-                scrollComponent.Refresh();
+                if (task.IsHeader)
+                {
+                    if (!skipHeader)
+                    {
+                        skipHeader = true;
+                        return true;
+                    }
+                }
+                else if ((int)task.RenewPeriod == SelectedFilterTab)
+                {
+                    skipHeader = false;
+                    return true;
+                }
+
+                return false;
             }
         }
 
@@ -234,6 +272,8 @@ namespace DeluxeJournal.Menus
             {
                 task.MarkAsViewed();
             }
+
+            SortTasks();
         }
 
         public override void OnVisible()
@@ -320,8 +360,6 @@ namespace DeluxeJournal.Menus
             {
                 _currentlySnappedEntryId = currentlySnappedComponent.myID;
             }
-
-            snapCursorToCurrentSnappedComponent();
         }
 
         public override void snapToDefaultClickableComponent()
@@ -399,9 +437,9 @@ namespace DeluxeJournal.Menus
                     }
                 }
 
-                if (!scrollComponent.CanScroll() || !_boundsWithScrollBar.Contains(x, y))
+                if (!scrollComponent.CanScroll || !_boundsWithScrollBar.Contains(x, y))
                 {
-                    Game1.activeClickableMenu?.exitThisMenu();
+                    ExitJournalMenu(playSound);
                 }
             }
 
@@ -412,7 +450,7 @@ namespace DeluxeJournal.Menus
         {
             if (!GameMenu.forcePreventClose)
             {
-                if (_selectedTaskIndex != -1)
+                if (_selectedTaskIndex >= 0 && _selectedTaskIndex < FilteredTasks.Count)
                 {
                     double currentTime = Game1.currentGameTime.TotalGameTime.TotalSeconds;
 
@@ -443,7 +481,14 @@ namespace DeluxeJournal.Menus
                             nextTaskIndex = tasks.IndexOf(FilteredTasks[--_selectedTaskIndex]);
                             tasks.Remove(task);
                             tasks.Insert(nextTaskIndex, task);
-                            ReloadFilteredTasks();
+
+                            if (SelectedFilterTab > 0)
+                            {
+                                FilteredTasks.RemoveAt(_selectedTaskIndex + 1);
+                                FilteredTasks.Insert(_selectedTaskIndex, task);
+                            }
+
+                            _taskManager.RefreshGroups();
 
                             if (_dragging)
                             {
@@ -460,7 +505,14 @@ namespace DeluxeJournal.Menus
                             nextTaskIndex = tasks.IndexOf(FilteredTasks[++_selectedTaskIndex]);
                             tasks.Remove(task);
                             tasks.Insert(nextTaskIndex, task);
-                            ReloadFilteredTasks();
+
+                            if (SelectedFilterTab > 0)
+                            {
+                                FilteredTasks.RemoveAt(_selectedTaskIndex - 1);
+                                FilteredTasks.Insert(_selectedTaskIndex, task);
+                            }
+
+                            _taskManager.RefreshGroups();
 
                             if (_dragging)
                             {
@@ -480,7 +532,7 @@ namespace DeluxeJournal.Menus
         {
             if (!GameMenu.forcePreventClose)
             {
-                if (_selectedTaskIndex != -1 && !_dragging)
+                if (_selectedTaskIndex >= 0 && _selectedTaskIndex < FilteredTasks.Count && !_dragging)
                 {
                     ITask task = FilteredTasks[_selectedTaskIndex];
                     int entryIndex = _selectedTaskIndex - scrollComponent.GetScrollOffset();
@@ -524,14 +576,6 @@ namespace DeluxeJournal.Menus
                     case Keys.Space:
                         OpenAddTaskMenu();
                         break;
-#if DEBUG
-                    case Keys.End:
-                        if (DeluxeJournalMod.Instance?.TaskManager is TaskManager taskManager)
-                        {
-                            taskManager.Save();
-                        }
-                        break;
-#endif
                 }
             }
         }
@@ -581,7 +625,7 @@ namespace DeluxeJournal.Menus
                         {
                             HoverText = _translation.Get("ui.tasks.removebutton.hover");
                         }
-                        else if (entry.IsNameTruncated() && entry.TimeHovering() > 1.0)
+                        else if (entry.IsNameTruncated && entry.TimeHovering() > 1.0)
                         {
                             HoverText = task.Name;
                         }
@@ -607,7 +651,7 @@ namespace DeluxeJournal.Menus
 
         public override void draw(SpriteBatch b)
         {
-            Vector2 moneyBoxPosition = new(moneyBox.bounds.X - 36, moneyBox.bounds.Y);
+            Rectangle moneyBoxDrawBounds = new(moneyBox.bounds.X - 36, moneyBox.bounds.Y, moneyBox.bounds.Width + 36, moneyBox.bounds.Height);
 
             scrollComponent.BeginScissorTest(b);
 
@@ -617,7 +661,10 @@ namespace DeluxeJournal.Menus
 
                 for (int i = 0; i < MaxEntries && i + scrollOffset < FilteredTasks.Count; i++)
                 {
-                    taskEntries[i].Draw(b, FilteredTasks[i + scrollOffset]);
+                    ITask task = FilteredTasks[i + scrollOffset];
+                    int colorIndex = task.DisplayColorIndex;
+
+                    taskEntries[i].Draw(b, task, DeluxeJournalMod.ColorSchemas[colorIndex < DeluxeJournalMod.ColorSchemas.Count ? colorIndex : 0]);
                 }
             }
             else if (_config.ShowAddTaskHelpMessage)
@@ -652,11 +699,14 @@ namespace DeluxeJournal.Menus
 
             addTaskButton.draw(b);
             b.Draw(DeluxeJournalMod.UiTexture,
-                moneyBoxPosition,
+                new Rectangle(addTaskButton.bounds.X + 16, addTaskButton.bounds.Y + 24, 28, 28),
+                new(0, 49, 7, 7),
+                Color.White);
+
+            b.Draw(DeluxeJournalMod.UiTexture,
+                moneyBoxDrawBounds,
                 new(16, 32, 68, 17),
-                Color.White,
-                0f, Vector2.Zero, 4f,
-                SpriteEffects.None, 0.9f);
+                Color.White);
 
             if (_moneyButtonVisible)
             {
@@ -673,21 +723,15 @@ namespace DeluxeJournal.Menus
                 }
             }
 
+            moneyDial.draw(b, new Vector2(moneyBoxDrawBounds.X + 68, moneyBoxDrawBounds.Y + 24), Math.Abs(money));
+
             if (money < 0)
             {
-                moneyDial.draw(b, moneyBoxPosition + new Vector2(68, 24), Math.Abs(money));
-
                 int signOffset = (int)Math.Log10(moneyDial.currentValue) * 24;
                 b.Draw(DeluxeJournalMod.UiTexture,
-                    moneyBoxPosition + new Vector2(212 - signOffset, 24),
+                    new Rectangle(moneyBoxDrawBounds.Right - signOffset - 60, moneyBoxDrawBounds.Y + 24, 20, 32),
                     new(91, 37, 5, 8),
-                    Color.Maroon,
-                    0f, Vector2.Zero, 4f,
-                    SpriteEffects.None, 0.9f);
-            }
-            else
-            {
-                moneyDial.draw(b, moneyBoxPosition + new Vector2(68, 24), money);
+                    Color.Maroon);
             }
         }
 

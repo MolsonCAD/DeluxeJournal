@@ -19,6 +19,7 @@ namespace DeluxeJournal.Menus
 
         private static readonly PerScreen<int> ActiveTabPerScreen = new PerScreen<int>();
 
+        /// <summary>The index of the currently active tab.</summary>
         public static int ActiveTab
         {
             get
@@ -36,10 +37,13 @@ namespace DeluxeJournal.Menus
         private readonly List<IPage> _pages;
         private string _hoverText;
 
-        public IReadOnlyList<ClickableComponent> Tabs => _tabs;
+        /// <summary>Read-only list of all tabs.</summary>
+        public IReadOnlyList<ClickableTextureComponent> Tabs => _tabs;
 
+        /// <summary>Read-only list of all pages.</summary>
         public IReadOnlyList<IPage> Pages => _pages;
 
+        /// <summary>Get the currently displayed page.</summary>
         public IPage ActivePage => _pages[ActiveTab];
 
         private string HoverText
@@ -56,20 +60,25 @@ namespace DeluxeJournal.Menus
             }
         }
 
-        internal DeluxeJournalMenu(PageManager pageManager) : base(0, 0, 832, 576, showUpperRightCloseButton: true)
+        internal DeluxeJournalMenu() : base(0, 0, 832, 576, showUpperRightCloseButton: true)
         {
+            Vector2 topLeft;
+
             if (LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.ko ||
                 LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.fr)
             {
-                height += 64;
+                topLeft = Utility.getTopLeftPositionForCenteringOnScreen(width, height + 64, 0, 32);
+            }
+            else
+            {
+                topLeft = Utility.getTopLeftPositionForCenteringOnScreen(width, height, 0, 32);
             }
 
-            Vector2 topLeft = Utility.getTopLeftPositionForCenteringOnScreen(width, height, 0, 32);
             xPositionOnScreen = (int)topLeft.X;
             yPositionOnScreen = (int)topLeft.Y;
 
-            _pages = pageManager.GetPages(new Rectangle(xPositionOnScreen, yPositionOnScreen, width, height));
-            _tabs = new List<ClickableTextureComponent>();
+            _pages = PageRegistry.CreatePages(new Rectangle(xPositionOnScreen, yPositionOnScreen, width, height));
+            _tabs = [];
             _hoverText = string.Empty;
 
             upperRightCloseButton.bounds = new Rectangle(xPositionOnScreen + width - 20, yPositionOnScreen - 8, 48, 48);
@@ -99,9 +108,8 @@ namespace DeluxeJournal.Menus
                 snapToDefaultClickableComponent();
             }
 
+            exitFunction = ActivePage.OnHidden;
             Game1.playSound("bigSelect");
-
-            exitFunction = () => ActivePage.OnHidden();
         }
 
         public void ChangeTab(int tab, bool playSound = true)
@@ -163,6 +171,7 @@ namespace DeluxeJournal.Menus
 
         public override void gameWindowSizeChanged(Rectangle oldBounds, Rectangle newBounds)
         {
+            GetActiveMenu().gameWindowSizeChanged(oldBounds, newBounds);
         }
 
         public override ClickableComponent getCurrentlySnappedComponent()
@@ -194,9 +203,19 @@ namespace DeluxeJournal.Menus
             GetActiveMenu().snapCursorToCurrentSnappedComponent();
         }
 
+        public override void applyMovementKey(int direction)
+        {
+            GetActiveMenu().applyMovementKey(direction);
+        }
+
         public override void receiveGamePadButton(Buttons b)
         {
             GetActiveMenu().receiveGamePadButton(b);
+        }
+
+        public override void gamePadButtonHeld(Buttons b)
+        {
+            GetActiveMenu().gamePadButtonHeld(b);
         }
 
         public override void setUpForGamePadMode()
@@ -206,7 +225,7 @@ namespace DeluxeJournal.Menus
 
         public override void receiveLeftClick(int x, int y, bool playSound = true)
         {
-            if (ActivePage.GetChildMenu() == null)
+            if (ElementsEnabled())
             {
                 if (upperRightCloseButton != null && upperRightCloseButton.containsPoint(x, y) && readyToClose())
                 {
@@ -250,7 +269,7 @@ namespace DeluxeJournal.Menus
         {
             GetActiveMenu().receiveKeyPress(key);
 
-            if (ActivePage.GetChildMenu() == null && !ActivePage.KeyboardHasFocus())
+            if (ElementsEnabled() && !ActivePage.KeyboardHasFocus())
             {
                 if (Game1.options.doesInputListContain(Game1.options.journalButton, key) && readyToClose())
                 {
@@ -266,7 +285,7 @@ namespace DeluxeJournal.Menus
 
             GetActiveMenu().performHoverAction(x, y);
 
-            if (ActivePage.GetChildMenu() == null)
+            if (ElementsEnabled())
             {
                 foreach (ClickableTextureComponent tab in _tabs)
                 {
@@ -286,7 +305,7 @@ namespace DeluxeJournal.Menus
 
         public override bool shouldDrawCloseButton()
         {
-            return ActivePage.GetChildMenu() == null;
+            return ElementsEnabled();
         }
 
         public override void update(GameTime time)
@@ -296,6 +315,8 @@ namespace DeluxeJournal.Menus
 
         public override void draw(SpriteBatch b)
         {
+            Game1.mouseCursorTransparency = 1f;
+
             if (ActivePage is QuestLogPage questLogPage && questLogPage.QuestLog != null)
             {
                 questLogPage.draw(b);
@@ -327,22 +348,47 @@ namespace DeluxeJournal.Menus
                 upperRightCloseButton.draw(b);
             }
 
-            Game1.mouseCursorTransparency = 1f;
-            drawMouse(b);
+            drawMouse(b, false, Game1.mouseCursor == Game1.cursor_default && Game1.options.SnappyMenus ? Game1.cursor_gamepad_pointer : Game1.mouseCursor);
 
-            if (HoverText.Length > 0 && ActivePage.GetChildMenu() == null)
+            if (HoverText.Length > 0 && ElementsEnabled())
             {
                 drawHoverText(b, HoverText, Game1.dialogueFont);
             }
+        }
+
+        protected override void cleanupBeforeExit()
+        {
+            IClickableMenu menu = GetActiveMenu();
+
+            while (menu.GetParentMenu() is IClickableMenu parent)
+            {
+                menu.exitThisMenuNoSound();
+                menu = parent;
+            }
+
+            foreach (IPage page in Pages)
+            {
+                if (page != menu)
+                {
+                    page.exitThisMenuNoSound();
+                }
+            }
+
+            menu.exitThisMenuNoSound();
+        }
+
+        private bool ElementsEnabled()
+        {
+            return !ActivePage.ParentElementsDisabled && ActivePage.GetChildMenu() == null;
         }
 
         private IClickableMenu GetActiveMenu()
         {
             IClickableMenu menu = ActivePage;
 
-            while (menu.GetChildMenu() != null)
+            while (menu.GetChildMenu() is IClickableMenu child)
             {
-                menu = menu.GetChildMenu();
+                menu = child;
             }
 
             return menu;

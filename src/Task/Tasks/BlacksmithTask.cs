@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.GameData.Tools;
@@ -19,7 +18,7 @@ namespace DeluxeJournal.Task.Tasks
 
             public override SmartIconFlags EnabledSmartIcons => SmartIconFlags.Item;
 
-            public override void Initialize(ITask task, ITranslationHelper translation)
+            protected override void InitializeInternal(ITask task)
             {
                 if (task is BlacksmithTask blacksmithTask)
                 {
@@ -27,7 +26,7 @@ namespace DeluxeJournal.Task.Tasks
                 }
             }
 
-            public override ITask? Create(string name)
+            protected override ITask? CreateInternal(string name)
             {
                 return ItemIds != null && ItemIds.Count > 0 ? new BlacksmithTask(name, ItemIds.First()) : null;
             }

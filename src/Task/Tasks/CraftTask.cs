@@ -1,5 +1,4 @@
-﻿using StardewModdingAPI;
-using StardewValley;
+﻿using StardewValley;
 using DeluxeJournal.Events;
 
 using static DeluxeJournal.Task.TaskParameterAttribute;
@@ -20,7 +19,7 @@ namespace DeluxeJournal.Task.Tasks
 
             public override bool EnableSmartIconCount => true;
 
-            public override void Initialize(ITask task, ITranslationHelper translation)
+            protected override void InitializeInternal(ITask task)
             {
                 if (task is CraftTask craftTask)
                 {
@@ -29,7 +28,7 @@ namespace DeluxeJournal.Task.Tasks
                 }
             }
 
-            public override ITask? Create(string name)
+            protected override ITask? CreateInternal(string name)
             {
                 return ItemIds != null && ItemIds.Count > 0 ? new CraftTask(name, ItemIds, Count) : null;
             }
