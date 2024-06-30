@@ -31,7 +31,7 @@ namespace DeluxeJournal.Menus.Components
             }
             else
             {
-                ColorSchema = new ColorSchema(Color.White, Color.LightGray, Color.DarkGray, Color.Black, Color.DarkGray);
+                ColorSchema = ColorSchema.ErrorSchema;
             }
 
             if (ColorSchema.Luminance(ColorSchema.Padding) > ColorSchema.Luminance(ColorSchema.Main))

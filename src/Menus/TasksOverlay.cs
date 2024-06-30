@@ -287,7 +287,7 @@ namespace DeluxeJournal.Menus
                     b.DrawString(_fontTools.Font, name, new(namePosition.X, namePosition.Y + 3f), shadowColor);
                     Utility.drawBoldText(b, name, _fontTools.Font, namePosition, textColor);
 
-                    if (!IsEditing && task is HeaderTask header && (hovering || header.IsCollapsed))
+                    if (task is HeaderTask header && ((IsContentInteractable && hovering) || header.IsCollapsed))
                     {
                         Utility.drawWithShadow(b,
                             DeluxeJournalMod.UiTexture,
@@ -306,7 +306,7 @@ namespace DeluxeJournal.Menus
                 {
                     Utility.drawTextWithColoredShadow(b, name, _fontTools.Font, new(namePosition.X + CheckBoxSpacing, namePosition.Y), textColor, shadowColor);
 
-                    if (!IsEditing && new Rectangle((int)namePosition.X, (int)namePosition.Y, _contentBounds.Width - 16, LineSpacing).Contains(mousePosition))
+                    if (IsContentInteractable && new Rectangle((int)namePosition.X, (int)namePosition.Y, _contentBounds.Width - 16, LineSpacing).Contains(mousePosition))
                     {
                         Utility.drawWithShadow(b,
                             DeluxeJournalMod.UiTexture,
@@ -413,7 +413,7 @@ namespace DeluxeJournal.Menus
         {
             Vector2 mousePosition = e.Cursor.ScreenPixels;
 
-            if (IsVisible && !IsEditing && e.Button == SButton.MouseLeft && _contentBounds.Contains(mousePosition))
+            if (IsContentInteractable && e.Button == SButton.MouseLeft && _contentBounds.Contains(mousePosition))
             {
                 int taskIndex = Math.Max((int)mousePosition.Y - _contentBounds.Y - 8, 0) / LineSpacing;
 

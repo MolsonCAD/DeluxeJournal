@@ -74,6 +74,9 @@ namespace DeluxeJournal.Menus
             set => Resize(value.X, value.Y);
         }
 
+        /// <summary>Whether the overlay content should be interactable.</summary>
+        public virtual bool IsContentInteractable => IsVisible && !IsEditing && Game1.activeClickableMenu == null;
+
         /// <summary>Whether this overlay visible on-screen.</summary>
         public virtual bool IsVisible { get; set; }
 

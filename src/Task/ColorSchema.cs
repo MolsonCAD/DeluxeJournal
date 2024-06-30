@@ -28,6 +28,9 @@ namespace DeluxeJournal.Task
         /// <summary>Magic saturation shift value for making a header color. (Scaled with Luminance.)</summary>
         public const float HeaderMaxSatShift = 0.3188f;
 
+        /// <summary>Error color schema instance.</summary>
+        public static readonly ColorSchema ErrorSchema = new(Color.White, Color.LightGray, Color.DarkGray, Color.Black, Color.DarkGray);
+
         public Color Main { get; set; }
 
         public Color Hover { get; set; }

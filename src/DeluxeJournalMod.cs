@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using Newtonsoft.Json;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -44,7 +45,7 @@ namespace DeluxeJournal
         public static Texture2D? ColoredTaskMask { get; private set; }
 
         /// <summary>Loaded color schema data.</summary>
-        public static IList<ColorSchema> ColorSchemas { get; private set; } = Array.Empty<ColorSchema>();
+        public static IList<ColorSchema> ColorSchemas { get; private set; } = [ColorSchema.ErrorSchema];
 
         /// <summary>The color of the task entry border.</summary>
         public static Color TaskBorderColor { get; private set; } = new(68, 18, 28);
@@ -155,33 +156,37 @@ namespace DeluxeJournal
         {
             string loadedPath = string.Empty;
             IEnumerable<string> paths = Directory.GetFiles($"{Helper.DirectoryPath}/{ColorDataPath}")
-                .Select(f => $"{ColorDataPath}/{Path.GetFileName(f)}");
+                .Select(f => $"{ColorDataPath}/{Path.GetFileName(f)}")
+                .Where(f => f != ColorDataDefault);
 
             if (relativePath == null)
             {
-                paths = paths.Where(f => f != ColorDataDefault).Append(ColorDataDefault);
+                paths = paths.Append(ColorDataDefault);
             }
             else
             {
-                paths = [relativePath];
-
-                if (tryNext)
-                {
-                    paths = paths.Append(ColorDataDefault).Where(f => f != ColorDataDefault && f != relativePath);
-                }
+                IEnumerable<string> target = [relativePath];
+                paths = tryNext ? target.Append(ColorDataDefault).Concat(paths) : target;
             }
 
             foreach (string path in paths)
             {
-                if (Helper.Data.ReadJsonFile<ColorData>(path)?.Colors is IList<ColorSchema> customColors)
+                try
                 {
-                    ColorSchemas = customColors;
-                    loadedPath = path;
-                    break;
+                    if (Helper.Data.ReadJsonFile<ColorData>(path)?.Colors is IList<ColorSchema> customColors)
+                    {
+                        ColorSchemas = customColors;
+                        loadedPath = path;
+                        break;
+                    }
+                    else
+                    {
+                        Monitor.Log($"Unable to load color data from '{path}' ... skipping", LogLevel.Warn);
+                    }
                 }
-                else
+                catch(JsonReaderException)
                 {
-                    Monitor.Log($"Unable to load color data from '{path}' ... skipping", LogLevel.Warn);
+                    Monitor.Log($"Unable to parse color data from '{path}' ... skipping");
                 }
             }
 
@@ -197,7 +202,7 @@ namespace DeluxeJournal
             }
             else
             {
-                ColorSchemas.Insert(0, new ColorSchema(Color.White, Color.LightGray, Color.DarkGray, Color.Black, Color.DarkGray));
+                ColorSchemas.Insert(0, ColorSchema.ErrorSchema);
                 Monitor.Log("Color schemas loaded before game textures. Unable to extract default color schema.\n\tTry running the following command: dj_colors_load", LogLevel.Error);
             }
 
