@@ -35,33 +35,24 @@ namespace DeluxeJournal.Menus.Components
 
             _translation = translation;
             _fontTools = new(Game1.dialogueFont);
-            _halfLineSpacing = (_fontTools.LineSpacing / 2) - (_fontTools.LineSpacing / 2 % 4);
+            _halfLineSpacing = _fontTools.LineSpacing / 8 * 4;
             _centerY = bounds.Y + (bounds.Height / 2);
             _hoverStartTime = 0;
             _hovering = false;
 
             checkbox = new ClickableTextureComponent(
-                new Rectangle(bounds.X + 24, _centerY - 20, 36, 36),
+                new(bounds.X + 24, _centerY - 20, 36, 36),
                 DeluxeJournalMod.UiTexture,
-                new Rectangle(16, 16, 9, 9),
+                new(16, 16, 9, 9),
                 4f);
 
             removeButton = new ClickableTextureComponent(
-                new Rectangle(bounds.Right - 60, _centerY - 22, 40, 40),
+                new(bounds.Right - 60, _centerY - 22, 40, 40),
                 DeluxeJournalMod.UiTexture,
-                new Rectangle(61, 16, 10, 10),
+                new(61, 16, 10, 10),
                 4f);
 
-            progressBar = new ProgressBar(new Rectangle(bounds.Right - 260, _centerY - 30, 248, 56), 0)
-            {
-                texture = DeluxeJournalMod.UiTexture,
-                barLeftSourceRect = new Rectangle(0, 64, 6, 14),
-                barMiddleSourceRect = new Rectangle(6, 64, 34, 14),
-                barRightSourceRect = new Rectangle(40, 64, 6, 14),
-                notchSourceRect = new Rectangle(46, 67, 1, 8),
-                AlignText = ProgressBar.TextAlignment.Center,
-                TextMargin = new Vector2(80, 28 - _halfLineSpacing)
-            };
+            progressBar = new ProgressBar(new Rectangle(bounds.Right - 260, _centerY - 30, 248, 56), 0);
         }
 
         public double TimeHovering()
@@ -155,7 +146,7 @@ namespace DeluxeJournal.Menus.Components
 
                         if (complete && count < maxCount)
                         {
-                            progressBar.Draw(b, _fontTools.Font, Color.DarkBlue, Color.Gray * 0.6f, colorSchema, count, maxCount);
+                            progressBar.Draw(b, _fontTools.Font, Color.DarkBlue, Color.Gray * 0.8f, colorSchema, count, maxCount);
                         }
                         else
                         {
