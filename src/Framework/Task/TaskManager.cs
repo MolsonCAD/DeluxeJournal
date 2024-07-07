@@ -79,30 +79,9 @@ namespace DeluxeJournal.Framework.Task
         /// <summary>Sort local player tasks.</summary>
         public void SortTasks()
         {
-            ((EventManagedTaskList)Tasks).Sort();
-        }
-
-        /// <summary>Refresh the task groups.</summary>
-        /// <remarks>
-        /// Tasks are grouped by headers and are given the same <see cref="ITask.Group"/> value as the header
-        /// they fall under.
-        /// </remarks>
-        public void RefreshGroups()
-        {
-            int group = 0;
-            int colorIndex = -1;
-
-            foreach (ITask task in Tasks)
-            {
-                if (task.IsHeader)
-                {
-                    group++;
-                    colorIndex = task.ColorIndex;
-                }
-
-                task.Group = group;
-                task.GroupColorIndex = colorIndex;
-            }
+            EventManagedTaskList tasks = (EventManagedTaskList)Tasks;
+            RefreshGroups(tasks);
+            tasks.Sort();
         }
 
         /// <summary>Load the task list from save data.</summary>
@@ -136,10 +115,9 @@ namespace DeluxeJournal.Framework.Task
                         _tasks[umid].Add(task.Copy());
                     }
 
+                    RefreshGroups(_tasks[umid]);
                     _tasks[umid].Sort();
                 }
-
-                RefreshGroups();
             }
         }
 
@@ -154,6 +132,35 @@ namespace DeluxeJournal.Framework.Task
                     .ToDictionary(entry => entry.Key, entry => (IList<ITask>)entry.Value.ToList());
 
                 _dataHelper.WriteGlobalData(TasksDataKey, Data);
+            }
+        }
+
+        /// <inheritdoc cref="RefreshGroups(IList{ITask})"/>
+        public void RefreshGroups()
+        {
+            RefreshGroups(Tasks);
+        }
+
+        /// <summary>Refresh the task groups.</summary>
+        /// <remarks>
+        /// Tasks are grouped by headers and are given the same <see cref="ITask.Group"/> value as the header
+        /// they fall under.
+        /// </remarks>
+        private static void RefreshGroups(IList<ITask> tasks)
+        {
+            int group = 0;
+            int colorIndex = -1;
+
+            foreach (ITask task in tasks)
+            {
+                if (task.IsHeader)
+                {
+                    group++;
+                    colorIndex = task.ColorIndex;
+                }
+
+                task.Group = group;
+                task.GroupColorIndex = colorIndex;
             }
         }
 
@@ -184,7 +191,7 @@ namespace DeluxeJournal.Framework.Task
             {
                 ITask task = Tasks[i];
 
-                if (!task.Active && task.RenewPeriod != ITask.Period.Never && task.DaysRemaining() == 0)
+                if (!task.Active && task.RenewPeriod != ITask.Period.Never && task.DaysRemaining() <= 0)
                 {
                     task.Active = true;
 
@@ -201,6 +208,11 @@ namespace DeluxeJournal.Framework.Task
                                     pushGroup = groupTask.Group;
                                     break;
                                 }
+                            }
+
+                            if (pushIndex == 0)
+                            {
+                                pushGroup = 0;
                             }
                         }
 
