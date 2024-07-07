@@ -109,7 +109,12 @@ namespace DeluxeJournal.Menus
                 OnClick = (_, _) => _promptActive = false
             };
 
-            exitFunction = () => Save();
+            onExit? baseOnExit = exitFunction;
+            exitFunction = () =>
+            {
+                baseOnExit?.Invoke();
+                Save();
+            };
         }
 
         public override void OnHidden()
@@ -227,15 +232,25 @@ namespace DeluxeJournal.Menus
         {
             if (_promptActive)
             {
-                if (key == Keys.Escape)
+                switch (key)
                 {
-                    _promptNoButton.SimulateLeftClick();
+                    case Keys.Y:
+                        _promptYesButton.SimulateLeftClick();
+                        break;
+                    case Keys.Escape:
+                        _promptNoButton.SimulateLeftClick();
+                        break;
                 }
 
                 return;
             }
 
-            if (_textBox.Selected)
+            if (key == Keys.Escape)
+            {
+                _textBox.Selected = false;
+                ExitJournalMenu();
+            }
+            else if (_textBox.Selected)
             {
                 if (Game1.options.SnappyMenus && !overrideSnappyMenuCursorMovementBan())
                 {
@@ -248,12 +263,6 @@ namespace DeluxeJournal.Menus
             else
             {
                 base.receiveKeyPress(key);
-            }
-
-            if (key == Keys.Escape)
-            {
-                _textBox.Selected = false;
-                ExitJournalMenu();
             }
         }
 
