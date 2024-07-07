@@ -194,7 +194,7 @@ namespace DeluxeJournal.Menus
 
         public void AddTask(ITask task)
         {
-            int i = _taskManager.Tasks.Count > 0 && _taskManager.Tasks[0].IsHeader ? 1 : 0;
+            int i = !task.IsHeader && _taskManager.Tasks.Count > 0 && _taskManager.Tasks[0].IsHeader ? 1 : 0;
 
             if (task.IsHeader || (int)task.RenewPeriod != SelectedFilterTab)
             {
