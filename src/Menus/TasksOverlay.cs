@@ -411,11 +411,11 @@ namespace DeluxeJournal.Menus
 
         private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)
         {
-            Vector2 mousePosition = e.Cursor.ScreenPixels;
+            Point mousePosition = Game1.getMousePosition(true);
 
             if (IsContentInteractable && e.Button == SButton.MouseLeft && _contentBounds.Contains(mousePosition))
             {
-                int taskIndex = Math.Max((int)mousePosition.Y - _contentBounds.Y - 8, 0) / LineSpacing;
+                int taskIndex = Math.Max(mousePosition.Y - _contentBounds.Y - 8, 0) / LineSpacing;
 
                 if (taskIndex < _tasks.Count)
                 {
