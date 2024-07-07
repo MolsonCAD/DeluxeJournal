@@ -194,15 +194,7 @@ namespace DeluxeJournal.Menus
 
         public void AddTask(ITask task)
         {
-            int i = 0;
-
-            for (; i < _taskManager.Tasks.Count; i++)
-            {
-                if (!_taskManager.Tasks[i].IsHeader)
-                {
-                    break;
-                }
-            }
+            int i = _taskManager.Tasks.Count > 0 && _taskManager.Tasks[0].IsHeader ? 1 : 0;
 
             if (task.IsHeader || (int)task.RenewPeriod != SelectedFilterTab)
             {
@@ -279,7 +271,6 @@ namespace DeluxeJournal.Menus
         public override void OnVisible()
         {
             _selectedTaskIndex = -1;
-            allClickableComponents.AddRange(taskEntries);
             SortTasks();
             RefreshMoneyDial();
             UpdateFilterTabs();
@@ -288,6 +279,12 @@ namespace DeluxeJournal.Menus
         public override bool readyToClose()
         {
             return base.readyToClose() && (_childMenu == null || _childMenu.readyToClose());
+        }
+
+        public override void populateClickableComponentList()
+        {
+            base.populateClickableComponentList();
+            allClickableComponents.AddRange(taskEntries);
         }
 
         protected override void customSnapBehavior(int direction, int oldRegion, int oldID)
