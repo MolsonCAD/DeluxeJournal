@@ -318,20 +318,31 @@ namespace DeluxeJournal.Task
             HashSet<string> ids = new HashSet<string>();
             HashSet<int> ignored = new HashSet<int>();
             List<string> keywords = new List<string>();
-            string[] words = text.Trim().Split(' ');
+            char[] delimiters = [ ' ', ',', '.', '/', '?', '!' ];
+            string[] words;
+            string joinSeparator;
 
-            for (int group = Math.Min(words.Length, 3); group > 0; group--)
+            if (LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.zh ||
+                LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.ja ||
+                LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.th)
+            {
+                words = text.Trim()
+                    .Where(c => !delimiters.Contains(c))
+                    .Select(c => c.ToString())
+                    .ToArray();
+                joinSeparator = string.Empty;
+            }
+            else
+            {
+                words = text.Trim().ToLower().Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+                joinSeparator = " ";
+            }
+
+            for (int group = words.Length; group > 0; group--)
             {
                 for (int i = words.Length; i >= group; i--)
                 {
-                    string word = string.Join(" ", words[(i - group)..i]).ToLower()
-                        .Replace("(", "")
-                        .Replace(")", "")
-                        .Replace("'", "")
-                        .Replace(".", "")
-                        .Replace(",", "")
-                        .Replace("!", "")
-                        .Replace("?", "");
+                    string word = string.Join(joinSeparator, words[(i - group)..i]);
 
                     if (word.Length == 0)
                     {
