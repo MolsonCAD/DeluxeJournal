@@ -19,12 +19,12 @@ namespace DeluxeJournal.Patching
             Instance = this;
         }
 
-        private static void Postfix_returnToCarpentryMenuAfterSuccessfulBuild(CarpenterMenu __instance, bool ___upgrading)
+        private static void Postfix_returnToCarpentryMenuAfterSuccessfulBuild(CarpenterMenu __instance, CarpenterMenu.BlueprintEntry ___Blueprint)
         {
             try
             {
                 // Only handle upgrades, since ModEvents.World.BuildingListChanged is used to broadly detect additions
-                if (___upgrading && Game1.GetBuildingUnderConstruction() is Building building)
+                if (___Blueprint.IsUpgrade && Game1.GetBuildingUnderConstruction() is Building building)
                 {
                     Instance.EventManager.BuildingConstructed.Broadcast(new BuildingConstructedEventArgs(Game1.getFarm(), building, true));
                 }

@@ -87,7 +87,7 @@
 	"alias.buildings.farmhouse": "house,home",
 
 	// item display names
-	//"alias.items.<item>": "",
+	"alias.items.copper_pan": "pan",
 
 	// villager display names
 	"alias.npcs.abigail": "abby"

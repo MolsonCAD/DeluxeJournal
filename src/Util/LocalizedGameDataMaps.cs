@@ -5,7 +5,6 @@ using StardewValley.GameData.Buildings;
 using StardewValley.GameData.Characters;
 using StardewValley.GameData.FarmAnimals;
 using StardewValley.GameData.Objects;
-using StardewValley.GameData.Tools;
 using StardewValley.GameData.Weapons;
 using StardewValley.ItemTypeDefinitions;
 using StardewValley.TokenizableStrings;
@@ -44,11 +43,6 @@ namespace DeluxeJournal.Util
             {
                 if (Settings.AllItemsEnabled || Settings.SetItemCategoryObject || Settings.SetItemCategoryCraftable)
                 {
-                    HashSet<string> roeFishNames = DataLoader.FishPondData(Game1.content)
-                        .Where(data => data.ProducedItems.Any(reward => reward.ItemId == "(O)812"))
-                        .Select(data => data.Id)
-                        .ToHashSet();
-
                     AddPlural(Game1.content.LoadString("Strings\\StringsFromCSFiles:Object.cs.12852"), SObject.FishCategory.ToString());
 
                     foreach (KeyValuePair<string, ObjectData> pair in Game1.objectData)
@@ -56,7 +50,7 @@ namespace DeluxeJournal.Util
                         if (!IgnoredItemIds.Contains(pair.Key) && pair.Value != null && !IgnoredItemTypes.Contains(pair.Value.Type))
                         {
                             if (!Settings.SetItemCategoryObject && Settings.SetItemCategoryCraftable
-                                && !CraftingRecipe.craftingRecipes.ContainsKey(pair.Value.Name))
+                                && (pair.Value.Name == null || !CraftingRecipe.craftingRecipes.ContainsKey(pair.Value.Name)))
                             {
                                 continue;
                             }
@@ -66,7 +60,7 @@ namespace DeluxeJournal.Util
                                 string itemId = ItemRegistry.type_object + pair.Key;
 
                                 AddPlural(parsedName, itemId);
-                                AddFlavored(parsedName, pair.Key, pair.Value, roeFishNames);
+                                AddFlavored(parsedName, pair.Key, pair.Value);
                                 AddConvenienceAlternates(itemId, pair.Value);
                             }
                         }
@@ -89,22 +83,11 @@ namespace DeluxeJournal.Util
 
                         if (ItemRegistry.GetData(toolQid) is ParsedItemData itemData)
                         {
-                            if (itemData.RawData is ToolData toolData
-                                && toolData.ApplyUpgradeLevelToDisplayName
-                                && toolData.UpgradeLevel > 0
-                                && ItemRegistry.Create(toolQid) is Tool tool)
-                            {
-                                Add(tool.DisplayName.ToLower(), toolQid);
-                            }
-                            else
-                            {
-                                Add(itemData.DisplayName.ToLower(), toolQid);
-                            }
+                            Add(itemData.DisplayName.ToLower(), toolQid);
                         }
                     }
 
-                    Add(TokenParser.ParseText("[LocalizedText Strings\\1_6_Strings:PanToolBaseName]"), "(T)Pan");
-                    Add(TokenParser.ParseText("[LocalizedText Strings\\\\StringsFromCSFiles:TrashCan]"), "(T)CopperTrashCan");
+                    Add(Game1.content.LoadString("Strings\\Tools:TrashCan_Name"), "(T)CopperTrashCan");
                 }
 
                 if (Settings.AllItemsEnabled)
@@ -131,79 +114,96 @@ namespace DeluxeJournal.Util
             /// <param name="localizedName">Localized ingredient name.</param>
             /// <param name="unqualifiedId">Unqualified item ID.</param>
             /// <param name="objectData">Object data.</param>
-            /// <param name="roeFishNames">Set of fish (internal) names that may produce roe.</param>
-            private void AddFlavored(string localizedName, string unqualifiedId, ObjectData objectData, IReadOnlySet<string> roeFishNames)
+            private void AddFlavored(string localizedName, string unqualifiedId, ObjectData objectData)
             {
+                int category = objectData.Category;
+
                 // Wild Honey
                 if (unqualifiedId == "340")
                 {
-                    Add(Game1.content.LoadString("Strings\\StringsFromCSFiles:Object.cs.12750"), ItemRegistry.type_object + unqualifiedId);
+                    Add(Game1.content.LoadString("Strings\\Objects:Honey_Name"), ItemRegistry.type_object + unqualifiedId);
+                    Add(Game1.content.LoadString("Strings\\Objects:Honey_Wild_Name"), ItemRegistry.type_object + unqualifiedId);
                     return;
                 }
 
-                switch (objectData.Category)
+                // Sea Urchin
+                if (unqualifiedId == "397")
+                {
+                    category = SObject.FishCategory;
+                }
+
+                switch (category)
                 {
                     case SObject.FruitsCategory:
                         // Jelly
-                        AddPlural(Game1.content.LoadString("Strings\\StringsFromCSFiles:Object.cs.12739", localizedName),
+                        AddPlural(Game1.content.LoadStringReturnNullIfNotFound($"Strings\\Objects:Jelly_Flavored_(O){unqualifiedId}_Name", localizedName, localizedName, localeFallback: false)
+                            ?? Game1.content.LoadString("Strings\\Objects:Jelly_Flavored_Name", localizedName, localizedName),
                             FlavoredItemHelper.EncodeFlavoredItemId("(O)344", unqualifiedId));
 
                         // Wine
-                        AddPlural(Game1.content.LoadString("Strings\\StringsFromCSFiles:Object.cs.12730", localizedName),
+                        AddPlural(Game1.content.LoadStringReturnNullIfNotFound($"Strings\\Objects:Wine_Flavored_(O){unqualifiedId}_Name", localizedName, localizedName, localeFallback: false)
+                            ?? Game1.content.LoadString("Strings\\Objects:Wine_Flavored_Name", localizedName, localizedName),
                             FlavoredItemHelper.EncodeFlavoredItemId("(O)348", unqualifiedId));
 
                         // Dried Fruit (not grapes)
                         if (unqualifiedId != "398")
                         {
-                            AddPlural(Game1.content.LoadString("Strings\\1_6_Strings:DriedFruit_DisplayName", localizedName),
+                            AddPlural(Game1.content.LoadStringReturnNullIfNotFound($"Strings\\Objects:DriedFruit_Flavored_(O){unqualifiedId}_Name", localizedName, localizedName, localeFallback: false)
+                                ?? Game1.content.LoadString("Strings\\Objects:DriedFruit_Flavored_Name", localizedName, localizedName),
                                 FlavoredItemHelper.EncodeFlavoredItemId("(O)DriedFruit", unqualifiedId));
                         }
                         break;
                     case SObject.GreensCategory when objectData.ContextTags?.Contains("edible_mushroom") == true:
                         //Dried Mushrooms
-                        AddPlural(Game1.content.LoadString("Strings\\1_6_Strings:DriedFruit_DisplayName", localizedName),
+                        AddPlural(Game1.content.LoadStringReturnNullIfNotFound($"Strings\\Objects:DriedFruit_Flavored_(O){unqualifiedId}_Name", localizedName, localizedName, localeFallback: false)
+                            ?? Game1.content.LoadString("Strings\\Objects:DriedFruit_Flavored_Name", localizedName, localizedName),
                             FlavoredItemHelper.EncodeFlavoredItemId("(O)DriedMushrooms", unqualifiedId));
                         break;
                     case SObject.GreensCategory when objectData.ContextTags?.Contains("preserves_pickle") == true:
                         // Special Pickles
-                        AddPlural(Game1.content.LoadString("Strings\\StringsFromCSFiles:Object.cs.12735", localizedName),
+                        AddPlural(Game1.content.LoadStringReturnNullIfNotFound($"Strings\\Objects:Pickles_Flavored_(O){unqualifiedId}_Name", localizedName, localizedName, localeFallback: false)
+                            ?? Game1.content.LoadString("Strings\\Objects:Pickles_Flavored_Name", localizedName, localizedName),
                             FlavoredItemHelper.EncodeFlavoredItemId("(O)342", unqualifiedId));
                         break;
                     case SObject.VegetableCategory:
                         // Pickles
-                        AddPlural(Game1.content.LoadString("Strings\\StringsFromCSFiles:Object.cs.12735", localizedName),
+                        AddPlural(Game1.content.LoadStringReturnNullIfNotFound($"Strings\\Objects:Pickles_Flavored_(O){unqualifiedId}_Name", localizedName, localizedName, localeFallback: false)
+                            ?? Game1.content.LoadString("Strings\\Objects:Pickles_Flavored_Name", localizedName, localizedName),
                             FlavoredItemHelper.EncodeFlavoredItemId("(O)342", unqualifiedId));
 
                         // Juice
-                        AddPlural(Game1.content.LoadString("Strings\\StringsFromCSFiles:Object.cs.12726", localizedName),
+                        AddPlural(Game1.content.LoadStringReturnNullIfNotFound($"Strings\\Objects:Juice_Flavored_(O){unqualifiedId}_Name", localizedName, localizedName, localeFallback: false)
+                            ?? Game1.content.LoadString("Strings\\Objects:Juice_Flavored_Name", localizedName, localizedName),
                             FlavoredItemHelper.EncodeFlavoredItemId("(O)350", unqualifiedId));
                         break;
                     case SObject.flowersCategory:
                         // Honey
-                        AddPlural(Game1.content.LoadString("Strings\\StringsFromCSFiles:Object.cs.12760", localizedName),
+                        AddPlural(Game1.content.LoadStringReturnNullIfNotFound($"Strings\\Objects:Honey_Flavored_(O){unqualifiedId}_Name", localizedName, localizedName, localeFallback: false)
+                            ?? Game1.content.LoadString("Strings\\Objects:Honey_Flavored_Name", localizedName, localizedName),
                             FlavoredItemHelper.EncodeFlavoredItemId("(O)340", unqualifiedId));
                         break;
                     case SObject.FishCategory:
-                        if (roeFishNames.Contains(objectData.Name))
-                        {
-                            // Roe
-                            Add(Game1.content.LoadString("Strings\\StringsFromCSFiles:Roe_DisplayName", localizedName),
-                                FlavoredItemHelper.EncodeFlavoredItemId("(O)812", unqualifiedId));
+                        // Roe
+                        Add(Game1.content.LoadStringReturnNullIfNotFound($"Strings\\Objects:Roe_Flavored_(O){unqualifiedId}_Name", localizedName, localizedName, localeFallback: false)
+                            ?? Game1.content.LoadString("Strings\\Objects:Roe_Flavored_Name", localizedName.TrimEnd('鱼'), localizedName.TrimEnd('鱼')),
+                            FlavoredItemHelper.EncodeFlavoredItemId("(O)812", unqualifiedId));
 
-                            // Aged Roe (not sturgeon)
-                            if (unqualifiedId != "698")
-                            {
-                                Add(Game1.content.LoadString("Strings\\StringsFromCSFiles:AgedRoe_DisplayName", localizedName),
-                                    FlavoredItemHelper.EncodeFlavoredItemId("(O)447", unqualifiedId));
-                            }
+                        // Aged Roe (not sturgeon)
+                        if (unqualifiedId != "698")
+                        {
+                            Add(Game1.content.LoadStringReturnNullIfNotFound($"Strings\\Objects:AgedRoe_Flavored_(O){unqualifiedId}_Name", localizedName, localizedName, localeFallback: false)
+                                ?? Game1.content.LoadString("Strings\\Objects:AgedRoe_Flavored_Name", localizedName.TrimEnd('鱼'), localizedName.TrimEnd('鱼')),
+                                FlavoredItemHelper.EncodeFlavoredItemId("(O)447", unqualifiedId));
                         }
 
                         // Bait
-                        Add(Game1.content.LoadString("Strings\\1_6_Strings:SpecificBait_DisplayName", localizedName),
+                        Add(Game1.content.LoadStringReturnNullIfNotFound($"Strings\\Objects:SpecificBait_Flavored_(O){unqualifiedId}_Name", localizedName, localizedName, localeFallback: false)
+                            ?? Game1.content.LoadString("Strings\\Objects:SpecificBait_Flavored_Name", localizedName, localizedName),
                             FlavoredItemHelper.EncodeFlavoredItemId("(O)SpecificBait", unqualifiedId));
 
                         // Smoked Fish
-                        AddPlural(Game1.content.LoadString("Strings\\1_6_Strings:SmokedFish_DisplayName", localizedName),
+                        AddPlural(Game1.content.LoadStringReturnNullIfNotFound($"Strings\\Objects:SmokedFish_Flavored_(O){unqualifiedId}_Name", localizedName, localizedName, localeFallback: false)
+                            ?? Game1.content.LoadString("Strings\\Objects:SmokedFish_Flavored_Name", localizedName, localizedName),
                             FlavoredItemHelper.EncodeFlavoredItemId("(O)SmokedFish", unqualifiedId));
                         break;
                 }
@@ -222,13 +222,13 @@ namespace DeluxeJournal.Util
                 switch (objectData.Category)
                 {
                     case SObject.EggCategory when contextTags.Contains("large_egg_item"):
-                        Add(TokenParser.ParseText("[LocalizedText Strings\\\\Objects:WhiteEgg_Name]"), itemId);
+                        Add(Game1.content.LoadString("Strings\\Objects:WhiteEgg_Name"), itemId);
                         break;
                     case SObject.MilkCategory when contextTags.Contains("cow_milk_item") && contextTags.Contains("large_milk_item"):
-                        Add(TokenParser.ParseText("[LocalizedText Strings\\\\Objects:Milk_Name]"), itemId);
+                        Add(Game1.content.LoadString("Strings\\Objects:Milk_Name"), itemId);
                         break;
                     case SObject.MilkCategory when contextTags.Contains("goat_milk_item") && contextTags.Contains("large_milk_item"):
-                        Add(TokenParser.ParseText("[LocalizedText Strings\\\\Objects:GoatMilk_Name]"), itemId);
+                        Add(Game1.content.LoadString("Strings\\Objects:GoatMilk_Name"), itemId);
                         break;
                 }
             }

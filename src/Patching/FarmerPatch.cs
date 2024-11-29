@@ -2,7 +2,6 @@
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Objects;
-using StardewValley.Quests;
 using DeluxeJournal.Events;
 using DeluxeJournal.Framework.Events;
 
@@ -46,21 +45,6 @@ namespace DeluxeJournal.Patching
             }
         }
 
-        private static void Postfix_checkForQuestComplete(Farmer __instance, NPC n, int number1, int number2, Item item, string str, int questType)
-        {
-            try
-            {
-                if (questType == Quest.type_crafting && (item is SObject || item is Ring))
-                {
-                    Instance.EventManager.ItemCrafted.Raise(__instance, new ItemReceivedEventArgs(__instance, item, item.Stack));
-                }
-            }
-            catch (Exception ex)
-            {
-                Instance.LogError(ex, nameof(Postfix_checkForQuestComplete));
-            }
-        }
-
         public override void Apply(Harmony harmony)
         {
             Patch(harmony,
@@ -71,11 +55,6 @@ namespace DeluxeJournal.Patching
             Patch(harmony,
                 original: AccessTools.Method(typeof(Farmer), nameof(Farmer.onGiftGiven)),
                 postfix: new HarmonyMethod(typeof(FarmerPatch), nameof(Postfix_onGiftGiven))
-            );
-
-            Patch(harmony,
-                original: AccessTools.Method(typeof(Farmer), nameof(Farmer.checkForQuestComplete)),
-                postfix: new HarmonyMethod(typeof(FarmerPatch), nameof(Postfix_checkForQuestComplete))
             );
         }
     }

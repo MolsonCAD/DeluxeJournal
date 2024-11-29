@@ -105,6 +105,7 @@ namespace DeluxeJournal
             Patcher.Apply(new Harmony(ModManifest.UniqueID), Monitor,
                 new QuestLogPatch(Monitor),
                 new FarmerPatch(EventManager, Monitor),
+                new CraftingPagePatch(EventManager, Monitor),
                 new CarpenterMenuPatch(EventManager, Monitor),
                 new PurchaseAnimalsMenuPatch(EventManager, Monitor),
                 new ShopMenuPatch(EventManager, Monitor)

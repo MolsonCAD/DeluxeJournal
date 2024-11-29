@@ -20,7 +20,7 @@ namespace DeluxeJournal.Util
             {
                 if (pair.Value.ClassName == toolData.ClassName && pair.Value.UpgradeLevel == upgradeLevel)
                 {
-                    return ItemRegistry.Create<Tool>(ItemRegistry.type_tool + pair.Key);
+                    return ItemRegistry.Create<Tool>(ItemRegistry.type_tool + pair.Key, allowNull: true);
                 }
             }
 

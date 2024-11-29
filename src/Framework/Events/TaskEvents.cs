@@ -93,7 +93,7 @@ namespace DeluxeJournal.Framework.Events
             }
         }
 
-        private bool OnPurchase(ISalable salable, Farmer player, int amount)
+        private bool OnPurchase(ISalable salable, Farmer player, int amount, ItemStockInformation stock)
         {
             EventManager.SalablePurchased.Raise(player, new SalableEventArgs(player, salable, amount));
             return false;

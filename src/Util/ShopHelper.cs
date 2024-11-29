@@ -86,17 +86,17 @@ namespace DeluxeJournal.Util
         /// <summary>Attach an onPurchase callback to a ShopMenu.</summary>
         /// <param name="shop">The ShopMenu.</param>
         /// <param name="onPurchase">The callback to be attached. A return value of true exits the menu.</param>
-        public static void AttachPurchaseCallback(ShopMenu shop, Func<ISalable, Farmer, int, bool> onPurchase)
+        public static void AttachPurchaseCallback(ShopMenu shop, ShopMenu.OnPurchaseDelegate onPurchase)
         {
-            Func<ISalable, Farmer, int, bool> origOnPurchase = shop.onPurchase;
+            ShopMenu.OnPurchaseDelegate origOnPurchase = shop.onPurchase;
 
-            shop.onPurchase = delegate (ISalable salable, Farmer player, int amount)
+            shop.onPurchase = delegate (ISalable salable, Farmer player, int amount, ItemStockInformation stock)
             {
-                bool exit = onPurchase(salable, player, amount);
+                bool exit = onPurchase(salable, player, amount, stock);
 
                 if (origOnPurchase != null)
                 {
-                    return origOnPurchase(salable, player, amount) || exit;
+                    return origOnPurchase(salable, player, amount, stock) || exit;
                 }
 
                 return exit;

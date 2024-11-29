@@ -76,11 +76,19 @@ namespace DeluxeJournal.Patching
         }
 
         /// <summary>Log an error that occurred inside a patch method.</summary>
+        /// <param name="message">Error message.</param>
+        /// <param name="methodName">The name of the patch method that produced the error.</param>
+        protected void LogError(string message, string methodName)
+        {
+            Monitor.Log($"Error occurred in Harmony patch {Name}.{methodName}: {message}", LogLevel.Error);
+        }
+
+        /// <summary>Log an error that occurred inside a patch method.</summary>
         /// <param name="ex">Error exception.</param>
         /// <param name="methodName">The name of the patch method that produced the error.</param>
         protected void LogError(Exception ex, string methodName)
         {
-            Monitor.Log($"Error occurred in Harmony patch {Name}.{methodName}: {ex}", LogLevel.Error);
+            LogError(ex.ToString(), methodName);
         }
     }
 }
