@@ -1,29 +1,29 @@
 {
 	// task names and keywords (for parsing)
 	"task.animal": "Animal de ferme",
-	"task.animal.keywords": "achat,acheter,obtenir",
+	"task.animal.keywords": "acheter,payer",
 	"task.basic": "Basique",
 	"task.blacksmith": "Amélioration d’outils",
-	"task.blacksmith.keywords": "améliorer,acheter,obtenir",
+	"task.blacksmith.keywords": "améliorer,acheter,payer,obtenir",
 	"task.build": "Construction",
 	"task.build.keywords": "achat,acheter,bâtir,construire,élever,obtenir",
 	"task.buy": "Achat",
-	"task.buy.keywords": "achat,acheter,obtenir",
+	"task.buy.keywords": "acheter,achat,obtenir",
 	"task.collect": "Collecte",
-	"task.collect.keywords": "amasser,attraper,collecter,couper,cueillir,fourrager,miner,obtenir,pêcher,rassembler,récolter,trouver,ramasser,récupérer",
-	"task.craft": "Artisanat",
-	"task.craft.keywords": "créer,création,cuisiner,cuisine,fabrication,fabriquer,faire,obtenir,obtention",
-	"task.gift": "Cadeau",
-	"task.gift.keywords": "anniversaire,donner,don,offrir,offre",
-	"task.header": "En-Tête",
-	"task.sell": "Vente",
-	"task.sell.keywords": "livrer,livraison,vendre,vente",
+	"task.collect.keywords": "collecter,couper,récolter,rassembler,fourrager,pêcher,attraper,miner,trouver,récupérer,obtenir",
+	"task.craft": "Fabrication",
+	"task.craft.keywords": "fabriquer,cuisiner,créer,faire,obtenir",
+	"task.gift": "Offrir",
+	"task.gift.keywords": "offrir,donner,cadeau",
+	"task.header": "En-tête",
+	"task.sell": "Vendre",
+	"task.sell.keywords": "vendre,livrer",
 
 	// tab/page names
 	"ui.tab.quests": "Quêtes",
 	"ui.tab.tasks": "Tâches",
 	"ui.tab.notes": "Notes",
-	"ui.tab.overlays": "Superpositions",
+	"ui.tab.overlays": "Fenêtre de superposition",
 	
 	// tasks page
 	"ui.tasks.help": "Appuyez sur le bouton Ajouter une tâche",
@@ -33,13 +33,13 @@
 	"ui.tasks.renewbutton.hover": "Renouveler la tâche",
 	"ui.tasks.renew.day": "{{count}} jour",
 	"ui.tasks.renew.days": "{{count}} jours",
-	"ui.tasks.status.deliver": "[152] apporter",
+	"ui.tasks.status.deliver": "[152] donné",
 	"ui.tasks.status.upgrading": "[42] en cours d’amélioration",
-	"ui.tasks.status.ready": "[151] prêt !",
+	"ui.tasks.status.ready": "[151] peut être récupéré",
 	"ui.tasks.moneybox.hover0": "Montant total à payer/gagner",
 	"ui.tasks.moneybox.hover1": "Patrimoine net",
 	"ui.tasks.moneybutton.hover": "Modifier la vue",
-	"ui.tasks.filter": "Filtre : {{category}}",
+	"ui.tasks.filter": "Filtre : {{category}}",
 	"ui.tasks.filter.all": "Tous",
 
 	// add new task menu
@@ -53,27 +53,27 @@
 	"ui.tasks.options": "Options des tâches",
 	"ui.tasks.options.name": "Nom",
 	"ui.tasks.options.renew": "Renouveler",
-	"ui.tasks.options.renew.Never": "jamais",
-	"ui.tasks.options.renew.Daily": "journalier",
-	"ui.tasks.options.renew.Weekly": "hebdomadaire",
-	"ui.tasks.options.renew.Monthly": "mensuel",
-	"ui.tasks.options.renew.Annually": "annuel",
-	"ui.tasks.options.renew.Custom": "personnalisé",
+	"ui.tasks.options.renew.Never": "Jamais",
+	"ui.tasks.options.renew.Daily": "Quotidiennement",
+	"ui.tasks.options.renew.Weekly": "Hebdomadaire",
+	"ui.tasks.options.renew.Monthly": "Mensuel",
+	"ui.tasks.options.renew.Annually": "Annuel",
+	"ui.tasks.options.renew.Custom": "Personnalisé",
 	"ui.tasks.options.type": "Type de tâche",
 
 	// task parameter names
 	"ui.tasks.parameter.animal": "Animal",
 	"ui.tasks.parameter.building": "Bâtiment",
-	"ui.tasks.parameter.color": "Couleur",
+	"ui.tasks.parameter.color": "couleur",
 	"ui.tasks.parameter.count": "Nombre",
-	"ui.tasks.parameter.item": "Objet",
-	"ui.tasks.parameter.npc": "PNJ",
+	"ui.tasks.parameter.item": "objet",
+	"ui.tasks.parameter.npc": "villageois",
 	"ui.tasks.parameter.quality": "Qualité (minimum)",
 	"ui.tasks.parameter.tool": "Outil",
 
 	// overlays page
-	"ui.overlays.backgroundcolor": "Couleur de fond",
-	"ui.overlays.hotkey": "Raccourci clavier: {{keybind}}",
+	"ui.overlays.backgroundcolor": "Couleur d’arrière-plan",
+	"ui.overlays.hotkey": "Raccourci : {{keybind}}",
 
 	// +---------------------------------+
 	// | display name aliases (OPTIONAL) |
@@ -84,10 +84,10 @@
 	"alias.animalshop.dairy_cow": "vache,vaches",
 
 	// building display names
-	"alias.buildings.farmhouse": "maison",
+	"alias.buildings.farmhouse": "Maison",
 
 	// item display names
-	//"alias.items.<item>": "",
+	"alias.items.copper_pan": "Poêle",
 
 	// villager display names
 	"alias.npcs.abigail": "Abby"
